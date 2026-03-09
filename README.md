@@ -6,3 +6,4 @@ Joy Jasmine Kaur - joyj0001@student.monash.edu
 Marcus Chan - mcha0202@student.monash.edu
 Lakshmi Meena Palaniappan- lpal0018@student.monash.edu
 Alaric Sim - asim0048@student.monash.edu
+Joyce Leung - jleu0009@student.monash.edu
