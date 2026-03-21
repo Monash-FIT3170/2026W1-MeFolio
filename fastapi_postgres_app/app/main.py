@@ -1,6 +1,8 @@
+#main.py
+
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
-from .db import SessionLocal, engine
+from .database import SessionLocal, engine
 from . import models, schemas
 
 app = FastAPI()
@@ -14,9 +16,11 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/") #path operation decorator - GET request at path /
-async def root():
-   return {"message": "Hello World"}
+@app.get("/", response_model=list[schemas.Item])
+def read_items(db: Session = Depends(get_db)):
+    items = db.query(models.Item).all()
+    return items
+
 
 @app.post("/items", response_model=schemas.Item)
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):

@@ -1,5 +1,7 @@
+# models.py
+
 from sqlalchemy import Column, Integer, String
-from .db import Base
+from .database import Base
 
 class Item(Base):
     __tablename__ = "items"
