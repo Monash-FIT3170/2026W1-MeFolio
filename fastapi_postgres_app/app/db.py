@@ -1,15 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from .config import settings
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# SQLAlchemy database URL
-DATABASE_URL = settings.db_url
+DATABASE_URL = "postgresql://dev:dev@localhost:5432/spike"
 
-# Create engine
 engine = create_engine(DATABASE_URL)
-
-# Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for ORM models
 Base = declarative_base()
