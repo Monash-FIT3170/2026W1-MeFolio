@@ -4,7 +4,7 @@
   "service": "app",
   "remoteUser": "root",
   "postCreateCommand": "meteor npm install",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspace/mefolio",
   "forwardPorts": [3000],
   "postCreateCommand": "meteor --version",
   "customizations": {
