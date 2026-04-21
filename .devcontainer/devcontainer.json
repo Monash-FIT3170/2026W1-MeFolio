@@ -3,10 +3,13 @@
   "dockerComposeFile": "../docker-compose.yaml",
   "service": "app",
   "remoteUser": "root",
-  "postCreateCommand": "meteor npm install",
+
   "workspaceFolder": "/workspace/mefolio",
+
+  "postCreateCommand": "meteor npm install && meteor --version",
+
   "forwardPorts": [3000],
-  "postCreateCommand": "meteor --version",
+
   "customizations": {
     "vscode": {
       "extensions": [
