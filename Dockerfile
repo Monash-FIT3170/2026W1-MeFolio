@@ -1,23 +1,22 @@
-FROM ubuntu:22.04
-
+FROM node:20-slim
+ 
+ENV HOME=/root
+ENV PATH="/root/.meteor:$PATH"
+ENV METEOR_ALLOW_SUPERUSER=1
+ 
 RUN apt-get update && apt-get install -y \
-    curl \
-    ca-certificates \
-    build-essential \
-    python3 \
+    bash curl git python3 make g++ procps ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
+ 
 RUN curl https://install.meteor.com/ | sh
-
+RUN meteor --version
+ 
 WORKDIR /app
-
-ENV METEOR_WATCH_MODE=polling
-ENV METEOR_ALLOW_SUPERUSER=true
-
-COPY mefolio/. .
-
+COPY mefolio/ .
 RUN meteor npm install
-
+ 
+ENV PORT=3000
+ 
 EXPOSE 3000
-
-CMD ["meteor", "run", "--allow-superuser"]
+ 
+CMD ["meteor", "run", "--port", "3000"]

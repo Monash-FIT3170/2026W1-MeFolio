@@ -1,18 +1,29 @@
+version: '3.8'
 services:
   app:
     build: .
     ports:
       - "3000:3000"
+    volumes:
+      - ./mefolio:/app
+      - meteor_local:/app/.meteor/local
+      - node_modules:/app/node_modules
     environment:
-      MONGO_URL: mongodb://mongo:27017/mydb
+      MONGO_URL: mongodb://mongo:27017/meteor
       ROOT_URL: http://localhost:3000
+      PORT: 3000
+      METEOR_WATCH_FORCE_POLLING: "true"
     depends_on:
       - mongo
-
+    restart: unless-stopped
+ 
   mongo:
     image: mongo:7
     volumes:
-      - mongo-data:/data/db
-
+      - mongo_data:/data/db
+    restart: unless-stopped
+ 
 volumes:
-  mongo-data:
+  mongo_data:
+  meteor_local:
+  node_modules:
