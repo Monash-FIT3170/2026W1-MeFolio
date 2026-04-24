@@ -44,7 +44,7 @@ export function LoginPage({
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-col justify-center px-20 text-white">
+        <div className="relative z-10 flex flex-col items-center justify-center px-20 text-white w-full text-center">
           <div className="flex items-center gap-3 mb-10 group cursor-default">
             <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform">
               <Sparkles className="w-10 h-10 text-yellow-300" />
@@ -59,11 +59,11 @@ export function LoginPage({
             </span>
           </h1>
 
-          <p className="text-xl opacity-80 mb-12 max-w-lg leading-relaxed">
+          <p className="text-xl opacity-80 mb-12 max-w-lg leading-relaxed mx-auto">
             Transform your professional presence with real-time analytics, AI-powered interactions, and engaging project showcases.
           </p>
 
-          <div className="grid gap-6">
+          <div className="grid gap-6 text-left">
             {[
               { icon: <Layout className="w-6 h-6" />, title: 'Interactive Project Showcases', desc: 'Add mini-challenges and live code snippets to prove your skills' },
               { icon: <LineChart className="w-6 h-6" />, title: 'Real-Time Visitor Analytics', desc: "Track who's viewing your portfolio and what they're interested in" },
