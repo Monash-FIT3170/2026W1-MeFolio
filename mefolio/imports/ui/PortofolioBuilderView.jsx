@@ -2,7 +2,7 @@ import { PortfolioCollection } from "../api/portfolio";
 
 import { useTracker } from "meteor/react-meteor-data";
 
-export const Portfolios = () => {
+export const PortfolioBuilderView = () => {
   const { portfolios, isLoading } = useTracker(() => {
     const handler = Meteor.subscribe("portfolios.all");
     return {
