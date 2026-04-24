@@ -51,7 +51,7 @@ export function SignUpPage({
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-col justify-center px-16 text-white w-full">
+        <div className="relative z-10 flex flex-col items-center justify-center px-16 text-white w-full text-center">
           <div className="flex items-center gap-3 mb-10 group cursor-default">
             <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md group-hover:scale-110 transition-transform">
               <Sparkles className="w-10 h-10 text-yellow-300" />
@@ -66,11 +66,11 @@ export function SignUpPage({
             </span>
           </h1>
 
-          <p className="text-xl opacity-80 mb-12 max-w-lg leading-relaxed">
+          <p className="text-xl opacity-80 mb-12 max-w-lg leading-relaxed mx-auto">
             Build an interactive showcase that tells your story better than a static resume ever could.
           </p>
 
-          <div className="space-y-6 max-w-lg">
+          <div className="space-y-6 max-w-lg text-left">
             {[
               { icon: <Rocket className="w-6 h-6" />, title: 'Get Noticed Instantly', desc: 'Stand out in a crowded market with a portfolio that recruiters enjoy exploring.' },
               { icon: <Trophy className="w-6 h-6" />, title: 'Prove Your Competence', desc: 'Let your work speak for itself with live code previews and interactive project challenges.' },
