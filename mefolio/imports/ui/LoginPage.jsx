@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Github, Mail, Lock, Sparkles, Shield, Layout, LineChart, Bot } from 'lucide-react';
+import { Meteor } from 'meteor/meteor';
 
 /**
  * FEAT-01: User Authentication UI
@@ -14,10 +15,18 @@ export function LoginPage({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Sign in attempt:', { email, password });
-    onSignIn();
+
+    Meteor.loginWithPassword(email, password, (error) => {
+      if (error) {
+        // Log the error for debugging and alert the user
+        console.error("Authetication Failure:", error.reason);
+        alert(error.reason);
+      } else {
+        console.log("Authentication Success: Session established.");
+      }
+    });
   };
 
   return (
