@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Github, Mail, Lock, User, Sparkles, Shield, Rocket, Trophy, BarChart3 } from 'lucide-react';
+import { Accounts } from 'meteor/accounts-base';
 
 export function SignUpPage({ 
   onSignUp,
@@ -15,9 +16,31 @@ export function SignUpPage({
     portfolioUrl: ''
   });
 
-  const handleSubmit = (e) => {
+const handleSubmit = (e) => {
     e.preventDefault();
-    onSignUp();
+
+    // Basic Validation Logic
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    // Meteor Account Creation Logic
+    Accounts.createUser({
+      email: formData.email,
+      password: formData.password,
+      profile: {
+        name: formData.name,
+      }
+    }, (error) => {
+      if (error) {
+        // If the email is already taken or password is too weak
+        alert('Registration Failed: ${error.reason}'); 
+      } else {
+        console.log('User created sussessfully')
+        onSignUp();
+      }
+    });
   };
 
   const handleChange = (e) => {
