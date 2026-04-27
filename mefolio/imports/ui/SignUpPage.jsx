@@ -30,7 +30,8 @@ const handleSubmit = (e) => {
       email: formData.email,
       password: formData.password,
       profile: {
-        name: formData.name,
+        userName: formData.portfolioUrl, 
+        fullName: formData.name,
       }
     }, (error) => {
       if (error) {
