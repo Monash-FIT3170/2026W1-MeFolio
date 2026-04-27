@@ -36,7 +36,7 @@ const handleSubmit = (e) => {
     }, (error) => {
       if (error) {
         // If the email is already taken or password is too weak
-        alert('Registration Failed: ${error.reason}'); 
+        alert(`Registration Failed: ${error.reason}`); 
       } else {
         console.log('User created sussessfully')
         onSignUp();

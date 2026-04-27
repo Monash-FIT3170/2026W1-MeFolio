@@ -1,5 +1,7 @@
 import assert from "assert";
 
+import "/imports/ui/LoginPage.test.jsx";
+
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
     const { name } = await import("../package.json");
