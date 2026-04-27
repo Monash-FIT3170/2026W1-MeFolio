@@ -8,7 +8,7 @@ import "./PortfolioBuilderView.css";
 // Top-level dashboard view that coordinates tab state and renders the active section.
 export const PortfolioBuilderView = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { isLoading, sidebarItems, overviewStats, liveVisitors, profile } =
+  const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
     createDashboardViewModel();
 
   const currentTab = getCurrentTab(sidebarItems, activeTab);
@@ -38,6 +38,11 @@ export const PortfolioBuilderView = () => {
         <div className="builder-content">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "about-me" ? (
+            <PlaceholderSection
+              title={currentTab.label}
+              description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
+            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -153,11 +158,11 @@ const Visitor = ({ visitor }) => {
 };
 
 // Generic placeholder used for dashboard tabs that are not built yet.
-const PlaceholderSection = ({ title }) => {
+const PlaceholderSection = ({ title, description = "This section is a placeholder for now." }) => {
   return (
     <section className="placeholder-card">
       <h2>{title}</h2>
-      <p>This section is a placeholder for now.</p>
+      <p>{description}</p>
     </section>
   );
 };

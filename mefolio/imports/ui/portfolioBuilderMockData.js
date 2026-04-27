@@ -1,5 +1,6 @@
 export const sidebarItems = [
   { id: "overview", label: "Overview" },
+  { id: "about-me", label: "About Me" },
   { id: "projects", label: "Projects" },
   { id: "analytics", label: "Analytics" },
   { id: "visitors", label: "Live Visitors" },
@@ -75,4 +76,12 @@ export const mockProfile = {
   initials: "JD",
   name: "John Doe",
   email: "john@example.com",
+};
+
+export const mockAboutMe = {
+  fullName: "John Doe",
+  signInEmail: "john@example.com",
+  linkedinUrl: "https://www.linkedin.com/in/johndoe",
+  githubUrl: "https://github.com/johndoe",
+  portfolioTitle: "Product Designer and Frontend Developer",
 };

@@ -1,4 +1,5 @@
 import {
+  mockAboutMe,
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
@@ -12,6 +13,7 @@ export const createLoadingViewModel = () => ({
   overviewStats: [],
   liveVisitors: [],
   profile: {},
+  aboutMe: {},
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -44,6 +46,25 @@ export const mapProfile = (portfolio) => {
   return portfolio ? mockProfile : mockProfile;
 };
 
+// Maps current user and portfolio fields into the About Me editor/view shape.
+export const mapAboutMe = (portfolio) => {
+  /*
+    Teammate handoff:
+    Replace this with a pure mapper that returns:
+    {
+      fullName,
+      signInEmail,
+      linkedinUrl,
+      githubUrl,
+      portfolioTitle,
+    }
+
+    Example source fields may come from the signed-in user record plus the
+    portfolio document being edited.
+  */
+  return portfolio ? mockAboutMe : mockAboutMe;
+};
+
 // Returns the current mock-backed dashboard state while the API is not wired in.
 export const createMockDashboardViewModel = () => ({
   isLoading: false,
@@ -51,6 +72,7 @@ export const createMockDashboardViewModel = () => ({
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
   profile: mockProfile,
+  aboutMe: mockAboutMe,
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
@@ -96,6 +118,7 @@ export const createDashboardViewModel = ({
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(portfolios[0]),
+    aboutMe: mapAboutMe(portfolios[0]),
   };
 };
 
