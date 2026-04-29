@@ -9,7 +9,8 @@ import { Meteor } from 'meteor/meteor';
  */
 export function LoginPage({
   onSignIn,
-  onSwitchToSignUp
+  onSwitchToSignUp,
+  onForgotPassword
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -132,7 +133,11 @@ const handleSubmit = (e) => {
                 <label htmlFor="password" className="text-sm font-bold text-gray-700">
                   Password
                 </label>
-                <button type="button" className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
+                >
                   Forgot?
                 </button>
               </div>

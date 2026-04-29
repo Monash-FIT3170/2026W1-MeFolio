@@ -4,6 +4,7 @@ import { Header } from "./Header.jsx";
 import { Info } from "./Info.jsx";
 import { LoginPage } from "./LoginPage.jsx";
 import { SignUpPage } from "./SignUpPage.jsx";
+import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
 import { useState } from 'react';
 import { useTracker } from 'meteor/react-meteor-data';
 
@@ -40,6 +41,16 @@ export const App = () => {
       <LoginPage 
         onSignIn={() => {}} 
         onSwitchToSignUp={() => setView('signup')} 
+        onForgotPassword={() => setView('forgot')}
+      />
+    );
+  }
+
+  if (view === 'forgot') {
+    return (
+      <ForgotPasswordPage 
+        onBackToLogin={() => setView('signin')} 
+        onPasswordReset={() => setView('signin')} 
       />
     );
   }
