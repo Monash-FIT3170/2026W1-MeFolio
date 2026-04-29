@@ -1,6 +1,8 @@
 import { PortfolioCollection } from "../api/portfolio";
 
 import { useTracker } from "meteor/react-meteor-data";
+import About from "./components/About.jsx";
+import Navbar from "./components/Navbar.jsx";
 
 export const PortfolioBuilderView = () => {
   const { portfolios, isLoading } = useTracker(() => {
@@ -20,8 +22,12 @@ export const PortfolioBuilderView = () => {
   };
   return (
     <div>
-      <h2>Portfolios</h2>
-      Placeholder for portfolio UI
-      </div>
+      <Navbar />
+      <About />
+      <section>
+        <h2>Portfolios</h2>
+        <div>Placeholder for portfolio UI</div>
+      </section>
+    </div>
   ); //TODO: Create UI to edit portfolio details instead of returning none.
 };
