@@ -11,10 +11,10 @@ const About = () => {
         <div className="about-left">
           <AboutDetails />
           <SkillsList />
+          <ContactButtons />
         </div>
         <div className="about-right">
           <AboutCard />
-          <ContactButtons />
         </div>
       </div>
     </section>
