@@ -3,6 +3,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { LoginPage } from "./LoginPage.jsx";
 import { SignUpPage } from "./SignUpPage.jsx";
+import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
 import { PortfolioBuilderView } from "./PortofolioBuilderView.jsx";
 
 export const App = () => {
@@ -26,6 +27,16 @@ export const App = () => {
       <LoginPage 
         onSignIn={() => {}} 
         onSwitchToSignUp={() => setView('signup')} 
+        onForgotPassword={() => setView('forgot')}
+      />
+    );
+  }
+
+  if (view === 'forgot') {
+    return (
+      <ForgotPasswordPage 
+        onBackToLogin={() => setView('signin')} 
+        onPasswordReset={() => setView('signin')} 
       />
     );
   }

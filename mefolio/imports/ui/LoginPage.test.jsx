@@ -2,9 +2,6 @@
  * UI Tests for LoginPage.jsx
  * 
  * Ensures that the LoginPage component renders correctly and handles user interactions as expected.
- * 
- * To run:
- * meteor test --driver-package meteortesting:mocha --full-app
  */
 
 import React from 'react';
@@ -52,12 +49,12 @@ if (Meteor.isClient) {
       expect(screen.getByRole('button', { name: /create an account/i })).to.exist;
     });
 
-    it('renders the Forgot button', () => {
+    it('Renders the Forgot button', () => {
       render(<LoginPage onSignIn={() => {}} onSwitchToSignUp={() => {}} />);
       expect(screen.getByText('Forgot?')).to.exist;
     });
 
-    it('renders GitHub and Google sign-in options', () => {
+    it('Renders GitHub and Google sign-in options', () => {
       render(<LoginPage onSignIn={() => {}} onSwitchToSignUp={() => {}} />);
       expect(screen.getByText('GitHub')).to.exist;
       expect(screen.getByText('Google')).to.exist;
