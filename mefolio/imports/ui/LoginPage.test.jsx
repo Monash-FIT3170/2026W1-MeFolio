@@ -54,6 +54,23 @@ if (Meteor.isClient) {
       expect(screen.getByText('Forgot?')).to.exist;
     });
 
+    it('Displays an error message on authentication failure', async () => {
+      // Mock login to return an error
+      Meteor.loginWithPassword = (email, password, callback) => {
+        callback({ reason: 'Invalid credentials' });
+      };
+      
+      render(<LoginPage onSignIn={() => {}} onSwitchToSignUp={() => {}} />);
+      
+      // Submit empty form
+      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      submitButton.click();
+      
+      // Check for error message
+      const errorDiv = await screen.findByText('Invalid credentials');
+      expect(errorDiv).to.exist;
+    });
+
     it('Renders GitHub and Google sign-in options', () => {
       render(<LoginPage onSignIn={() => {}} onSwitchToSignUp={() => {}} />);
       expect(screen.getByText('GitHub')).to.exist;

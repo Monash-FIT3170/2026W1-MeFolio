@@ -4,6 +4,8 @@ import { Meteor } from 'meteor/meteor';
 import { LoginPage } from "./LoginPage.jsx";
 import { SignUpPage } from "./SignUpPage.jsx";
 import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
+import { TermsOfServicePage } from "./TermsOfServicePage.jsx";
+import { PrivacyPolicyPage } from "./PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./PortofolioBuilderView.jsx";
 
 export const App = () => {
@@ -41,10 +43,20 @@ export const App = () => {
     );
   }
 
+  if (view === 'terms') {
+    return <TermsOfServicePage onBack={() => setView('signup')} />;
+  }
+
+  if (view === 'privacy') {
+    return <PrivacyPolicyPage onBack={() => setView('signup')} />;
+  }
+
   return (
     <SignUpPage 
       onSignUp={() => {}} 
       onSwitchToSignIn={() => setView('signin')} 
+      onShowTerms={() => setView('terms')}
+      onShowPrivacy={() => setView('privacy')}
     />
   );
 };

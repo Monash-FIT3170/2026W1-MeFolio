@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Github, Mail, Lock, User, Sparkles, Shield, Rocket, Trophy, BarChart3 } from 'lucide-react';
 import { Accounts } from 'meteor/accounts-base';
 
+/**
+ * FEAT-01: User Authentication UI
+ * This component implements the visual requirements for the MeFolio sign up page.
+ */
 export function SignUpPage({ 
   onSignUp,
-  onSwitchToSignIn 
+  onSwitchToSignIn,
+  onShowTerms,
+  onShowPrivacy
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,12 +23,13 @@ export function SignUpPage({
     portfolioUrl: ''
   });
 
-const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    setError(null);
 
     // Basic Validation Logic
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
@@ -36,9 +44,9 @@ const handleSubmit = (e) => {
     }, (error) => {
       if (error) {
         // If the email is already taken or password is too weak
-        alert(`Registration Failed: ${error.reason}`); 
+        setError(`Registration Failed: ${error.reason}`); 
       } else {
-        console.log('User created sussessfully')
+        console.log('User created successfully')
         onSignUp();
       }
     });
@@ -127,6 +135,12 @@ const handleSubmit = (e) => {
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Start Your Journey</h2>
             <p className="text-gray-500 text-base">Start building your interactive portfolio today</p>
           </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-bold">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
@@ -225,7 +239,12 @@ const handleSubmit = (e) => {
 
             <label className="flex items-start gap-3 cursor-pointer ml-1">
               <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-indigo-600 mt-0.5" required />
-              <span className="text-xs text-gray-600 font-medium">I agree to the <a href="#" className="font-bold text-indigo-600 hover:text-indigo-700 underline">Terms</a> and <a href="#" className="font-bold text-indigo-600 hover:text-indigo-700 underline">Privacy Policy</a></span>
+              <span className="text-xs text-gray-600 font-medium">
+                I agree to the{' '}
+                <button type="button" onClick={onShowTerms} className="font-bold text-indigo-600 hover:text-indigo-700 underline">Terms</button>
+                {' '}and{' '}
+                <button type="button" onClick={onShowPrivacy} className="font-bold text-indigo-600 hover:text-indigo-700 underline">Privacy Policy</button>
+              </span>
             </label>
 
             <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98] mt-2">

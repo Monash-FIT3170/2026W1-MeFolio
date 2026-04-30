@@ -15,15 +15,17 @@ export function LoginPage({
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
 
 const handleSubmit = (e) => {
     e.preventDefault();
+    setError(null);
 
     Meteor.loginWithPassword(email, password, (error) => {
       if (error) {
-        // Log the error for debugging and alert the user
-        console.error("Authetication Failure:", error.reason);
-        alert(error.reason);
+        // Log the error for debugging and update the local state for the UI warning
+        console.error("Authentication Failure:", error.reason);
+        setError(error.reason);
       } else {
         console.log("Authentication Success: Session established.");
       }
@@ -102,10 +104,16 @@ const handleSubmit = (e) => {
             <span className="text-3xl font-bold text-gray-900">MeFolio</span>
           </div>
 
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">Welcome back</h2>
-            <p className="text-gray-500 text-lg">Sign in to your professional dashboard</p>
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Welcome back</h2>
+            <p className="text-gray-500 text-base">Sign in to your professional dashboard</p>
           </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-bold">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field - Prominent */}
