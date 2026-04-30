@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { useTracker } from 'meteor/react-meteor-data';
+import { Meteor } from 'meteor/meteor';
 import { Counter } from "./Counter.jsx";
 import { Header } from "./Header.jsx";
 import { Info } from "./Info.jsx";
 import { LoginPage } from "./LoginPage.jsx";
 import { SignUpPage } from "./SignUpPage.jsx";
 import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
-import { useState } from 'react';
-import { useTracker } from 'meteor/react-meteor-data';
+import { TermsOfServicePage } from "./TermsOfServicePage.jsx";
+import { PrivacyPolicyPage } from "./PrivacyPolicyPage.jsx";
 
 export const App = () => {
   const [view, setView] = useState('signin');
@@ -35,7 +37,7 @@ export const App = () => {
     );
   }
 
-  // IF NOT LOGGED IN: Toggle between Sign In and Sign Up
+  // IF NOT LOGGED IN: Toggle between different views
   if (view === 'signin') {
     return (
       <LoginPage 
@@ -55,10 +57,20 @@ export const App = () => {
     );
   }
 
+  if (view === 'terms') {
+    return <TermsOfServicePage onBack={() => setView('signup')} />;
+  }
+
+  if (view === 'privacy') {
+    return <PrivacyPolicyPage onBack={() => setView('signup')} />;
+  }
+
   return (
     <SignUpPage 
       onSignUp={() => {}} 
       onSwitchToSignIn={() => setView('signin')} 
+      onShowTerms={() => setView('terms')}
+      onShowPrivacy={() => setView('privacy')}
     />
   );
 };
