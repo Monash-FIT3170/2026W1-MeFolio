@@ -1,7 +1,21 @@
 import React from "react";
 
-export const ProfileCard = ({ name, title, location, status, stack, imageUrl }) => {
+export const ProfileCard = ({ name, title, location, status, stack }) => {
+  const [imageUrl, setImageUrl] = useState(null);
+
   const initials = name ? name.spilt(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "?";
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div style={{ position: "relative", width: "320px" }}>
       <div style={{
@@ -19,7 +33,7 @@ export const ProfileCard = ({ name, title, location, status, stack, imageUrl }) 
         alignItems: "center", gap: "1.25rem",
         position: "relative",
       }}>
-        {/*avatar*/}
+        <label htmlFor="profile-upload" style={{ cursor: "pointer" }} title="Click to upload photo">
         {imageUrl ? (
           <img
           src={imageUrl}
@@ -39,6 +53,12 @@ export const ProfileCard = ({ name, title, location, status, stack, imageUrl }) 
             {initials}
             </div>
         )}
+        </label>
+        <input id="profile-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }}/>
+
+        <p style={{ fontSize: 11, color: "#9ca3af", margin: "-12px 0 0" }}>
+          Click photo to change
+        </p>
 
         <div style={{ textAlign: "center" }}>
           <p style={{ fontSize: 17, fontWeight: 500, margin: "0 0 4px" }}>
