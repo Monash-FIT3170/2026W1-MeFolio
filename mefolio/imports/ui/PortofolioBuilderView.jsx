@@ -9,13 +9,37 @@ import {
   createDashboardViewModel,
   getCurrentTab,
 } from "./portfolioBuilderViewModel";
+import AboutMeLinksEditor from "./components/AboutMeLinksEditor.jsx";
 import "./PortfolioBuilderView.css";
+
+// Temporary adapter from the current flat mock shape to the agreed links shape.
+// We will clean this up in a later commit when we update the mock/view-model layer.
+const createAboutMeLinksValue = (aboutMe = {}) => ({
+  contact: {
+    email: aboutMe.signInEmail || "",
+  },
+  socials: {
+    github: aboutMe.githubUrl || "",
+    linkedin: aboutMe.linkedinUrl || "",
+    other: [{ label: "", url: "" }],
+  },
+});
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
 export const PortfolioBuilderView = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
-    createDashboardViewModel();
+  const {
+    isLoading,
+    sidebarItems,
+    overviewStats,
+    liveVisitors,
+    profile,
+    aboutMe,
+  } = createDashboardViewModel();
+
+  const [aboutMeLinks, setAboutMeLinks] = useState(() =>
+    createAboutMeLinksValue(aboutMe)
+  );
 
   const currentTab = getCurrentTab(sidebarItems, activeTab);
 
@@ -45,9 +69,9 @@ export const PortfolioBuilderView = () => {
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "about-me" ? (
-            <PlaceholderSection
-              title={currentTab.label}
-              description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
+            <AboutMeSection
+              linksValue={aboutMeLinks}
+              onLinksChange={setAboutMeLinks}
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />
@@ -55,6 +79,15 @@ export const PortfolioBuilderView = () => {
         </div>
       </main>
     </div>
+  );
+};
+
+// Builder tab for the About Me links task.
+const AboutMeSection = ({ linksValue, onLinksChange }) => {
+  return (
+    <section>
+      <AboutMeLinksEditor value={linksValue} onChange={onLinksChange} />
+    </section>
   );
 };
 
@@ -148,15 +181,6 @@ const StatCard = ({ stat }) => {
 // Displays one visitor row inside the live visitors list.
 const Visitor = ({ visitor }) => {
   return (
-    <div>
-      <Navbar />
-      <About />
-      <section>
-        <h2>Portfolios</h2>
-        <div>Placeholder for portfolio UI</div>
-      </section>
-    </div>
-  ); //TODO: Create UI to edit portfolio details instead of returning none.
     <div className="visitor-row">
       <div className={visitor.active ? "visitor-dot active" : "visitor-dot"} />
 
@@ -173,7 +197,10 @@ const Visitor = ({ visitor }) => {
 };
 
 // Generic placeholder used for dashboard tabs that are not built yet.
-const PlaceholderSection = ({ title, description = "This section is a placeholder for now." }) => {
+const PlaceholderSection = ({
+  title,
+  description = "This section is a placeholder for now.",
+}) => {
   return (
     <section className="placeholder-card">
       <h2>{title}</h2>
