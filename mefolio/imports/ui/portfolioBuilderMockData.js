@@ -79,9 +79,44 @@ export const mockProfile = {
 };
 
 export const mockAboutMe = {
-  fullName: "John Doe",
-  signInEmail: "john@example.com",
-  linkedinUrl: "https://www.linkedin.com/in/johndoe",
-  githubUrl: "https://github.com/johndoe",
-  portfolioTitle: "Product Designer and Frontend Developer",
+  profile: {
+    fullName: "John Doe",
+    headline: "Product Designer and Frontend Developer",
+    avatarUrl: "",
+    location: "Sydney, NSW",
+    availability: {
+      isAvailable: true,
+      label: "Available for hire",
+    },
+  },
+
+  about: {
+    summary:
+      "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+    highlights: ["React", "UI Design", "Frontend Development"],
+    yearsOfExperience: 3,
+  },
+
+  contact: {
+    email: "john@example.com",
+    phone: "",
+    website: "",
+  },
+
+  socials: {
+    github: "https://github.com/johndoe",
+    linkedin: "https://www.linkedin.com/in/johndoe",
+    twitter: "",
+    other: [
+      {
+        label: "",
+        url: "",
+      },
+    ],
+  },
+
+  cta: {
+    resumeUrl: "",
+    contactEnabled: true,
+  },
 };

@@ -16,12 +16,15 @@ import "./PortfolioBuilderView.css";
 // We will clean this up in a later commit when we update the mock/view-model layer.
 const createAboutMeLinksValue = (aboutMe = {}) => ({
   contact: {
-    email: aboutMe.signInEmail || "",
+    email: aboutMe.contact?.email || aboutMe.signInEmail || "",
   },
   socials: {
-    github: aboutMe.githubUrl || "",
-    linkedin: aboutMe.linkedinUrl || "",
-    other: [{ label: "", url: "" }],
+    github: aboutMe.socials?.github || aboutMe.githubUrl || "",
+    linkedin: aboutMe.socials?.linkedin || aboutMe.linkedinUrl || "",
+    other:
+      Array.isArray(aboutMe.socials?.other) && aboutMe.socials.other.length > 0
+        ? aboutMe.socials.other
+        : [{ label: "", url: "" }],
   },
 });
 

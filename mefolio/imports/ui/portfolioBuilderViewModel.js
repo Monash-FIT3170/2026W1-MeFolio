@@ -50,13 +50,39 @@ export const mapProfile = (portfolio) => {
 export const mapAboutMe = (portfolio) => {
   /*
     Teammate handoff:
-    Replace this with a pure mapper that returns:
+    Replace this with a pure mapper that returns the agreed FEAT-05 shape:
+
     {
-      fullName,
-      signInEmail,
-      linkedinUrl,
-      githubUrl,
-      portfolioTitle,
+      profile: {
+        fullName,
+        headline,
+        avatarUrl,
+        location,
+        availability: {
+          isAvailable,
+          label,
+        },
+      },
+      about: {
+        summary,
+        highlights,
+        yearsOfExperience,
+      },
+      contact: {
+        email,
+        phone,
+        website,
+      },
+      socials: {
+        github,
+        linkedin,
+        twitter,
+        other: [{ label, url }],
+      },
+      cta: {
+        resumeUrl,
+        contactEnabled,
+      },
     }
 
     Example source fields may come from the signed-in user record plus the
