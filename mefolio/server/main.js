@@ -20,20 +20,62 @@ Meteor.startup(async () => {
   if ((await PortfolioCollection.find().countAsync()) === 0) {
     await PortfolioCollection.insertAsync({
       userId: "Superuser", // TODO: Replace with actual user ID once user collection is set up
-      portfolioNumber: 1, //Allows for multiple portfolios per user in the future
-      title: "Sample Portfolio",
-      bio: "This is a sample portfolio.", 
-      createdAt: new Date(),
-      projects: [], // Array to hold project IDs
-      theme: "minimal",
-      badges: [{
-        title: "Sample Badge",
-        issuer: "Sample Issuer",
-        issueDate: new Date(),
-        badgeImageUrl: "https://example.com/badge.png",
-        verificationUrl: "https://example.com/verify-badge"
+      portfolioNumber: 1, // Allows for multiple portfolios per user in the future
 
-      }],
+      // Legacy fields kept for compatibility
+      title: "Sample Portfolio",
+      bio: "This is a sample portfolio.",
+
+      // Agreed FEAT-05 structure
+      profile: {
+        fullName: "John Doe",
+        headline: "Product Designer and Frontend Developer",
+        avatarUrl: "",
+        location: "Sydney, NSW",
+        availability: {
+          isAvailable: true,
+          label: "Available for hire",
+        },
+      },
+
+      about: {
+        summary:
+          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+        highlights: ["React", "UI Design", "Frontend Development"],
+        yearsOfExperience: 3,
+      },
+
+      contact: {
+        email: "john@example.com",
+        phone: "",
+        website: "",
+      },
+
+      socials: {
+        github: "https://github.com/johndoe",
+        linkedin: "https://www.linkedin.com/in/johndoe",
+        twitter: "",
+        other: [],
+      },
+
+      cta: {
+        resumeUrl: "https://example.com/resume.pdf",
+        contactEnabled: true,
+      },
+
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      projects: [],
+      theme: "minimal",
+      badges: [
+        {
+          title: "Sample Badge",
+          issuer: "Sample Issuer",
+          issueDate: new Date(),
+          badgeImageUrl: "https://example.com/badge.png",
+          verificationUrl: "https://example.com/verify-badge",
+        },
+      ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
         phoneNumber: "123-456-7890",
