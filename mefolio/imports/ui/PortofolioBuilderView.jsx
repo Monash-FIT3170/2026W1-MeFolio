@@ -4,6 +4,7 @@ import {
   getCurrentTab,
 } from "./portfolioBuilderViewModel";
 import "./PortfolioBuilderView.css";
+import {ModeSwitch} from "./ModeButton.jsx";
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
 export const PortfolioBuilderView = () => {
@@ -61,7 +62,7 @@ const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
           <span>MeFolio</span>
         </div>
 
-        <button className="view-portfolio-btn">View Portfolio</button>
+        <ModeSwitch onToggle={onPreviewToggle} />
       </div>
 
       <nav className="builder-nav">

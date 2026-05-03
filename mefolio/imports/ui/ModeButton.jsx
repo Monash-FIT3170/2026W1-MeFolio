@@ -5,8 +5,8 @@ export const ModeSwitch = ({ inititalPreview = false}, onClick) => {
 
   const click = () => { // when clicking mode switch
     setPreview(!preview);
-    if (onClick) {
-        onClick(!preview);
+    if (onToggle) {
+        onToggle(!preview);
     }
   }
 
@@ -23,8 +23,9 @@ export const ModeSwitch = ({ inititalPreview = false}, onClick) => {
         }
       `}
     >
-        <span className="font-medium">View Portfolio</span>
-
+        <span className="font-medium">
+          {preview? "Back to Builder" : "View Portfolio"}
+        </span>
     </button>
   );
 };
