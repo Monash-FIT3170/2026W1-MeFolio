@@ -1,3 +1,9 @@
+import { PortfolioCollection } from "../api/portfolio";
+
+import { useTracker } from "meteor/react-meteor-data";
+import About from "./components/About.jsx";
+import Navbar from "./components/Navbar.jsx";
+
 import { useState } from "react";
 import {
   createDashboardViewModel,
@@ -142,6 +148,15 @@ const StatCard = ({ stat }) => {
 // Displays one visitor row inside the live visitors list.
 const Visitor = ({ visitor }) => {
   return (
+    <div>
+      <Navbar />
+      <About />
+      <section>
+        <h2>Portfolios</h2>
+        <div>Placeholder for portfolio UI</div>
+      </section>
+    </div>
+  ); //TODO: Create UI to edit portfolio details instead of returning none.
     <div className="visitor-row">
       <div className={visitor.active ? "visitor-dot active" : "visitor-dot"} />
 
