@@ -4,6 +4,7 @@ import "meteor/accounts-base";
 import "meteor/accounts-password";
 
 import "/imports/ui/LoginPage.test.jsx";
+import "/imports/ui/ForgotPasswordPage.test.jsx"; 
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
 

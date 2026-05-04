@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, Sparkles, Shield, ArrowLeft, CheckCircle, Github } from 'lucide-react';
 
+/**
+ * FEAT-01: User Authentication UI
+ * This component implements the visual requirements for the MeFolio forgot password page
+ */
 export function ForgotPasswordPage({
     onBackToLogin,
     onPasswordReset
