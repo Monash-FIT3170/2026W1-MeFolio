@@ -2,7 +2,7 @@
   "name": "mefolio",
   "private": true,
   "scripts": {
-    "start": "meteor run",
+    "start": "meteor run --settings server/oauth-login/oauth.settings.json",
     "test": "meteor test --once --driver-package meteortesting:mocha",
     "test-app": "TEST_WATCH=1 meteor test --full-app --driver-package meteortesting:mocha",
     "visualize": "meteor --production --extra-packages bundle-visualizer"
@@ -10,9 +10,11 @@
   "dependencies": {
     "@babel/runtime": "^7.23.5",
     "@swc/helpers": "^0.5.17",
+    "lucide-react": "^0.454.0",
     "meteor-node-stubs": "^1.2.12",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
     "@meteorjs/rspack": "^1.0.0",
@@ -21,7 +23,20 @@
     "@rspack/core": "^1.7.1",
     "@rspack/plugin-react-refresh": "^1.4.3",
     "@svgr/webpack": "^8.1.0",
-    "react-refresh": "^0.17.0"
+    "@tailwindcss/postcss": "^4.2.4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "autoprefixer": "^10.5.0",
+    "chai": "^6.2.2",
+    "mocha": "^11.7.5",
+    "postcss": "^8.5.10",
+    "postcss-loader": "^8.2.1",
+    "puppeteer": "^24.42.0",
+    "react-refresh": "^0.17.0",
+    "selenium-webdriver": "^4.43.0",
+    "sinon": "^21.1.2"
   },
   "meteor": {
     "mainModule": {
