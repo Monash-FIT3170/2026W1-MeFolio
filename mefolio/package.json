@@ -31,7 +31,7 @@
     "autoprefixer": "^10.5.0",
     "chai": "^6.2.2",
     "mocha": "^11.7.5",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.13",
     "postcss-loader": "^8.2.1",
     "puppeteer": "^24.42.0",
     "react-refresh": "^0.17.0",
