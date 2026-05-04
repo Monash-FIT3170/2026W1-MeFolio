@@ -1,6 +1,5 @@
 export const sidebarItems = [
   { id: "overview", label: "Overview" },
-  { id: "about-me", label: "About Me" },
   { id: "projects", label: "Projects" },
   { id: "analytics", label: "Analytics" },
   { id: "visitors", label: "Live Visitors" },
