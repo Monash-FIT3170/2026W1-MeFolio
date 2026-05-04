@@ -17,20 +17,51 @@ export function LoginPage({
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
-const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (e) => {
+      e.preventDefault();
+      setError(null);
+
+      Meteor.loginWithPassword(email, password, (error) => {
+        if (error) {
+          // Log the error for debugging and update the local state for the UI warning
+          console.error("Authentication Failure:", error.reason);
+          setError(error.reason);
+        } else {
+          console.log("Authentication Success: Session established.");
+        }
+      });
+    };
+
+  const handleGithubLogin = () => {
     setError(null);
 
-    Meteor.loginWithPassword(email, password, (error) => {
+    Meteor.loginWithGithub({}, (error) => {
       if (error) {
-        // Log the error for debugging and update the local state for the UI warning
-        console.error("Authentication Failure:", error.reason);
-        setError(error.reason);
+        console.error("GitHub Authentication Failure:", error.reason);
+        setError(error.reason || error.message);
       } else {
-        console.log("Authentication Success: Session established.");
+        console.log("GitHub Authentication Success.");
+        onSignIn?.();
       }
     });
   };
+
+const handleGoogleLogin = () => {
+  setError(null);
+
+  Meteor.loginWithGoogle(
+    { requestPermissions: ['email'] },
+    (error) => {
+      if (error) {
+        console.error("Google Authentication Failure:", error.reason);
+        setError(error.reason || error.message);
+      } else {
+        console.log("Google Authentication Success.");
+        onSignIn?.();
+      }
+    }
+  );
+};
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans relative">
@@ -191,6 +222,7 @@ const handleSubmit = (e) => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
+                onClick={handleGithubLogin}
                 className="flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-100 rounded-xl hover:border-indigo-600 hover:bg-indigo-50/50 transition-all group"
               >
                 <Github className="w-5 h-5 group-hover:text-indigo-600 transition-colors" />
@@ -198,6 +230,7 @@ const handleSubmit = (e) => {
               </button>
               <button
                 type="button"
+                onClick={handleGoogleLogin}
                 className="flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-100 rounded-xl hover:border-indigo-600 hover:bg-indigo-50/50 transition-all group"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">

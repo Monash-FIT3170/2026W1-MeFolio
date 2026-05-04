@@ -25,3 +25,6 @@ rspack@1.0.0                  # Integrate Rspack into Meteor for client and serv
 accounts-password
 accounts-base
 meteortesting:mocha
+accounts-google
+accounts-github
+service-configuration

@@ -1,0 +1,12 @@
+{
+  "private": {
+    "google": {
+      "clientId": "GOOGLE_CLIENT_ID_HERE",
+      "secret": "GOOGLE_CLIENT_SECRET_HERE"
+    },
+    "github": {
+      "clientId": "GITHUB_CLIENT_ID_HERE",
+      "secret": "GITHUB_CLIENT_SECRET_HERE"
+    }
+  }
+}
