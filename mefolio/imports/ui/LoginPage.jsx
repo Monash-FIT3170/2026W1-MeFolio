@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Github, Mail, Lock, Sparkles, Shield, Layout, LineChart, Bot } from 'lucide-react';
 import { Meteor } from 'meteor/meteor';
+import { Accounts } from 'meteor/accounts-base';
 
 /**
  * FEAT-01: User Authentication UI
@@ -37,7 +38,21 @@ const handleSubmit = (e) => {
       {/* Dev Bypass - Top Right Corner */}
       <div className="absolute top-4 right-4 z-50">
         <button
-          onClick={onSignIn}
+          onClick={() => {
+            // Mock login for development bypass
+            Meteor.loginWithPassword('test@example.com', 'password', (err) => {
+              if (err) {
+                // If user doesn't exist, create them
+                Accounts.createUser({
+                  email: 'test@example.com',
+                  password: 'password',
+                  profile: { name: 'Test User' }
+                }, () => onSignIn());
+              } else {
+                onSignIn();
+              }
+            });
+          }}
           className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-xs font-bold transition-colors border border-slate-200"
         >
           <Shield className="w-3.5 h-3.5" />
