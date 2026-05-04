@@ -1,23 +1,31 @@
 import { useState } from "react";
 
-export const ModeSwitch = ({ inititalPreview = false}, onClick) => {
-  const [preview, setPreview] = useState(inititalPreview); // state to track if in preview mode or not
+/**
+ * Mode switch button component to toggle between builder and preview modes.
+ * 
+ * @param {boolean} initialPreview - Whether in preview mode or not.
+ * @param {function} onToggle - Callback function when the mode is toggled.
+ * @returns Button element that toggles between builder and preview modes.
+ */
+export const ModeSwitch = ({ initialPreview = false, onToggle}) => {
+  const [preview, setPreview] = useState(initialPreview); // state to track if in preview mode or not
 
-  const click = () => { // when clicking mode switch
-    setPreview(!preview);
+  const handleClick = () => { // when clicking mode switch
+    const next = !preview
+    setPreview(next);
     if (onToggle) {
-        onToggle(!preview);
+        onToggle(next);
     }
   }
 
   return (
     <button
-      onClick={handleClick}
+      onClick={handleClick} //TODO double check styling with tailwind
       className={`
         flex items-center gap-2 px-5 py-2.5 rounded-full
         border transition-all duration-200
         ${
-          active
+          preview
             ? "bg-indigo-100 border-indigo-300 text-indigo-600"
             : "bg-gray-100 border-gray-200 text-indigo-500 hover:bg-gray-200"
         }
