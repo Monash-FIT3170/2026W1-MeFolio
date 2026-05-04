@@ -12,8 +12,7 @@
     "@swc/helpers": "^0.5.17",
     "meteor-node-stubs": "^1.2.12",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^7.14.2"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@meteorjs/rspack": "^1.0.0",
