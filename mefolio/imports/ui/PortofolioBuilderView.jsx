@@ -38,11 +38,6 @@ export const PortfolioBuilderView = () => {
         <div className="builder-content">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
-          ) : activeTab === "about-me" ? (
-            <PlaceholderSection
-              title={currentTab.label}
-              description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
-            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
