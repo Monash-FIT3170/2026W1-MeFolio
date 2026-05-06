@@ -12,7 +12,7 @@ Open the docker folder in vscode and open a new terminal in the same directory
 ### Step 4 - Open the Compose the Docker Container in VScode
 Install "Dev Containers" extension in VS Code, and then do the following:
 
-Cmd + Shift + P → Reopen in Container
+Cmd + Shift + P -> Reopen in Container
 
 ### Step 5 - Create Meteor App/MongoDB Connection
 You should now be in the linux docker container 'app'.
@@ -30,7 +30,7 @@ Your MongoDB database should be accessible from a separate docker container via 
 ### Step 6 - Leave the devcontainer accessing the Docker Container
 Once you are finished developing and wish to leave your development container, please use:
 
-Cmd + Shift + P → Reopen folder locally
+Cmd + Shift + P -> Reopen folder locally
 
 ### (Optional) Step 7 - Kill/pause Docker containers to free Memory
 After development has been completed you may use one of the following:
