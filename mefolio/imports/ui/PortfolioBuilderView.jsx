@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
 
+import { PortfolioCollection} from "../api/portfolio";
+import { UsersCollection } from "../api/users";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -17,16 +21,32 @@ import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
 
+// Custom hook to fetch real portfolio data from MongoDB via Meteor
+const useDashboardData = () =>
+  useTracker(() => {
+    const portfoliosHandler = Meteor.subscribe("portfolios.all");
+    const portfolios = PortfolioCollection.find({}).fetch();
+    //const user = Meteor.user();
+    const usersHandler = Meteor.subscribe("users.all");
+    const user = UsersCollection.find({}).fetch();
+
+    return {
+      isLoading: !portfoliosHandler.ready(),
+      portfolios,
+      user,
+    };
+  });
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
   const DashboardLayout = () => {
     const [activeTab, setActiveTab] = useState("overview");
-    const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
-      createDashboardViewModel();
+    const { isLoading, portfolios, user } = useDashboardData();
+  const { isLoading: viewModelLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
+      createDashboardViewModel({ isLoading, portfolios, user });
     const navigate = useNavigate();
     const currentTab = getCurrentTab(sidebarItems, activeTab);
 
-    if (isLoading) {
+    if (viewModelLoading) {
       return <p className="builder-loading">Loading...</p>;
     }
 

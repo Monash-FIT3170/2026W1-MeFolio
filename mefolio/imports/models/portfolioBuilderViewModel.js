@@ -39,13 +39,16 @@ export const mapLiveVisitors = (portfolios) => {
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
-export const mapProfile = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper from the current user or portfolio owner
-    into: { initials, name, email }
-  */
-  return portfolio ? mockProfile : mockProfile;
+export const mapProfile = (user) => {
+  if (!user) {
+    return mockProfile;
+  }
+
+  return {
+    initials: user.profile?.initials || "",
+    name: user.profile?.name || "",
+    email: user.email || "",
+  };
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
@@ -77,34 +80,11 @@ export const createMockDashboardViewModel = () => ({
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
+  user = null,
 } = {}) => {
   if (isLoading) {
     return createLoadingViewModel();
   }
-
-  /*
-    Suggested Meteor integration skeleton:
-
-    import { Meteor } from "meteor/meteor";
-    import { useTracker } from "meteor/react-meteor-data";
-    import { PortfolioCollection } from "../api/portfolio";
-
-    const useDashboardData = () =>
-      useTracker(() => {
-        const portfoliosHandler = Meteor.subscribe("portfolios.all");
-        const portfolios = PortfolioCollection.find({}).fetch();
-
-        return {
-          isLoading: !portfoliosHandler.ready(),
-          portfolios,
-        };
-      });
-
-    In the component:
-
-    const { isLoading, portfolios } = useDashboardData();
-    const viewModel = createDashboardViewModel({ isLoading, portfolios });
-  */
 
   if (!portfolios.length) {
     return createMockDashboardViewModel();
@@ -115,7 +95,7 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(portfolios[0]),
+    profile: mapProfile(user[0]),
     aboutMe: mapAboutMe(portfolios[0]),
   };
 };
