@@ -2,3 +2,9 @@ body {
   padding: 10px;
   font-family: sans-serif;
 }
+
+/* About section */
+.about-right > div {
+  width: 100%;
+  max-width: 100%;
+}
