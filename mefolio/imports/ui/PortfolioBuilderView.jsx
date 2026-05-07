@@ -6,8 +6,32 @@ import {
 import "./PortfolioBuilderView.css";
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
-import { ModeSwitch } from "./ModeButton.jsx";
-import { TestPortfolioView } from "./TestPortfolioView.jsx";
+
+// Small component for the preview mode toggle.
+const ModeSwitch = ({ onToggle }) => {
+  return (
+    <button onClick={onToggle} className="view-portfolio-btn">
+      Preview Mode
+    </button>
+  );
+};
+
+// Placeholder page for the portfolio preview.
+const TestPortfolioView = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="placeholder-card" style={{ margin: '40px' }}>
+      <h1>Test Portfolio Preview</h1>
+      <p>This is where the user can preview their portfolio.</p>
+      <button 
+        onClick={() => navigate('/')}
+        style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
+      >
+        Back to Dashboard
+      </button>
+    </div>
+  );
+};
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
   const DashboardLayout = () => {
@@ -171,7 +195,8 @@ import { TestPortfolioView } from "./TestPortfolioView.jsx";
       </section>
     );
   };
-  export const PortfolioBuilderView = () => {
+
+export const PortfolioBuilderView = () => {
   return(
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
