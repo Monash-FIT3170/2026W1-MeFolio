@@ -15,6 +15,7 @@ import { TestPortfolioView } from "./TestPortfolioView";
 import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
+import ProfileSettings from "./Portfolio Builder/ProfileSettings";
 
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
@@ -50,22 +51,19 @@ import OverviewSection from "./Portfolio Builder/OverviewSection";
             <h1>{currentTab.label}</h1>
           </header>
 
-          <div className="builder-content">
-            {activeTab === "overview" ? (
-              <OverviewSection stats={overviewStats} visitors={liveVisitors} />
-            ) : activeTab === "about-me" ? (
-              <PlaceholderSection
-                title={currentTab.label}
-                description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
-              />
-            ) : (
-              <PlaceholderSection title={currentTab.label} />
-            )}
-          </div>
-        </main>
-      </div>
-    );
-  };
+        <div className="builder-content">
+          {activeTab === "overview" ? (
+            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "settings" ? (
+            <ProfileSettings profile={profile} />
+          ) : (
+            <PlaceholderSection title={currentTab.label} />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
 
   // Sidebar navigation for switching dashboard sections.
   const Sidebar = ({ items, activeTab, onTabChange, profile, onPreviewToggle }) => {
@@ -95,19 +93,9 @@ import OverviewSection from "./Portfolio Builder/OverviewSection";
           ))}
         </nav>
 
-        <ProfileSummary profile={profile} />
-      </aside>
-    );
-  };
-
-// const ProfileSettings = ({ profile }) => {
-//   return (
-//     <div className="visitor-details"> 
-//       <h2>Profile Settings</h2>
-//       <p>Name: {profile.name}</p>
-//       <p>Email: {profile.email}</p>
-//     </div>
-//   );
-// };
+      <ProfileSummary profile={profile} />
+    </aside>
+  );
+};
 
 
