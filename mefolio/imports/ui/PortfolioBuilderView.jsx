@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   createDashboardViewModel,
   getCurrentTab,
-} from "./portfolioBuilderViewModel";
+} from "../models/portfolioBuilderViewModel";
 
 import "./PortfolioBuilderView.css";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,7 @@ import ProfileSettings from "./Portfolio Builder/ProfileSettings";
 
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-  const DashboardLayout = () => {
+  const PortfolioBuilderView = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
       createDashboardViewModel();
@@ -98,4 +98,4 @@ import ProfileSettings from "./Portfolio Builder/ProfileSettings";
   );
 };
 
-
+export default PortfolioBuilderView;
