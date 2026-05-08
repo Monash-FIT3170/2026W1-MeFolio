@@ -4,7 +4,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import About from "./components/About.jsx";
 import Navbar from "./components/Navbar.jsx";
 
-export const PortfolioBuilderView = () => {
+export const PortfolioView = () => {
   const { portfolios, isLoading } = useTracker(() => {
     const handler = Meteor.subscribe("portfolios.all");
     return {
