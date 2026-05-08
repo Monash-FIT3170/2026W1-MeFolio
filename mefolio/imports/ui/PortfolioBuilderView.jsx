@@ -7,7 +7,7 @@ import { UsersCollection } from "../api/users";
 import {
   createDashboardViewModel,
   getCurrentTab,
-} from "./portfolioBuilderViewModel";
+} from "../models/portfolioBuilderViewModel";
 
 import "./PortfolioBuilderView.css";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +38,7 @@ const useDashboardData = () =>
   });
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-  const DashboardLayout = () => {
+  const PortfolioBuilderView = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const { isLoading, portfolios, user } = useDashboardData();
   const { isLoading: viewModelLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
@@ -118,4 +118,4 @@ const useDashboardData = () =>
   );
 };
 
-
+export default PortfolioBuilderView;

@@ -23,7 +23,7 @@ const handleSave = (profile) => {
   }
 
   Meteor.call(
-    'users.update',
+    'users1.update',
     profile._id,
     updates,
     (error) => {

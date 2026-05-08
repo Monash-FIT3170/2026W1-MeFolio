@@ -3,7 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { UsersCollection } from "../imports/api/users";
+import { UsersCollection } from "/imports/api/users";
 import './oauth-login/oauth.js';
 
 Accounts.config({
@@ -82,7 +82,7 @@ Meteor.startup(async () => {
   }
 });
 
-Meteor.publish('users.all', function(){
+Meteor.publish('users1.all', function(){
   return UsersCollection.find({}, {sort: {createdAt: -1}});
 });
 
@@ -96,15 +96,15 @@ Meteor.publish('portfolios.all', function(){
 
 Meteor.methods({
   // User methods
-  async "users.insert"(userData) {
+  async "users1.insert"(userData) {
     return await UsersCollection.insertAsync(userData);
   },
 
-  async "users.update"(userId, updates) {
+  async "users1.update"(userId, updates) {
     return await UsersCollection.updateAsync(userId, { $set: updates });
   },
 
-  async "users.delete"(userId) {
+  async "users1.delete"(userId) {
     return await UsersCollection.removeAsync(userId);
   },
 
