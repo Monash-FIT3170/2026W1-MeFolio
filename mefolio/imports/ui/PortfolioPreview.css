@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+.preview-layout-container {
+  padding: 48px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.project-scroll-section {
+  position: relative;
+  width: 100%;
+  margin-top: 32px;
+}
+
+.project-scroll-viewport {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto; 
+  gap: 2rem;
+  padding-bottom: 2rem;
+  
+  cursor: grab; 
+  scroll-behavior: smooth;
+  
+  -webkit-overflow-scrolling: touch; 
+}
+
+.project-scroll-viewport:active {
+  cursor: grabbing; 
+}
+
+.project-scroll-viewport::-webkit-scrollbar {
+  display: none; 
+}
+
+.project-card-slot {
+  flex: 0 0 auto;
+  width: 380px; 
+  scroll-snap-align: center;
+}
+
+.scroll-spacer {
+  flex: 0 0 auto;
+  width: 32px;
+}
+
+.scroll-fade-hint {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100px;
+  background: linear-gradient(to left, #f8fafc, transparent);
+  pointer-events: none;
+}
