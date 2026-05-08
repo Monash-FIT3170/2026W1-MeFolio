@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 /**
  * Mode switch button component to toggle between builder and preview modes.
@@ -7,33 +7,61 @@ import { useState } from "react";
  * @param {function} onToggle - Callback function when the mode is toggled.
  * @returns Button element that toggles between builder and preview modes.
  */
-export const ModeSwitch = ({ initialPreview = false, onToggle}) => {
+export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
   const [preview, setPreview] = useState(initialPreview); // state to track if in preview mode or not
+  const [visible, setVisible] = useState(true); //track visibility
+  const timerRef = useRef(null); 
+
+  useEffect(() => { //show when scrolling
+    if (!initialPreview) return;
+
+    const reset = () => {
+      setVisible(true);
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setVisible(false), 3000);
+    };
+
+    reset(); 
+    window.addEventListener("scroll", reset);
+    return () => {
+      window.removeEventListener("scroll", reset);
+      clearTimeout(timerRef.current);
+    };
+  }, [initialPreview]);
 
   const handleClick = () => { // when clicking mode switch
     const next = !preview
     setPreview(next);
     if (onToggle) {
-        onToggle(next);
+      onToggle(next);
     }
   }
 
   return (
     <button
-      onClick={handleClick} //TODO double check styling with tailwind
+      onClick={handleClick}
       className={`
-        flex items-center gap-2 px-5 py-2.5 rounded-full
-        border transition-all duration-200
-        ${
-          preview
-            ? "bg-indigo-100 border-indigo-300 text-indigo-600"
-            : "bg-gray-100 border-gray-200 text-indigo-500 hover:bg-gray-200"
+        border px-4 py-3 rounded-xl
+        font-bold cursor-pointer transition-all duration-200
+        ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
+        ${preview
+          ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
+          : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
         }
       `}
     >
-        <span className="font-medium">
-          {preview? "Back to Builder" : "View Portfolio"}
-        </span>
+      <span className="font-medium">
+        {preview ? "Back to Builder" : "View Portfolio"}
+      </span>
     </button>
   );
 };
+
+// width: 100%;
+//     border: none;
+//     background-color: #eef2ff;
+//     color: #4f46e5;
+//     padding: 12px 16px;
+//     border-radius: 10px;
+//     font-weight: 700;
+//     cursor: pointer;

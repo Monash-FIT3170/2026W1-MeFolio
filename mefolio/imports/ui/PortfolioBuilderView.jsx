@@ -6,32 +6,9 @@ import {
 import "./PortfolioBuilderView.css";
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
+import { ModeSwitch } from "./ModeButton";
+import { TestPortfolioView } from "./TestPortfolioView";
 
-// Small component for the preview mode toggle.
-const ModeSwitch = ({ onToggle }) => {
-  return (
-    <button onClick={onToggle} className="view-portfolio-btn">
-      Preview Mode
-    </button>
-  );
-};
-
-// Placeholder page for the portfolio preview.
-const TestPortfolioView = () => {
-  const navigate = useNavigate();
-  return (
-    <div className="placeholder-card" style={{ margin: '40px' }}>
-      <h1>Test Portfolio Preview</h1>
-      <p>This is where the user can preview their portfolio.</p>
-      <button 
-        onClick={() => navigate('/')}
-        style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
-      >
-        Back to Dashboard
-      </button>
-    </div>
-  );
-};
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
   const DashboardLayout = () => {
@@ -56,7 +33,9 @@ const TestPortfolioView = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           profile={profile}
-          onPreviewToggle={() => navigate("/preview") }
+          onPreviewToggle={(isPreview) => {
+            if (isPreview) navigate("/preview");
+          }}
         />
 
         <main className="builder-main">
