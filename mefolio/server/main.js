@@ -23,8 +23,7 @@ Meteor.startup(async () => {
       },
       email: "superuser@example.com",
       profile: {
-        name: "Superuser",
-        initials: "SU"
+        name: "Superuser"
       }
     });
   } else {

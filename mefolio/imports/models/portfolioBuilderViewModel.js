@@ -45,7 +45,6 @@ export const mapProfile = (user) => {
   }
 
   return {
-    initials: user.profile?.initials || "",
     name: user.profile?.name || "",
     email: user.email || "",
   };
@@ -67,12 +66,13 @@ export const mapAboutMe = (portfolio = {}) => {
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
-export const createMockDashboardViewModel = () => ({
+export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
-  profile: mockProfile,
+  //profile: mapProfile(Meteor.user()),
+  profile: mapProfile(user),
   aboutMe: mapAboutMe(samplePortfolioProfileData),
 });
 
@@ -87,7 +87,7 @@ export const createDashboardViewModel = ({
   }
 
   if (!portfolios.length) {
-    return createMockDashboardViewModel();
+    return createMockDashboardViewModel(user);
   }
 
   return {
