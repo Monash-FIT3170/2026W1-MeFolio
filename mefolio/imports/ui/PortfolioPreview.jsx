@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProjectCard } from './ProjectCard.jsx';
-import './PortfolioPreview.css';
 
 const MOCK_PROJECTS = [
   {
@@ -52,12 +51,13 @@ const MOCK_PROJECTS = [
 export const PortfolioPreview = () => {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
-  
+
   const [isDown, setIsDown] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const handleMouseDown = (e) => {
+    if (!scrollRef.current) return;
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
     setScrollLeft(scrollRef.current.scrollLeft);
@@ -67,10 +67,10 @@ export const PortfolioPreview = () => {
   const handleMouseUp = () => setIsDown(false);
 
   const handleMouseMove = (e) => {
-    if (!isDown) return;
+    if (!isDown || !scrollRef.current) return;
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2; 
+    const walk = (x - startX) * 2;
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -78,18 +78,17 @@ export const PortfolioPreview = () => {
     <div className="p-12 bg-slate-50 min-h-screen">
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
-        <button 
-          onClick={() => navigate('/')} 
-          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+        <button
+          onClick={() => navigate('/')}
+          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"        
         >
           Back to Dashboard
         </button>
       </header>
 
       <div className="relative w-full">
-        {/* Behavioral CSS class: project-scroll-viewport */}
-        <div 
-          className={`project-scroll-viewport gap-8 pb-8 ${isDown ? 'active' : ''}`}
+        <div
+          className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? 'cursor-grabbing' : ''}`}
           ref={scrollRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
@@ -97,7 +96,7 @@ export const PortfolioPreview = () => {
           onMouseMove={handleMouseMove}
         >
           {MOCK_PROJECTS.map((project) => (
-            <div className="project-card-slot" key={project.id}>
+            <div className="shrink-0 w-[380px]" key={project.id}>
               <ProjectCard project={project} />
             </div>
           ))}

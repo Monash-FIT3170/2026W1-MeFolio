@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Github, ExternalLink, Code, Play, Star, Mic } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from './Card';
-import './ProjectCard.css'; // Importing your behavioral CSS
 
 export function ProjectCard({ project }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
@@ -17,7 +16,7 @@ export function ProjectCard({ project }) {
   return (
     <Card className="overflow-hidden bg-white border-2 border-slate-100 rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
       {/* Image Section */}
-      <div className="relative h-48 flex items-center justify-center bg-slate-100 overflow-hidden no-interaction">
+      <div className="relative h-48 flex items-center justify-center bg-slate-100 overflow-hidden pointer-events-none select-none">
         {data.imageUrl && !imageError ? (
           <img 
             src={data.imageUrl} 
@@ -30,7 +29,7 @@ export function ProjectCard({ project }) {
             Preview Coming Soon
           </span>
         )}
-        
+
         <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-white rounded-full shadow-sm">
           <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
           <span className="text-xs font-extrabold text-slate-800">{data.stars}</span>
