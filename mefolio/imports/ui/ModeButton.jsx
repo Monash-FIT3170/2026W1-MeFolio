@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from "react";
 export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
   const [preview, setPreview] = useState(initialPreview); // state to track if in preview mode or not
   const [visible, setVisible] = useState(true); //track visibility
-  const timerRef = useRef(null); 
+  const timerRef = useRef(null);
 
   useEffect(() => { //show when scrolling
     if (!initialPreview) return;
@@ -21,7 +21,7 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
       timerRef.current = setTimeout(() => setVisible(false), 3000);
     };
 
-    reset(); 
+    reset();
     window.addEventListener("scroll", reset);
     return () => {
       window.removeEventListener("scroll", reset);
@@ -56,12 +56,3 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
     </button>
   );
 };
-
-// width: 100%;
-//     border: none;
-//     background-color: #eef2ff;
-//     color: #4f46e5;
-//     padding: 12px 16px;
-//     border-radius: 10px;
-//     font-weight: 700;
-//     cursor: pointer;
