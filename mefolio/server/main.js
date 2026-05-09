@@ -2,6 +2,7 @@ import { Meteor } from "meteor/meteor";;
 import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import '/imports/api/files/resumeFiles';
 
 Meteor.startup(async () => {
 
@@ -40,7 +41,7 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-        resumeLink: "https://example.com/resume.pdf",
+        // resumeLink: "",
         allowAccess: true,
       }
     });
