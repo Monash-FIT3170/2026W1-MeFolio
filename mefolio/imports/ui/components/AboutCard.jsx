@@ -1,13 +1,15 @@
 import React from "react";
+import { ProfileCard } from "./ProfileCard";
 
 const AboutCard = () => {
   return (
-    <div className="about-card card">
-      <div className="avatar large">JD</div>
-      <h3>Full-Stack Developer</h3>
-      <p className="muted">Sydney, NSW</p>
-      <p className="summary">A concise one-line summary or tagline goes here. Team can replace with real content.</p>
-    </div>
+    <ProfileCard
+      name = "John Doe"
+      title = "Full-Stack Developer"
+      location= "Sydney, NSW"
+      summary = "A concise one-line summary or tagline goes here. Team can replace with real content."
+      imageUrl={null}
+    />  
   );
 };
 
