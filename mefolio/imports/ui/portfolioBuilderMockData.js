@@ -128,3 +128,33 @@ export const samplePortfolioProfileData = {
     allowAccess: true
   }
 };
+
+export const mockProjects = [
+  {
+    id: "project-1",
+    title: "Personal Portfolio Website",
+    description:
+      "A responsive portfolio website used to showcase projects, skills, and contact details.",
+    technologies: ["React", "CSS", "Meteor"],
+    githubLink: "https://github.com/example/portfolio",
+    liveDemoLink: "https://example-portfolio.com",
+  },
+  {
+    id: "project-2",
+    title: "Task Management App",
+    description:
+      "A simple task tracking app with project cards, status updates, and basic filtering.",
+    technologies: ["JavaScript", "MongoDB", "Meteor"],
+    githubLink: "https://github.com/example/task-app",
+    liveDemoLink: "https://example-task-app.com",
+  },
+  {
+    id: "project-3",
+    title: "Developer Blog Platform",
+    description:
+      "A blog-style project used to share technical writeups and software engineering reflections.",
+    technologies: ["React", "Node.js", "CSS"],
+    githubLink: "https://github.com/example/blog-platform",
+    liveDemoLink: "https://example-blog.com",
+  },
+];

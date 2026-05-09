@@ -2,9 +2,10 @@ import {
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
+  mockProjects,
   sidebarItems,
   samplePortfolioProfileData,
-  defaultPortfolioProfileData
+  defaultPortfolioProfileData,
 } from "../ui/portfolioBuilderMockData";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
@@ -14,7 +15,8 @@ export const createLoadingViewModel = () => ({
   overviewStats: [],
   liveVisitors: [],
   profile: {},
-  aboutMe: {}
+  aboutMe: {},
+  projects: [],
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -43,49 +45,72 @@ export const mapProfile = (user) => {
     return mockProfile;
   }
 
+  const selectedUser = Array.isArray(user) ? user[0] : user;
+
+  if (!selectedUser) {
+    return mockProfile;
+  }
+
   return {
-    name: user.profile?.name || "",
-    email: user.email || ""
+    name: selectedUser.name || mockProfile.name,
+    role: selectedUser.role || mockProfile.role,
+    avatar: selectedUser.avatar || mockProfile.avatar,
   };
 };
 
-// Maps current user and portfolio fields into the About Me editor/view shape.
-export const mapAboutMe = (portfolio = {}) => {
+// Maps profile/about-me data into the settings tab format.
+export const mapAboutMe = (portfolio) => {
+  const source = portfolio || samplePortfolioProfileData || defaultPortfolioProfileData;
+
   return {
-    ...defaultPortfolioProfileData,
-    ...portfolio,
-    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
-    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-    recruiterInfo: {
-      ...defaultPortfolioProfileData.recruiterInfo,
-      ...(portfolio.recruiterInfo || {})
-    }
+    fullName: source?.fullName || defaultPortfolioProfileData.fullName,
+    professionalTitle:
+      source?.professionalTitle || defaultPortfolioProfileData.professionalTitle,
+    shortBio: source?.shortBio || defaultPortfolioProfileData.shortBio,
+    email: source?.email || defaultPortfolioProfileData.email,
+    phone: source?.phone || defaultPortfolioProfileData.phone,
+    location: source?.location || defaultPortfolioProfileData.location,
+    linkedIn: source?.linkedIn || defaultPortfolioProfileData.linkedIn,
+    github: source?.github || defaultPortfolioProfileData.github,
+    portfolioUrl:
+      source?.portfolioUrl || defaultPortfolioProfileData.portfolioUrl,
   };
 };
 
-// Returns the current mock-backed dashboard state while the API is not wired in.
-// TODO: Replace with generic view to be used when users have no portfolio data, or during loading.
+// Maps project data into the project ordering format used by the Projects tab.
+export const mapProjects = (portfolios) => {
+  /*
+    Teammate handoff:
+    Replace this mock fallback with real project data once project ordering
+    is connected to the database.
+  */
+  return portfolios?.length ? mockProjects : mockProjects;
+};
+
+// Creates a mock dashboard model for local/demo usage.
 export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
   profile: mapProfile(user),
-  aboutMe: mapAboutMe(samplePortfolioProfileData)
+  aboutMe: mapAboutMe(samplePortfolioProfileData),
+  projects: mockProjects,
 });
 
-// Builds the single data object the UI consumes, from either loading, mock, or real data.
+// Gets the current selected tab from the sidebar list.
+export const getCurrentTab = (items, activeTab) => {
+  return items.find((item) => item.id === activeTab);
+};
+
+// Creates the full dashboard view model from loading state, portfolios, and user data.
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
-  user = null
+  user = null,
 } = {}) => {
   if (isLoading) {
     return createLoadingViewModel();
-  }
-
-  if (!portfolios.length) {
-    return createMockDashboardViewModel(user);
   }
 
   return {
@@ -93,11 +118,8 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(user[0]),
-    aboutMe: mapAboutMe(portfolios[0])
+    profile: mapProfile(user),
+    aboutMe: mapAboutMe(portfolios[0]),
+    projects: mapProjects(portfolios),
   };
 };
-
-// Safely returns the currently selected tab, or a fallback if the list is empty.
-export const getCurrentTab = (items, activeTab) =>
-  items.find((item) => item.id === activeTab) ?? items[0] ?? null;
