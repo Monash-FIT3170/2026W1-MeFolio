@@ -182,7 +182,7 @@ a {
 
 @media (min-width: 768px) {
   .about-grid {
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 420px;
     gap: var(--spacing-2xl);
   }
 }
