@@ -1,56 +1,35 @@
 @import "tailwindcss";
 
-.preview-layout-container {
-  padding: 48px;
-  background-color: #f8fafc;
-  min-height: 100vh;
-}
-
-.project-scroll-section {
-  position: relative;
-  width: 100%;
-  margin-top: 32px;
-}
+/* Behavioral Logic */
 
 .project-scroll-viewport {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  overflow-x: auto; 
-  gap: 2rem;
-  padding-bottom: 2rem;
-  
-  cursor: grab; 
-  scroll-behavior: smooth;
-  
-  -webkit-overflow-scrolling: touch; 
-}
-
-.project-scroll-viewport:active {
-  cursor: grabbing; 
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  cursor: grab;
+  /* Hide scrollbars */
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .project-scroll-viewport::-webkit-scrollbar {
   display: none; 
 }
 
+.project-scroll-viewport:active {
+  cursor: grabbing !important;
+}
+
 .project-card-slot {
   flex: 0 0 auto;
-  width: 380px; 
-  scroll-snap-align: center;
+  width: 380px;
 }
 
-.scroll-spacer {
-  flex: 0 0 auto;
-  width: 32px;
-}
-
-.scroll-fade-hint {
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 100px;
-  background: linear-gradient(to left, #f8fafc, transparent);
+/* Ensure images don't interfere with dragging */
+.no-interaction {
   pointer-events: none;
+  -webkit-user-drag: none;
 }
