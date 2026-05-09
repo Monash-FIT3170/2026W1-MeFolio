@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 
-import { PortfolioCollection} from "../api/portfolio";
+import { PortfolioCollection } from "../api/portfolio";
 import { UsersCollection } from "../api/users";
 import {
   createDashboardViewModel,
-  getCurrentTab,
+  getCurrentTab
 } from "../models/portfolioBuilderViewModel";
 
 import "./PortfolioBuilderView.css";
@@ -26,33 +26,45 @@ const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
     const portfolios = PortfolioCollection.find({}).fetch();
-    //const user = Meteor.user();
-    const usersHandler = Meteor.subscribe("users.all");
+
+    /* HANDOVER
+    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet. 
+    Will switch to Meteor.user() once authentication is implemented.
+
+    const user = Meteor.user(); 
+    */
+    const usersHandler = Meteor.subscribe("users1.all");
     const user = UsersCollection.find({}).fetch();
 
     return {
       isLoading: !portfoliosHandler.ready(),
       portfolios,
-      user,
+      user
     };
   });
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-  const PortfolioBuilderView = () => {
-    const [activeTab, setActiveTab] = useState("overview");
-    const { isLoading, portfolios, user } = useDashboardData();
-  const { isLoading: viewModelLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
-      createDashboardViewModel({ isLoading, portfolios, user });
-    const navigate = useNavigate();
-    const currentTab = getCurrentTab(sidebarItems, activeTab);
+const PortfolioBuilderView = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const { isLoading, portfolios, user } = useDashboardData();
+  const {
+    isLoading: viewModelLoading,
+    sidebarItems,
+    overviewStats,
+    liveVisitors,
+    profile,
+    aboutMe
+  } = createDashboardViewModel({ isLoading, portfolios, user });
+  const navigate = useNavigate();
+  const currentTab = getCurrentTab(sidebarItems, activeTab);
 
-    if (viewModelLoading) {
-      return <p className="builder-loading">Loading...</p>;
-    }
+  if (viewModelLoading) {
+    return <p className="builder-loading">Loading...</p>;
+  }
 
-    if (!currentTab) {
-      return <p className="builder-loading">No dashboard sections available.</p>;
-    }
+  if (!currentTab) {
+    return <p className="builder-loading">No dashboard sections available.</p>;
+  }
 
     return (
       <div className="builder-layout">
@@ -66,16 +78,20 @@ const useDashboardData = () =>
           }}
         />
 
-        <main className="builder-main">
-          <header className="builder-header">
-            <h1>{currentTab.label}</h1>
-          </header>
+      <main className="builder-main">
+        <header className="builder-header">
+          <h1>{currentTab.label}</h1>
+        </header>
 
         <div className="builder-content">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "settings" ? (
-            <ProfileSettings profile={profile} />
+            <ProfileSettings
+              profile={profile}
+              aboutMe={aboutMe}
+              userId={user[0]?._id}
+            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -85,33 +101,39 @@ const useDashboardData = () =>
   );
 };
 
-  // Sidebar navigation for switching dashboard sections.
-  const Sidebar = ({ items, activeTab, onTabChange, profile, onPreviewToggle }) => {
-    return (
-      <aside className="builder-sidebar">
-        <div className="sidebar-top">
-          <div className="builder-logo">
-            <span>MeFolio</span>
-          </div>
-
-          <ModeSwitch onToggle={onPreviewToggle} />
+// Sidebar navigation for switching dashboard sections.
+const Sidebar = ({
+  items,
+  activeTab,
+  onTabChange,
+  profile,
+  onPreviewToggle
+}) => {
+  return (
+    <aside className="builder-sidebar">
+      <div className="sidebar-top">
+        <div className="builder-logo">
+          <span>MeFolio</span>
         </div>
 
-        <nav className="builder-nav">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              className={
-                activeTab === item.id
-                  ? "builder-nav-item active"
-                  : "builder-nav-item"
-              }
-              onClick={() => onTabChange(item.id)}
-            >
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+        <ModeSwitch onToggle={onPreviewToggle} />
+      </div>
+
+      <nav className="builder-nav">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            className={
+              activeTab === item.id
+                ? "builder-nav-item active"
+                : "builder-nav-item"
+            }
+            onClick={() => onTabChange(item.id)}
+          >
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
 
       <ProfileSummary profile={profile} />
     </aside>

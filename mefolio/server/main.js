@@ -11,7 +11,6 @@ Accounts.config({
 });
 
 Meteor.startup(async () => {
-
   // Insert sample user data if collections are empty
   let sampleUserId;
   if ((await UsersCollection.find().countAsync()) === 0) {
@@ -56,18 +55,19 @@ Meteor.startup(async () => {
       userId: sampleUserId,
       portfolioNumber: 1, //Allows for multiple portfolios per user in the future
       title: "Sample Portfolio",
-      bio: "This is a sample portfolio.", 
+      bio: "This is a sample portfolio.",
       createdAt: new Date(),
       projects: [sampleProjectId], // Array to hold project IDs
       theme: "minimal",
-      badges: [{
-        title: "Sample Badge",
-        issuer: "Sample Issuer",
-        issueDate: new Date(),
-        badgeImageUrl: "https://example.com/badge.png",
-        verificationUrl: "https://example.com/verify-badge"
-
-      }],
+      badges: [
+        {
+          title: "Sample Badge",
+          issuer: "Sample Issuer",
+          issueDate: new Date(),
+          badgeImageUrl: "https://example.com/badge.png",
+          verificationUrl: "https://example.com/verify-badge"
+        }
+      ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
         phoneNumber: "123-456-7890",
@@ -75,22 +75,22 @@ Meteor.startup(async () => {
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
         resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true,
+        allowAccess: true
       }
     });
   }
 });
 
-Meteor.publish('users1.all', function(){
-  return UsersCollection.find({}, {sort: {createdAt: -1}});
+Meteor.publish("users1.all", function () {
+  return UsersCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-Meteor.publish('projects.all', function(){
-  return ProjectCollection.find({}, {sort: {createdAt: -1}});
+Meteor.publish("projects.all", function () {
+  return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-Meteor.publish('portfolios.all', function(){
-  return PortfolioCollection.find({}, {sort: {createdAt: -1}});
+Meteor.publish("portfolios.all", function () {
+  return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
@@ -128,10 +128,12 @@ Meteor.methods({
   },
 
   async "portfolios.update"(portfolioId, updates) {
-    return await PortfolioCollection.updateAsync(portfolioId, { $set: updates });
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: updates
+    });
   },
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
-  },
+  }
 });

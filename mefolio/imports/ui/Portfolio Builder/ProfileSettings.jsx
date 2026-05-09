@@ -2,61 +2,75 @@ import { useState } from "react";
 import { UsersCollection } from "../../api/users";
 import { PortfolioCollection } from "../../api/portfolio";
 
+/**
+ * Profile Settings component allows users to edit their profile information and portfolio details.
+ *
+ * @param {Object} profile - the user's profile details as output by the mapProfile function in the view model
+ * @param {Object} aboutMe - the user's portfolio details as output by the mapAboutMe function in the view model
+ * @param {string} userId - the current user's ID
+ *
+ * @returns Form element pre-populated with the user's current profile data, allowing them to make edits and save changes.
+ */
 const ProfileSettings = ({ profile, aboutMe, userId }) => {
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
     title: aboutMe.title || "",
-    bio: aboutMe.bio || "",
+    bio: aboutMe.bio || ""
   });
 
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
 
   const handleSave = (form) => {
-  const updates = {};
+    const updates = {};
 
-  // Email
-  if (form.email) {
-    updates.email = form.email;
-  }
-
-  // Profile fields
-  const profileUpdates = {};
-  if (form.name) profileUpdates.name = form.name;
-  if (Object.keys(profileUpdates).length > 0) {
-    updates.profile = profileUpdates;
-  }
-
-  // About Me fields
-  const aboutMeUpdates = {};
-  if (form.title) aboutMeUpdates.title = form.title;
-  if (form.bio) aboutMeUpdates.bio = form.bio;
-  if (Object.keys(aboutMeUpdates).length > 0) {
-    updates.aboutMe = aboutMeUpdates;
-  }
-
-  Meteor.call("users1.update", userId, updates, (error) => {
-    if (error) {
-      console.error("Error updating profile:", error);
-      alert("Failed to save changes. Please try again.");
-    } 
-  });
-
-  // Get the user's portfolio. Assuming one portfolio per user for now.
-  const userPortfolio = PortfolioCollection.find({ userId: userId }).fetch();
-
-  Meteor.call("portfolios.update", userPortfolio[0]?._id, aboutMeUpdates, (error) => {
-    if (error) {
-      console.error("Error updating portfolio:", error);
-      alert("Failed to save changes. Please try again.");
+    // Email
+    if (form.email) {
+      updates.email = form.email;
     }
-  });
-};
+
+    // Profile fields
+    const profileUpdates = {};
+    if (form.name) profileUpdates.name = form.name;
+    if (Object.keys(profileUpdates).length > 0) {
+      updates.profile = profileUpdates;
+    }
+
+    // About Me fields
+    const aboutMeUpdates = {};
+    if (form.title) aboutMeUpdates.title = form.title;
+    if (form.bio) aboutMeUpdates.bio = form.bio;
+    if (Object.keys(aboutMeUpdates).length > 0) {
+      updates.aboutMe = aboutMeUpdates;
+    }
+
+    Meteor.call("users1.update", userId, updates, (error) => {
+      if (error) {
+        console.error("Error updating profile:", error);
+        alert("Failed to save changes. Please try again.");
+      }
+    });
+
+    // Get the user's portfolio. Assuming one portfolio per user for now.
+    const userPortfolio = PortfolioCollection.find({ userId: userId }).fetch();
+
+    Meteor.call(
+      "portfolios.update",
+      userPortfolio[0]?._id,
+      aboutMeUpdates,
+      (error) => {
+        if (error) {
+          console.error("Error updating portfolio:", error);
+          alert("Failed to save changes. Please try again.");
+        }
+      }
+    );
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">

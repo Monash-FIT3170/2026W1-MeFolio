@@ -1,11 +1,10 @@
 import {
-  mockAboutMe,
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   sidebarItems,
   samplePortfolioProfileData,
-  defaultPortfolioProfileData,
+  defaultPortfolioProfileData
 } from "../ui/portfolioBuilderMockData";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
@@ -15,7 +14,7 @@ export const createLoadingViewModel = () => ({
   overviewStats: [],
   liveVisitors: [],
   profile: {},
-  aboutMe: {},
+  aboutMe: {}
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -46,41 +45,40 @@ export const mapProfile = (user) => {
 
   return {
     name: user.profile?.name || "",
-    email: user.email || "",
+    email: user.email || ""
   };
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
 export const mapAboutMe = (portfolio = {}) => {
-    return {
+  return {
     ...defaultPortfolioProfileData,
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
-      ...(portfolio.recruiterInfo || {}),
-    },
+      ...(portfolio.recruiterInfo || {})
+    }
   };
-  // return portfolio ? mockAboutMe : mockAboutMe;
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
+// TODO: Replace with generic view to be used when users have no portfolio data, or during loading.
 export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
-  //profile: mapProfile(Meteor.user()),
   profile: mapProfile(user),
-  aboutMe: mapAboutMe(samplePortfolioProfileData),
+  aboutMe: mapAboutMe(samplePortfolioProfileData)
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
-  user = null,
+  user = null
 } = {}) => {
   if (isLoading) {
     return createLoadingViewModel();
@@ -96,7 +94,7 @@ export const createDashboardViewModel = ({
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user[0]),
-    aboutMe: mapAboutMe(portfolios[0]),
+    aboutMe: mapAboutMe(portfolios[0])
   };
 };
 
