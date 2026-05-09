@@ -2,12 +2,17 @@
 import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
+import { useEffect } from "react";
 
 const ContactButtons = ({ portfolio }) => {
 
   const [resumeLink, setResumeLink] = useState(
     portfolio?.recruiterInfo?.resumeLink || ""
   );
+
+  useEffect(() => {
+    setResumeLink(portfolio?.recruiterInfo?.resumeLink || "");
+  }, [portfolio]);
 
   const handleUploadClick = () => {
     document.getElementById("resume-upload").click();
@@ -37,9 +42,11 @@ const ContactButtons = ({ portfolio }) => {
 
       const fileUrl = `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
 
+      if (!portfolio?._id) return;
+
       Meteor.call(
         "portfolios.update",
-        portfolio._id,
+        portfolio?._id,
         {
           "recruiterInfo.resumeLink": fileUrl,
         },
