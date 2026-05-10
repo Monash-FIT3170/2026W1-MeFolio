@@ -4,34 +4,10 @@ import {
   getCurrentTab,
 } from "./portfolioBuilderViewModel";
 import "./PortfolioBuilderView.css";
+import { PortfolioPreview } from "./PortfolioPreview.jsx";
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 
-// Small component for the preview mode toggle.
-const ModeSwitch = ({ onToggle }) => {
-  return (
-    <button onClick={onToggle} className="view-portfolio-btn">
-      Preview Mode
-    </button>
-  );
-};
-
-// Placeholder page for the portfolio preview.
-const TestPortfolioView = () => {
-  const navigate = useNavigate();
-  return (
-    <div className="placeholder-card" style={{ margin: '40px' }}>
-      <h1>Test Portfolio Preview</h1>
-      <p>This is where the user can preview their portfolio.</p>
-      <button 
-        onClick={() => navigate('/')}
-        style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
-      >
-        Back to Dashboard
-      </button>
-    </div>
-  );
-};
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
   const DashboardLayout = () => {
@@ -90,8 +66,13 @@ const TestPortfolioView = () => {
             <span>MeFolio</span>
           </div>
 
-          <ModeSwitch onToggle={onPreviewToggle} />
-        </div>
+        <button
+          onClick={onPreviewToggle} 
+          className="view-portfolio-btn"
+        >
+          Preview Mode
+        </button>
+      </div>
 
         <nav className="builder-nav">
           {items.map((item) => (
@@ -200,7 +181,7 @@ export const PortfolioBuilderView = () => {
   return(
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<TestPortfolioView />} />
+      <Route path="/preview" element={<PortfolioPreview />} />
     </Routes>
 
   )
