@@ -1,6 +1,10 @@
 import { Meteor } from "meteor/meteor";
+<<<<<<< HEAD
 import { Accounts } from "meteor/accounts-base";
+=======
+>>>>>>> e480147 (feat: implement About Me personal info section)
 import { Random } from "meteor/random";
+import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { UsersCollection } from "/imports/api/users";
@@ -59,15 +63,15 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: [sampleProjectId], // Array to hold project IDs
       theme: "minimal",
-      badges: [
-        {
-          title: "Sample Badge",
-          issuer: "Sample Issuer",
-          issueDate: new Date(),
-          badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge"
-        }
-      ],
+      username: "me",
+      badges: [{
+        title: "Sample Badge",
+        issuer: "Sample Issuer",
+        issueDate: new Date(),
+        badgeImageUrl: "https://example.com/badge.png",
+        verificationUrl: "https://example.com/verify-badge"
+
+      }],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
         phoneNumber: "123-456-7890",
@@ -91,6 +95,11 @@ Meteor.publish("projects.all", function () {
 
 Meteor.publish("portfolios.all", function () {
   return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
+});
+
+Meteor.publish('portfolios.byUsername', function(username){
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
