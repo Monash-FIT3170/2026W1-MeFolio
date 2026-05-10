@@ -14,6 +14,7 @@ export const createLoadingViewModel = () => ({
   liveVisitors: [],
   profile: {},
   aboutMe: {},
+  portfolioId: null,
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -38,31 +39,52 @@ export const mapLiveVisitors = (portfolios) => {
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
 export const mapProfile = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper from the current user or portfolio owner
-    into: { initials, name, email }
-  */
-  return portfolio ? mockProfile : mockProfile;
+  if (!portfolio) {
+    return mockProfile;
+  }
+
+  const bio = typeof portfolio.bio === "object" ? portfolio.bio : {};
+  const name = bio.fullName || portfolio.title || "Portfolio Owner";
+  const email = bio.email || portfolio.userId || "";
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase())
+    .slice(0, 2)
+    .join("") || "PO";
+
+  return {
+    initials,
+    name,
+    email,
+    username: portfolio.username || "me",
+  };
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
 export const mapAboutMe = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper that returns:
-    {
-      fullName,
-      signInEmail,
-      linkedinUrl,
-      githubUrl,
-      portfolioTitle,
-    }
+  if (!portfolio) {
+    return mockAboutMe;
+  }
 
-    Example source fields may come from the signed-in user record plus the
-    portfolio document being edited.
-  */
-  return portfolio ? mockAboutMe : mockAboutMe;
+  const bio = typeof portfolio.bio === "object" ? portfolio.bio : {
+    professionalSummary: portfolio.bio,
+  };
+
+  return {
+    fullName: bio.fullName || "",
+    email: bio.email || "",
+    headline: bio.headline || "",
+    professionalSummary: bio.professionalSummary || "",
+    location: bio.location || "",
+    yearsOfExperience: bio.yearsOfExperience ?? 0,
+    phone: bio.phone || "",
+    highlights: Array.isArray(bio.highlights) ? bio.highlights : [],
+    signInEmail: bio.signInEmail || "",
+    linkedinUrl: bio.linkedinUrl || "",
+    githubUrl: bio.githubUrl || "",
+    portfolioTitle: portfolio.title || "",
+  };
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
@@ -73,6 +95,7 @@ export const createMockDashboardViewModel = () => ({
   liveVisitors: mockLiveVisitors,
   profile: mockProfile,
   aboutMe: mockAboutMe,
+  portfolioId: "mock-portfolio-id",
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
@@ -119,6 +142,7 @@ export const createDashboardViewModel = ({
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(portfolios[0]),
     aboutMe: mapAboutMe(portfolios[0]),
+    portfolioId: portfolios[0]._id,
   };
 };
 

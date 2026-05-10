@@ -80,6 +80,13 @@ export const mockProfile = {
 
 export const mockAboutMe = {
   fullName: "John Doe",
+  email: "john@example.com",
+  headline: "Product Designer and Frontend Developer",
+  professionalSummary: "Passionate about creating beautiful and functional digital experiences. Experienced in React, UI/UX design, and full-stack development.",
+  location: "Sydney, Australia",
+  yearsOfExperience: 5,
+  phone: "+61 2 1234 5678",
+  highlights: ["React Expert", "UI/UX Design", "Full-Stack Development"],
   signInEmail: "john@example.com",
   linkedinUrl: "https://www.linkedin.com/in/johndoe",
   githubUrl: "https://github.com/johndoe",
