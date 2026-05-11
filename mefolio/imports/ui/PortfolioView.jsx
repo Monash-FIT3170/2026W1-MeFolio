@@ -11,25 +11,17 @@ export const PortfolioView = () => {
   const { portfolio, isLoading } = useTracker(() => {
     const userKey = username || "me";
     const handler = Meteor.subscribe("portfolios.byUsername", userKey);
-    
-    // Query the portfolio data reactively
+
     const portfolioData = PortfolioCollection.findOne(
-      { username: userKey }, 
+      { username: userKey },
       { sort: { createdAt: -1 } }
     );
-    
+
     return {
       portfolio: portfolioData,
       isLoading: !handler.ready(),
     };
-  }, [username]); // Re-run when username changes
-
-  // Extract bio data from portfolio
-  const portfolioBio = portfolio
-    ? typeof portfolio.bio === "string"
-      ? { professionalSummary: portfolio.bio }
-      : portfolio.bio || {}
-    : {};
+  }, [username]);
 
   if (isLoading) {
     return (
@@ -45,20 +37,14 @@ export const PortfolioView = () => {
   return (
     <div>
       <Navbar />
-      <About bio={portfolioBio} />
+      <About />
       <section className="portfolio-summary">
         <h2>{portfolio?.title || "Portfolio Overview"}</h2>
         {portfolio ? (
           <div className="portfolio-details">
-            <p>
-              <strong>Owner:</strong> {portfolio.userId || "Unknown"}
-            </p>
-            <p>
-              <strong>Theme:</strong> {portfolio.theme || "Minimal"}
-            </p>
-            <p>
-              <strong>Projects:</strong> {portfolio.projects?.length ?? 0}
-            </p>
+            <p><strong>Owner:</strong> {portfolio.userId || "Unknown"}</p>
+            <p><strong>Theme:</strong> {portfolio.theme || "Minimal"}</p>
+            <p><strong>Projects:</strong> {portfolio.projects?.length ?? 0}</p>
           </div>
         ) : (
           <p>
