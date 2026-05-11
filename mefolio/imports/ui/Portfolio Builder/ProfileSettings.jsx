@@ -19,8 +19,27 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     bio: aboutMe.bio || "",
   });
 
+  const [errors, setErrors] = useState({});
+
+    //returns true if it matches the regex
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+
+     if (e.target.name === "email") {
+    setErrors((prev) => ({
+      ...prev,
+      email: e.target.value && !validateEmail(e.target.value) 
+        ? "Please enter a valid email" 
+        : ""
+    }));
+
+    }
   };
 
   const handleSave = (form) => {
