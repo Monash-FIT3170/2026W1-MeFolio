@@ -37,7 +37,7 @@ const useDashboardData = () =>
     const user = UsersCollection.find({}).fetch();
 
     return {
-      isLoading: !portfoliosHandler.ready(),
+      isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
       portfolios,
       user
     };
