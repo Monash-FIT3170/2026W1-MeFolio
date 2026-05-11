@@ -45,13 +45,22 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
   const handleSave = (form) => {
     const updates = {};
 
+    //Validate the required fields
+    const newErrors = {};
+    if (!form.name) newErrors.name = "Please enter a name";
+    if (!form.email) newErrors.email = "Please enter an email";
+    if (!form.title) newErrors.title = "Please enter a Portfolo Title";
+    //if email is there check that it matches the regex above 
+    if (form.email && !validateEmail(form.email)) newErrors.email = "Please enter a valid email";
+
+    //If there was at least one error add newError into Error state
+    if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return; //Ends the call here if errors were found
+  }
+
     // Email
     if (form.email) {
-      //Prevent email from being saved if it is of invalid type
-    if (form.email && !validateEmail(form.email)) {
-    setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
-    return; //Returns here to block it from saving
-    }
       updates.email = form.email;
     }
 
