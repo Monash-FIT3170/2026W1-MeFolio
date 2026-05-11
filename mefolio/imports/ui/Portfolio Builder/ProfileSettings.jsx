@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 
 /**
@@ -8,11 +9,13 @@ import { PortfolioCollection } from "../../api/portfolio";
  *
  * @param {Object} profile - the user's profile details as output by the mapProfile function in the view model
  * @param {Object} aboutMe - the user's portfolio details as output by the mapAboutMe function in the view model
- * @param {string} userId - the current user's ID
  *
  * @returns Form element pre-populated with the user's current profile data, allowing them to make edits and save changes.
  */
-const ProfileSettings = ({ profile, aboutMe, userId }) => {
+const ProfileSettings = ({ profile, aboutMe }) => {
+  const currentUser = useTracker(() => Meteor.user());
+  const userId = currentUser?._id;
+
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
@@ -40,7 +43,12 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     if (Object.keys(aboutMeUpdates).length > 0)
       updates.aboutMe = aboutMeUpdates;
 
-    Meteor.call("users1.update", userId, updates, (error) => {
+    if (!userId) {
+      alert("You must be logged in to save changes.");
+      return;
+    }
+
+    Meteor.call("users.update", userId, updates, (error) => {
       if (error) {
         console.error("Error updating profile:", error);
         alert("Failed to save changes. Please try again.");
@@ -49,6 +57,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
 
     // Get the user's portfolio. Assuming one portfolio per user for now.
     const userPortfolio = PortfolioCollection.find({ userId }).fetch();
+
     Meteor.call(
       "portfolios.update",
       userPortfolio[0]?._id,

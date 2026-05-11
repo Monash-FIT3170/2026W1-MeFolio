@@ -35,7 +35,7 @@ export const mapProfile = (user) => {
   const selectedUser = Array.isArray(user) ? user[0] : user;
   return {
     name: selectedUser.profile?.name || "",
-    email: selectedUser.email || "",
+    email: selectedUser.email || selectedUser.emails?.[0]?.address || "",
   };
 };
 

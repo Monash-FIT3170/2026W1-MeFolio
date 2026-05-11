@@ -3,7 +3,6 @@ import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 import { ProjectCollection } from "../../api/projects";
-import { UsersCollection } from "../../api/users";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -37,14 +36,8 @@ const useDashboardData = () =>
         })()
       : ProjectCollection.find({}).fetch();
 
-    /* HANDOVER
-    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet.
-    Will switch to Meteor.user() once authentication is implemented.
-
+    const usersHandler = Meteor.subscribe("users.current");
     const user = Meteor.user();
-    */
-    const usersHandler = Meteor.subscribe("users1.all");
-    const user = UsersCollection.find({}).fetch();
 
     return {
       isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
@@ -144,7 +137,7 @@ const DashboardLayout = () => {
             <ProfileSettings
               profile={profile}
               aboutMe={aboutMe}
-              userId={user?.[0]?._id}
+              userId={user?._id}
             />
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
