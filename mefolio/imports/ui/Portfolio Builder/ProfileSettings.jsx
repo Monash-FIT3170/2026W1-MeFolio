@@ -45,7 +45,15 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
   const handleSave = (form) => {
     const updates = {};
 
-    if (form.email) updates.email = form.email;
+    // Email
+    if (form.email) {
+      //Prevent email from being saved if it is of invalid type
+    if (form.email && !validateEmail(form.email)) {
+    setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
+    return; //Returns here to block it from saving
+    }
+      updates.email = form.email;
+    }
 
     const profileUpdates = {};
     if (form.name) profileUpdates.name = form.name;
@@ -112,6 +120,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
               value={form.email}
               onChange={handleChange}
             />
+            {errors.email && (<p className="text-red-500 text-xs mt-1">{errors.email}</p>)}
           </div>
         </div>
 
