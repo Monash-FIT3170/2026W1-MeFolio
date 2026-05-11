@@ -68,33 +68,36 @@ const ContactButtons = ({ portfolio }) => {
     upload.start();
   };
 
-  return (
-    <div className="contact-buttons">
+  const buttonBase =
+    "text-white px-4 py-2 rounded flex items-center gap-2 transition-colors";
 
-      <button className="btn primary">
+  return (
+    <div className="contact-buttons flex flex-wrap gap-3">
+
+      <button className={`${buttonBase} bg-blue-600 hover:bg-blue-700`}>
         Get in touch
       </button>
 
       {resumeLink ? (
         <>
           <a href={resumeLink} target="_blank" rel="noreferrer">
-            <button className="btn ghost">
+            <button className={`${buttonBase} bg-gray-500 hover:bg-gray-600`}>
               View Resume
             </button>
           </a>
 
           <a href={resumeLink} download>
-            <button className="btn ghost">
+            <button className={`${buttonBase} bg-green-600 hover:bg-green-700`}>
               Download Resume
             </button>
           </a>
 
-          <button className="btn secondary" onClick={handleUploadClick}>
+          <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
             Replace Resume
           </button>
         </>
       ) : (
-        <button className="btn secondary" onClick={handleUploadClick}>
+        <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
           Upload Resume
         </button>
       )}
