@@ -1,8 +1,4 @@
 import { Meteor } from "meteor/meteor";
-<<<<<<< HEAD
-import { Accounts } from "meteor/accounts-base";
-=======
->>>>>>> e480147 (feat: implement About Me personal info section)
 import { Random } from "meteor/random";
 import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";

@@ -1,14 +1,12 @@
 import React from "react";
-import { ProfileCard } from "./ProfileCard";
+import { ProfileCard } from "./ProfileCard.jsx";
 
-const AboutCard = ({ name, title, location, summary, imageUrl }) => {
+const AboutCard = () => {
   return (
     <ProfileCard
-      name={name}
-      title={title}
-      location={location}
-      summary={summary}
-      imageUrl={imageUrl || null}
+      name="John Doe"
+      title="Full-Stack Developer"
+      location="Sydney, NSW"
     />
   );
 };
