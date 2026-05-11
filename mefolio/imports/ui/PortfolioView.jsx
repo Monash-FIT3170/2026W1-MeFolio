@@ -13,18 +13,25 @@ export const PortfolioView = () => {
   const { portfolio, isLoading } = useTracker(() => {
     const userKey = username || "me";
     const handler = Meteor.subscribe("portfolios.byUsername", userKey);
-
+    
+    // Query the portfolio data reactively
+    const portfolioData = PortfolioCollection.findOne(
+      { username: userKey }, 
+      { sort: { createdAt: -1 } }
+    );
+    
     return {
-      portfolio: PortfolioCollection.findOne({ username: userKey }, { sort: { createdAt: -1 } }),
+      portfolio: portfolioData,
       isLoading: !handler.ready(),
     };
-  });
+  }, [username]); // Re-run when username changes
 
-  const portfolioBioSummary = portfolio
+  // Extract bio data from portfolio
+  const portfolioBio = portfolio
     ? typeof portfolio.bio === "string"
-      ? portfolio.bio
-      : portfolio.bio?.professionalSummary || portfolio.bio?.headline || ""
-    : "";
+      ? { professionalSummary: portfolio.bio }
+      : portfolio.bio || {}
+    : {};
 
   if (isLoading) {
     return (
@@ -67,6 +74,7 @@ export const PortfolioView = () => {
         <div>Placeholder for portfolio UI</div>
       </section>
       <About bioSummary={portfolioBioSummary} />
+      <About bio={portfolioBio} />
       <section className="portfolio-summary">
         <h2>{portfolio?.title || "Portfolio Overview"}</h2>
         {portfolio ? (
