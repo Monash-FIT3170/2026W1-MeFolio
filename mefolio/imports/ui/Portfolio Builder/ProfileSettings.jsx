@@ -23,6 +23,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
 
     //returns true if it matches the regex
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validateName = (name) => /^[a-zA-Z\s-]+$/.test(name);
     
   const handleChange = (e) => {
 
