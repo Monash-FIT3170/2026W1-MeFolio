@@ -14,7 +14,6 @@ const About = () => {
           <ContactButtons />
         </div>
         <div className="about-right">
-          <AboutCard />
         </div>
       </div>
     </section>
