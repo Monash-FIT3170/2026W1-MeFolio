@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
-import { Accounts } from "meteor/accounts-base";
 import { Random } from "meteor/random";
+import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
@@ -31,6 +31,7 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: [], // Array to hold project IDs
       theme: "minimal",
+      username: "me",
       badges: [{
         title: "Sample Badge",
         issuer: "Sample Issuer",
@@ -58,6 +59,11 @@ Meteor.publish('projects.all', function(){
 
 Meteor.publish('portfolios.all', function(){
   return PortfolioCollection.find({}, {sort: {createdAt: -1}});
+});
+
+Meteor.publish('portfolios.byUsername', function(username){
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({

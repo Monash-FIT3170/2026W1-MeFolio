@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "../api/portfolio";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -11,12 +15,20 @@ import { PortfolioView } from "./PortfolioView";
 
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-  const DashboardLayout = () => {
-    const [activeTab, setActiveTab] = useState("overview");
-    const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
-      createDashboardViewModel();
-    const navigate = useNavigate();
-    const currentTab = getCurrentTab(sidebarItems, activeTab);
+export const PortfolioBuilderView = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const { portfolios, isLoading: portfoliosLoading } = useTracker(() => {
+    const handler = Meteor.subscribe("portfolios.all");
+    return {
+      portfolios: PortfolioCollection.find({}, { sort: { createdAt: -1 } }).fetch(),
+      isLoading: !handler.ready(),
+    };
+  });
+
+  const { isLoading, sidebarItems, overviewStats, liveVisitors, profile } =
+    createDashboardViewModel({ isLoading: portfoliosLoading, portfolios });
+
+  const currentTab = getCurrentTab(sidebarItems, activeTab);
 
     if (isLoading) {
       return <p className="builder-loading">Loading...</p>;
@@ -60,17 +72,24 @@ import { PortfolioView } from "./PortfolioView";
     );
   };
 
-  // Sidebar navigation for switching dashboard sections.
-  const Sidebar = ({ items, activeTab, onTabChange, profile, onPreviewToggle }) => {
-    return (
-      <aside className="builder-sidebar">
-        <div className="sidebar-top">
-          <div className="builder-logo">
-            <span>MeFolio</span>
-          </div>
+// Sidebar navigation for switching dashboard sections.
+const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
+  const navigate = useNavigate();
 
-          <ModeSwitch onToggle={onPreviewToggle} />
+  return (
+    <aside className="builder-sidebar">
+      <div className="sidebar-top">
+        <div className="builder-logo">
+          <span>MeFolio</span>
         </div>
+
+        <button
+          className="view-portfolio-btn"
+          onClick={() => navigate(`/portfolio/${profile?.username ?? "me"}`)}
+        >
+          View Portfolio
+        </button>
+      </div>
 
         <nav className="builder-nav">
           {items.map((item) => (
