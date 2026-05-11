@@ -45,7 +45,7 @@ export const mapProfile = (user) => {
 
   return {
     name: user.profile?.name || "",
-    email: user.email || ""
+    email: user.email || user.emails?.[0]?.address || ""
   };
 };
 
@@ -93,7 +93,7 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(user[0]),
+    profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0])
   };
 };

@@ -29,17 +29,11 @@ const useDashboardData = () =>
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
     const portfolios = PortfolioCollection.find({}).fetch();
 
-    /* HANDOVER
-    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet. 
-    Will switch to Meteor.user() once authentication is implemented.
-
+    const userHandler = Meteor.subscribe("users.current");
     const user = Meteor.user(); 
-    */
-    const usersHandler = Meteor.subscribe("users1.all");
-    const user = UsersCollection.find({}).fetch();
 
     return {
-      isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
+      isLoading: !portfoliosHandler.ready() || !userHandler.ready(),
       portfolios,
       user
     };
@@ -89,11 +83,7 @@ const DashboardLayout = () => {
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "settings" ? (
-            <ProfileSettings
-              profile={profile}
-              aboutMe={aboutMe}
-              userId={user[0]?._id}
-            />
+            <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}

@@ -1,9 +1,8 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
-import { Random } from "meteor/random";
+import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { UsersCollection } from "/imports/api/users";
 import './oauth-login/oauth.js';
 
 Accounts.config({
@@ -11,23 +10,20 @@ Accounts.config({
 });
 
 Meteor.startup(async () => {
-  // Insert sample user data if collections are empty
+  // Insert sample user data if no Meteor account exists yet
   let sampleUserId;
-  if ((await UsersCollection.find().countAsync()) === 0) {
-    sampleUserId = await UsersCollection.insertAsync({
+  if ((await Meteor.users.find().countAsync()) === 0) {
+    sampleUserId = await Meteor.users.insertAsync({
       createdAt: new Date(),
-      services: {
-        password: "",
-        resume: ""
-      },
-      email: "superuser@example.com",
+      emails: [{ address: "superuser@example.com", verified: false }],
       profile: {
         name: "Superuser"
       }
     });
+    Accounts.setPassword(sampleUserId, "superuser");
   } else {
     // If user already exists, get the first user's _id
-    const existingUser = await UsersCollection.findOneAsync();
+    const existingUser = await Meteor.users.findOneAsync();
     sampleUserId = existingUser._id;
   }
 
@@ -81,10 +77,6 @@ Meteor.startup(async () => {
   }
 });
 
-Meteor.publish("users1.all", function () {
-  return UsersCollection.find({}, { sort: { createdAt: -1 } });
-});
-
 Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
@@ -93,18 +85,39 @@ Meteor.publish("portfolios.all", function () {
   return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
 });
 
+Meteor.publish("users.current", function () {
+  return Meteor.users.find(this.userId);
+});
+
 Meteor.methods({
   // User methods
-  async "users1.insert"(userData) {
-    return await UsersCollection.insertAsync(userData);
-  },
+  async "users.update"(userId, updates) {
+    if (this.userId !== userId) {
+      throw new Meteor.Error("not-authorized", "You may only update your own account.");
+    }
 
-  async "users1.update"(userId, updates) {
-    return await UsersCollection.updateAsync(userId, { $set: updates });
-  },
+    check(userId, String);
+    check(updates, Object);
 
-  async "users1.delete"(userId) {
-    return await UsersCollection.removeAsync(userId);
+    const updateDoc = {};
+    if (updates.profile) {
+      updateDoc.profile = updates.profile;
+    }
+
+    if (Object.keys(updateDoc).length > 0) {
+      await Meteor.users.updateAsync(userId, { $set: updateDoc });
+    }
+
+    if (updates.email) {
+      const currentUser = await Meteor.users.findOneAsync(userId, { fields: { emails: 1 } });
+      const currentEmail = currentUser?.emails?.[0]?.address;
+      if (currentEmail && currentEmail !== updates.email) {
+        await Meteor.users.updateAsync(userId, { $pull: { emails: { address: currentEmail } } });
+        await Meteor.users.updateAsync(userId, { $push: { emails: { address: updates.email, verified: false } } });
+      } else if (!currentEmail) {
+        await Meteor.users.updateAsync(userId, { $push: { emails: { address: updates.email, verified: false } } });
+      }
+    }
   },
 
   // Project methods
