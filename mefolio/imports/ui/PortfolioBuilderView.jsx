@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { ModeSwitch } from "./ModeButton";
 import { PortfolioView } from "./PortfolioView";
+import RecruiterPortal from "./RecruiterPortal";
 
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
@@ -31,11 +32,12 @@ import { PortfolioView } from "./PortfolioView";
         <Sidebar
           items={sidebarItems}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
-          profile={profile}
-          onPreviewToggle={(isPreview) => {
-            if (isPreview) navigate("/preview");
+          onTabChange={(tabId) => {
+            setActiveTab(tabId);
           }}
+
+          profile={profile}
+          navigate={navigate}
         />
 
         <main className="builder-main">
@@ -51,6 +53,8 @@ import { PortfolioView } from "./PortfolioView";
                 title={currentTab.label}
                 description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
               />
+            ) : activeTab === "recruiter" ? (
+              <RecruiterPortal onUploadClick={() => console.log("upload")} />
             ) : (
               <PlaceholderSection title={currentTab.label} />
             )}
@@ -61,7 +65,7 @@ import { PortfolioView } from "./PortfolioView";
   };
 
   // Sidebar navigation for switching dashboard sections.
-  const Sidebar = ({ items, activeTab, onTabChange, profile, onPreviewToggle }) => {
+  const Sidebar = ({ items, activeTab, onTabChange, profile, navigate }) => {
     return (
       <aside className="builder-sidebar">
         <div className="sidebar-top">
@@ -69,7 +73,9 @@ import { PortfolioView } from "./PortfolioView";
             <span>MeFolio</span>
           </div>
 
-          <ModeSwitch onToggle={onPreviewToggle} />
+          <ModeSwitch onToggle={(isPreview) => {
+            if (isPreview) navigate("/preview");
+          }} />
         </div>
 
         <nav className="builder-nav">
@@ -181,6 +187,5 @@ export const PortfolioBuilderView = () => {
       <Route path="/" element={<DashboardLayout />} />
       <Route path="/preview" element={<PortfolioView />} />
     </Routes>
-
   )
 }

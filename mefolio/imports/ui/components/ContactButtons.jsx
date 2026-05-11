@@ -12,7 +12,7 @@ const ContactButtons = ({ portfolio }) => {
 
   useEffect(() => {
     setResumeLink(portfolio?.recruiterInfo?.resumeLink || "");
-  }, [portfolio]);
+  }, [portfolio?.recruiterInfo?.resumeLink]);
 
   const handleUploadClick = () => {
     document.getElementById("resume-upload").click();
@@ -31,16 +31,7 @@ const ContactButtons = ({ portfolio }) => {
     upload.on("end", (error, fileObj) => {
 
       console.log("UPLOAD END");
-
-      if (error) {
-        console.error(error);
-        alert("Upload failed");
-        return;
-      }
-
       console.log(fileObj);
-
-      const fileUrl = `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
 
       if (!portfolio?._id) return;
 
@@ -59,8 +50,6 @@ const ContactButtons = ({ portfolio }) => {
           }
 
           setResumeLink(fileUrl);
-
-          alert("Upload successful");
         }
       );
     });
@@ -72,80 +61,36 @@ const ContactButtons = ({ portfolio }) => {
     "text-white px-4 py-2 rounded flex items-center gap-2 transition-colors";
 
   return (
-    // <div className="contact-buttons flex flex-wrap gap-3">
-
-    //   <button className={`${buttonBase} bg-blue-600 hover:bg-blue-700`}>
-    //     Get in touch
-    //   </button>
-
-    //   {resumeLink ? (
-    //     <>
-    //       <a href={resumeLink} target="_blank" rel="noreferrer">
-    //         <button className={`${buttonBase} bg-gray-500 hover:bg-gray-600`}>
-    //           View Resume
-    //         </button>
-    //       </a>
-
-          // <a href={resumeLink} download>
-          //   <button className={`${buttonBase} bg-green-600 hover:bg-green-700`}>
-          //     Download Resume
-          //   </button>
-          // </a>
-
-      //     <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
-      //       Replace Resume
-      //     </button>
-      //   </>
-      // ) : (
-      //   <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
-      //     Upload Resume
-      //   </button>
-      // )}
-
-      // <input
-      //   type="file"
-      //   id="resume-upload"
-      //   style={{ display: "none" }}
-      //   accept="application/pdf"
-      //   onChange={handleFileChange}
-      // />
-
     <div className="flex gap-3 flex-wrap">
       <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#5b3df5] hover:bg-[#4a30d4] text-white text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer border-none">
         Get in touch
       </button>
 
-      {resumeLink ? (
+      {Boolean(resumeLink) && (
         <>
-        <a href={resumeLink} target="_blank" rel="noreferrer">
-          <button className="inline-flex items-center gap-2 px-6 py-3 bg-transparent hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl border border-slate-300 hover:border-[#5b3df5] transition-colors duration-150 cursor-pointer">
-            View Resume
-          </button>
-        </a>
+          <a href={resumeLink} target="_blank" rel="noreferrer">
+            <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#F3F4F6] hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer outline-none focus:outline-none focus:ring-0 border-none">
+              View Resume
+            </button>
+          </a>
 
-        <a href={resumeLink} download>
-          <button className={`${buttonBase} bg-green-600 hover:bg-green-700`}>
+          <a
+            href={resumeLink}
+            download
+            className="inline-flex items-center gap-2 px-6 py-3 bg-transparent hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl border border-slate-300 hover:border-[#5b3df5] transition-colors duration-150 cursor-pointer"
+          >
             Download Resume
-          </button>
-        </a>
-
-                  <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
-            Replace Resume
-          </button>
+          </a>
         </>
-      ) : (
-        <button className={`${buttonBase} bg-purple-600 hover:bg-purple-700`} onClick={handleUploadClick}>
-          Upload Resume
-        </button>
       )}
       
-      <input
+      {/* <input
         type="file"
         id="resume-upload"
         style={{ display: "none" }}
         accept="application/pdf"
         onChange={handleFileChange}
-      />
+      /> */}
     </div>
   );
 };
