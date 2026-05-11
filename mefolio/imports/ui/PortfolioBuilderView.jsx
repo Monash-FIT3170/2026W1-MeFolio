@@ -21,6 +21,8 @@ import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
 
+
+
 // Custom hook to fetch real portfolio data from MongoDB via Meteor
 const useDashboardData = () =>
   useTracker(() => {
@@ -44,7 +46,7 @@ const useDashboardData = () =>
   });
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-const PortfolioBuilderView = () => {
+const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { isLoading, portfolios, user } = useDashboardData();
   const {
@@ -140,4 +142,12 @@ const Sidebar = ({
   );
 };
 
-export default PortfolioBuilderView;
+export const PortfolioBuilderView = () => {
+  return(
+    <Routes>
+      <Route path="/" element={<DashboardLayout />} />
+      <Route path="/preview" element={<TestPortfolioView />} />
+    </Routes>
+
+  );
+};
