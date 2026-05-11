@@ -1,46 +1,15 @@
-/* this file is imported in client/main.jsx */
+@import "tailwindcss";
 
 :root {
-  /* Colors */
-  --color-background: hsl(210, 20%, 98%);
-  --color-foreground: hsl(220, 20%, 15%);
-  --color-card: hsl(0, 0%, 100%);
-  --color-primary: hsl(4, 70%, 55%);
-  --color-primary-hover: hsl(4, 70%, 45%);
-  --color-muted: hsl(220, 10%, 50%);
-  --color-border: hsl(220, 14%, 90%);
-
-  /* Shadows */
-  --shadow-card: 0 1px 3px 0 hsl(220 20% 15% / 0.04),
-    0 1px 2px -1px hsl(220 20% 15% / 0.04);
-  --shadow-card-hover: 0 10px 15px -3px hsl(220 20% 15% / 0.08),
-    0 4px 6px -4px hsl(220 20% 15% / 0.04);
-
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-
-  /* Border radius */
-  --radius: 0.75rem;
-  --radius-sm: 0.5rem;
-
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 200ms ease;
-  --transition-slow: 250ms ease;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-/* ============ Reset & Base Styles ============ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+body, html, #react-target {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
 }
 
 body {
@@ -372,4 +341,5 @@ a {
 .resource-link:hover .resource-icon {
   opacity: 1;
   color: var(--color-primary);
+  /* background-color: white; */
 }

@@ -13,7 +13,6 @@ const Hero = () => (
             </div>
         </div>
         <div className="hero-right">
-            <ProfileCard />
         </div>
     </div>
 );
