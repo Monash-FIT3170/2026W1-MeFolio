@@ -44,7 +44,7 @@ export const PortfolioView = () => {
         </div>
       </section>
 
-      <section className="px-10 lg:px-20 py-20 border-t border-slate-100">
+      <section className="px-10 lg:px-20 py-20 border-t border-slate-100 bg-slate-50">
         <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-8">
           Portfolios
         </h2>
