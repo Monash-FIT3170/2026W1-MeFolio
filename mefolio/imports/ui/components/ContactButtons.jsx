@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import { useEffect } from "react";
+import { Mail, ExternalLink } from "lucide-react";
 
 const ContactButtons = ({ portfolio }) => {
 
@@ -63,6 +64,7 @@ const ContactButtons = ({ portfolio }) => {
   return (
     <div className="flex gap-3 flex-wrap">
       <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#5b3df5] hover:bg-[#4a30d4] text-white text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer border-none">
+        <Mail size={18} />
         Get in touch
       </button>
 
@@ -70,16 +72,9 @@ const ContactButtons = ({ portfolio }) => {
         <>
           <a href={resumeLink} target="_blank" rel="noreferrer">
             <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#F3F4F6] hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer outline-none focus:outline-none focus:ring-0 border-none">
+              <ExternalLink size={18} />
               View Resume
             </button>
-          </a>
-
-          <a
-            href={resumeLink}
-            download
-            className="inline-flex items-center gap-2 px-6 py-3 bg-transparent hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl border border-slate-300 hover:border-[#5b3df5] transition-colors duration-150 cursor-pointer"
-          >
-            Download Resume
           </a>
         </>
       )}
