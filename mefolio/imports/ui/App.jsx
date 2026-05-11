@@ -7,7 +7,7 @@ import { SignUpPage } from "./SignUpPage.jsx";
 import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
 import { TermsOfServicePage } from "./TermsOfServicePage.jsx";
 import { PrivacyPolicyPage } from "./PrivacyPolicyPage.jsx";
-import { PortfolioBuilderView } from "./PortfolioBuilderView.jsx";
+import PortfolioBuilderView from './PortfolioBuilderView.jsx';
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
