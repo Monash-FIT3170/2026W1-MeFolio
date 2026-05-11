@@ -3,6 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import './oauth-login/oauth.js';
 
 Accounts.config({
   loginExpirationInDays: 1

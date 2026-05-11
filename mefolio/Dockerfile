@@ -14,4 +14,4 @@ ENV PORT=3000
  
 EXPOSE 3000
  
-CMD ["meteor", "run", "--port", "3000", "--allow-superuser"]
+CMD ["meteor", "run", "--port", "3000", "--settings", "server/oauth-login/oauth.settings.json", "--allow-superuser"]
