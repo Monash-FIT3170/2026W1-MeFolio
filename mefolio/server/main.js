@@ -1,8 +1,13 @@
-import { Meteor } from "meteor/meteor";;
+import { Meteor } from "meteor/meteor";
+import { Accounts } from "meteor/accounts-base";
 import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import '/imports/api/files/resumeFiles';
+
+Accounts.config({
+  loginExpirationInDays: 1
+});
 
 Meteor.startup(async () => {
 

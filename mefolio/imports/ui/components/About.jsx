@@ -42,7 +42,6 @@ const About = () => {
         </div>
 
         <div className="about-right">
-          <AboutCard />
         </div>
 
       </div>
