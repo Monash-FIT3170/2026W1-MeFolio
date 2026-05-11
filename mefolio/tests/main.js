@@ -7,6 +7,7 @@ import "/imports/ui/LoginPage.test.jsx";
 import "/imports/ui/ForgotPasswordPage.test.jsx"; 
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
+import "/imports/ui/ProjectCard.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
