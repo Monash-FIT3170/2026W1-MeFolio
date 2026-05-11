@@ -12,19 +12,31 @@ Meteor.startup(async () => {
 
   if ((await ProjectCollection.find().countAsync()) === 0) {
     await ProjectCollection.insertAsync({
+      userId: "Superuser", // TODO: Replace this and all references with actual user ID once user collection is set up
       title: "Sample Project",
       description: "This is a sample project.",
       createdAt: new Date(),
       technologies: ["React", "Node.js"],
       githubLink: "https://github.com/sample/project",
       liveDemoLink: "https://sampleproject.com",
-      media: "" // Placeholder for media type
+      media: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTnoykQqAJdf2s_lKgw_q1r11hihUR5S7jxw&s"
+    });
+    
+    await ProjectCollection.insertAsync({
+      userId: "Superuser",
+      title: "Sample Project 2",
+      description: "This is the second sample project.",
+      createdAt: new Date(),
+      technologies: ["Vue", "Firebase"],
+      githubLink: "https://github.com/sample/project2",
+      liveDemoLink: "https://sampleproject2.com",
+      media: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-bgekrhZkDbpZ5gdHfDclh3T_PhALym5BwQ&s"
     });
   }
 
   if ((await PortfolioCollection.find().countAsync()) === 0) {
     await PortfolioCollection.insertAsync({
-      userId: "Superuser", // TODO: Replace with actual user ID once user collection is set up
+      userId: "Superuser", // TODO: Replace this and all references with actual user ID once user collection is set up
       portfolioNumber: 1, //Allows for multiple portfolios per user in the future
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.", 

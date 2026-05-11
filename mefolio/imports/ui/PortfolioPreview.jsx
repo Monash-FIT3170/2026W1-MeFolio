@@ -49,6 +49,19 @@ const MOCK_PROJECTS = [
 ];
 
 export const PortfolioPreview = () => {
+
+  
+  const MONGO_PROJECTS = useTracker(() => {
+    const sub = Meteor.subscribe("projects.all");
+
+    console.log("subscription ready:", sub.ready());
+    console.log("client docs:", ProjectCollection.find({}).fetch());
+
+    if (!sub.ready()) return [];
+
+    return ProjectCollection.find({ userId: "Superuser" }).fetch();
+  });
+
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
