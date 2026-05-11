@@ -48,7 +48,11 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
 
     //Validate the required fields
     const newErrors = {};
-    if (!form.name) newErrors.name = "Please enter a name";
+      if (!form.name) {
+    newErrors.name = "Name is required";}
+    else if (!validateName(form.name)) {
+    newErrors.name = "Name cannot contain numbers or special characters";
+    }
     if (!form.email) newErrors.email = "Please enter an email";
     if (!form.title) newErrors.title = "Please enter a Portfolo Title";
     //if email is there check that it matches the regex above 
