@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import { Eye, Trash2, Plus, Download } from "lucide-react";
@@ -6,23 +6,58 @@ import { Eye, Trash2, Plus, Download } from "lucide-react";
 const RecruiterPortal = ({ portfolio }) => {
   const fileInputRef = useRef(null);
 
-  // NEW: local UI list of uploaded resumes
   const [resumes, setResumes] = useState([]);
+
+  useEffect(() => {
+    const resumeLinks = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
+      ? portfolio.recruiterInfo.resumeLinks
+      : portfolio?.recruiterInfo?.resumeLink
+      ? [
+          {
+            name:
+              portfolio.recruiterInfo.resumeLink
+                .split("/")
+                .pop() || "Resume.pdf",
+            url: portfolio.recruiterInfo.resumeLink,
+          },
+        ]
+      : [];
+
+    setResumes(resumeLinks);
+  }, [portfolio?.recruiterInfo?.resumeLink, portfolio?.recruiterInfo?.resumeLinks]);
 
   const handleClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleDelete = (url) => {
-    setResumes((prev) => prev.filter((r) => r.url !== url));
+  const syncResumeLinks = (updatedLinks) => {
+    setResumes(updatedLinks);
 
-    // optional DB delete if you later support multiple resumes
+    if (!portfolio?._id) {
+      return;
+    }
+
+    Meteor.call(
+      "portfolios.update",
+      portfolio._id,
+      {
+        "recruiterInfo.resumeLinks": updatedLinks,
+      },
+      (err) => {
+        if (err) {
+          console.error(err);
+          alert("Could not save uploaded resume list.");
+        }
+      }
+    );
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const handleDelete = (url) => {
+    const updated = resumes.filter((r) => r.url !== url);
+    syncResumeLinks(updated);
+  };
 
+  const handleFileUpload = (file) => {
     const upload = ResumeFiles.insert(
       {
         file,
@@ -30,11 +65,6 @@ const RecruiterPortal = ({ portfolio }) => {
       },
       false
     );
-
-    upload.on("error", (err) => {
-      console.error("UPLOAD ERROR:", err);
-      alert("Upload failed");
-    });
 
     upload.on("end", (error, fileObj) => {
       if (error) {
@@ -46,34 +76,33 @@ const RecruiterPortal = ({ portfolio }) => {
       const fileUrl =
         `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
 
-      Meteor.call(
-        "portfolios.update",
-        portfolio?._id,
-        {
-          "recruiterInfo.resumeLink": fileUrl,
-        },
-        (err) => {
-          if (err) {
-            console.error(err);
-            alert("Database update failed");
-            return;
-          }
+      const newResume = {
+        name: file.name,
+        url: fileUrl,
+      };
 
-          // NEW: update UI instantly
-          setResumes((prev) => [
-            ...prev,
-            {
-              name: fileObj.original?.name || file.name,
-              url: fileUrl,
-            },
-          ]);
+      setResumes((prevResumes) => {
+        const updatedLinks = [...prevResumes, newResume];
+        syncResumeLinks(updatedLinks);
+        return updatedLinks;
+      });
 
-          alert("Upload successful");
-        }
-      );
+      alert("Upload successful");
     });
 
     upload.start();
+  };
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      handleFileUpload(file);
+    });
+
+    event.target.value = null;
   };
 
   return (

@@ -119,6 +119,7 @@ export const createDashboardViewModel = ({
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(portfolios[0]),
     aboutMe: mapAboutMe(portfolios[0]),
+    portfolio: portfolios[0],
   };
 };
 

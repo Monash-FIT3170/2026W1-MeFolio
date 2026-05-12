@@ -6,14 +6,19 @@ import { useEffect } from "react";
 import { Mail, ExternalLink } from "lucide-react";
 
 const ContactButtons = ({ portfolio }) => {
+  const resumeLinkValue = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
+    ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""
+    : portfolio?.recruiterInfo?.resumeLink || "";
 
-  const [resumeLink, setResumeLink] = useState(
-    portfolio?.recruiterInfo?.resumeLink || ""
-  );
+  const [resumeLink, setResumeLink] = useState(resumeLinkValue);
 
   useEffect(() => {
-    setResumeLink(portfolio?.recruiterInfo?.resumeLink || "");
-  }, [portfolio?.recruiterInfo?.resumeLink]);
+    setResumeLink(
+      Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
+        ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""
+        : portfolio?.recruiterInfo?.resumeLink || ""
+    );
+  }, [portfolio?.recruiterInfo?.resumeLink, portfolio?.recruiterInfo?.resumeLinks]);
 
   const handleUploadClick = () => {
     document.getElementById("resume-upload").click();

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "/imports/api/portfolio";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -14,8 +17,16 @@ import RecruiterPortal from "./RecruiterPortal";
 // Top-level dashboard view that coordinates tab state and renders the active section.
   const DashboardLayout = () => {
     const [activeTab, setActiveTab] = useState("overview");
-    const { isLoading, sidebarItems, overviewStats, liveVisitors, profile, aboutMe } =
-      createDashboardViewModel();
+    const { portfolios, isLoading } = useTracker(() => {
+      const handler = Meteor.subscribe("portfolios.all");
+      return {
+        portfolios: PortfolioCollection.find({}).fetch(),
+        isLoading: !handler.ready(),
+      };
+    });
+
+    const { sidebarItems, overviewStats, liveVisitors, profile, aboutMe, portfolio } =
+      createDashboardViewModel({ isLoading, portfolios });
     const navigate = useNavigate();
     const currentTab = getCurrentTab(sidebarItems, activeTab);
 
@@ -54,7 +65,7 @@ import RecruiterPortal from "./RecruiterPortal";
                 description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
               />
             ) : activeTab === "recruiter" ? (
-              <RecruiterPortal onUploadClick={() => console.log("upload")} />
+              <RecruiterPortal portfolio={portfolio} />
             ) : (
               <PlaceholderSection title={currentTab.label} />
             )}
