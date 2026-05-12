@@ -12,19 +12,20 @@ Meteor.startup(async () => {
 
   if ((await ProjectCollection.find().countAsync()) === 0) {
     await ProjectCollection.insertAsync({
-      userId: "Superuser", // TODO: Replace this and all references with actual user ID once user collection is set up
-      title: "Sample Project",
-      description: "This is a sample project.",
+      portfolioId: "abc",
+      priority: 1,
+      title: "Jonah Rudzki",
+      description: "Advanced optimisation on orthagonal implementations",
       createdAt: new Date(),
-      technologies: ["React", "Node.js"],
+      technologies: ["Orthol", "Node.js"],
       githubLink: "https://github.com/sample/project",
-      liveDemoLink: "https://sampleproject.com",
-      media: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTnoykQqAJdf2s_lKgw_q1r11hihUR5S7jxw&s"
+      media: "https://media.licdn.com/dms/image/v2/D5603AQG6P3oRpewbnw/profile-displayphoto-crop_800_800/B56Z0yItb7K8AI-/0/1774662641268?e=1779926400&v=beta&t=FnM8thWl_NJk7pqsRkQ76gIEnqX3ROorcjFoidYbyMk"
     });
     
     await ProjectCollection.insertAsync({
-      userId: "Superuser",
-      title: "Sample Project 2",
+      portfolioId: "abc",
+      priority: 2,
+      title: "Sponge bob is cool",
       description: "This is the second sample project.",
       createdAt: new Date(),
       technologies: ["Vue", "Firebase"],
@@ -36,12 +37,13 @@ Meteor.startup(async () => {
 
   if ((await PortfolioCollection.find().countAsync()) === 0) {
     await PortfolioCollection.insertAsync({
+      mock_id: "abc",
       userId: "Superuser", // TODO: Replace this and all references with actual user ID once user collection is set up
       portfolioNumber: 1, //Allows for multiple portfolios per user in the future
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.", 
       createdAt: new Date(),
-      projects: [], // Array to hold project IDs
+      // projects: [1, 2], // Array to hold project IDs
       theme: "minimal",
       badges: [{
         title: "Sample Badge",

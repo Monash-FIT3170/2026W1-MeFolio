@@ -1,67 +1,57 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProjectCard } from './ProjectCard.jsx';
-
-const MOCK_PROJECTS = [
-  {
-    id: "1",
-    title: "E-Commerce Platform",
-    description: "A full-stack store with real-time inventory.",
-    tech: ["React", "Node.js", "Stripe"],
-    stars: 234,
-    challengeName: "Cart Logic Challenge"
-  },
-  {
-    id: "2",
-    title: "Task Management App",
-    description: "Collaborative tasks with real-time updates.",
-    tech: ["Vue.js", "Firebase", "Tailwind"],
-    stars: 156,
-    challengeName: "State Management"
-  },
-  {
-    id: "3",
-    title: "AI Content Generator",
-    description: "Generate high-quality blog posts using GPT-4 API endpoints.",
-    tech: ["Next.js", "OpenAI", "PostgreSQL"],
-    stars: 380,
-    challengeName: "API Rate Limiting",
-    imageUrl: ""
-  },
-  {
-    id: "4",
-    title: "ksksjkfase",
-    description: "awawfawfawf",
-    tech: ["Python", "React", "D3.js"],
-    stars: 89,
-    challengeName: "hfhejfhjf",
-    imageUrl: ""
-  },
-  {
-    id: "5",
-    title: "fesfsefsef",
-    description: "esfsfsefsefsefsef",
-    tech: ["React Native", "Express", "SQLite"],
-    stars: 412,
-    challengeName: "efsefsefsf",
-    imageUrl: ""
-  }
-];
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "../api/portfolio.js";
+import { ProjectCollection } from '../api/projects.js';
 
 export const PortfolioPreview = () => {
+  /*
+  The js bellow subscribes to all portfolios and finds the Porfolio with the superuser id.
+  Using this portfolio, it then gets all projects with that id. 
 
-  
-  const MONGO_PROJECTS = useTracker(() => {
-    const sub = Meteor.subscribe("projects.all");
+  It will break if superuser starts having many portfolios with its current implementation. 
+
+  Personnaly I (harry mills) think this should be refactored so a projects container recieves a portfolio id as
+  a component attributes and then sub to projects in thier once the whole page is set up to 
+  separate concerns between components.
+  */
+  const portfolio = useTracker(() => {
+    const sub = Meteor.subscribe("portfolios.all");
 
     console.log("subscription ready:", sub.ready());
-    console.log("client docs:", ProjectCollection.find({}).fetch());
 
     if (!sub.ready()) return [];
 
-    return ProjectCollection.find({ userId: "Superuser" }).fetch();
+    return PortfolioCollection.findOne({ userId: "Superuser" }); 
   });
 
+  console.log("port_id:", portfolio?._id)
+
+  const projects = useTracker(() => {
+    const sub = Meteor.subscribe("projects.all");
+
+    console.log("portfolio subscription handle:", sub);
+    console.log("subscription id:", sub.subscriptionId);
+    console.log("projects:",ProjectCollection.find({}).fetch());
+
+    console.log("subscription ready:", sub.ready());
+
+    if (!sub.ready() || !portfolio) return [];
+    console.log("Getting project collection")
+
+
+    return ProjectCollection.find({
+      portfolioId: "abc"
+    }).fetch();
+  }, [portfolio]);  
+
+  /*
+  Above is 
+  Below is related UI js
+  */
+  
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -108,8 +98,8 @@ export const PortfolioPreview = () => {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
         >
-          {MOCK_PROJECTS.map((project) => (
-            <div className="shrink-0 w-[380px]" key={project.id}>
+          {MONGO_PROJECTS.map((project) => (
+            <div className="shrink-0 w-[380px]"  key={project.priority }>
               <ProjectCard project={project} />
             </div>
           ))}
