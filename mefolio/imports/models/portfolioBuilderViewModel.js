@@ -48,7 +48,7 @@ export const mapProfile = (user) => {
 
   return {
     name: selectedUser.profile?.name || "",
-    email: selectedUser.email || ""
+    email: selectedUser.email || "",
   };
 };
 
@@ -56,15 +56,15 @@ export const mapProfile = (user) => {
 export const mapAboutMe = (portfolio) => {
   // const source = portfolio || samplePortfolioProfileData || defaultPortfolioProfileData;
 
-    return {
+  return {
     ...defaultPortfolioProfileData,
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
-      ...(portfolio.recruiterInfo || {})
-    }
+      ...(portfolio.recruiterInfo || {}),
+    },
   };
 
   //TODO: Check with Ankit
@@ -119,7 +119,7 @@ export const createDashboardViewModel = ({
     return createLoadingViewModel();
   }
 
-    if (!portfolios.length) {
+  if (!portfolios.length) {
     return createMockDashboardViewModel(user);
   }
 

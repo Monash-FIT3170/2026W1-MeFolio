@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 
 /**
  * Mode switch button component to toggle between builder and preview modes.
- * 
+ *
  * @param {boolean} initialPreview - Whether in preview mode or not.
  * @param {function} onToggle - Callback function when the mode is toggled.
  * @returns Button element that toggles between builder and preview modes.
@@ -12,7 +12,8 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
   const [visible, setVisible] = useState(true); //track visibility
   const timerRef = useRef(null);
 
-  useEffect(() => { //show when scrolling
+  useEffect(() => {
+    //show when scrolling
     if (!initialPreview) return;
 
     const reset = () => {
@@ -29,13 +30,14 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
     };
   }, [initialPreview]);
 
-  const handleClick = () => { // when clicking mode switch
-    const next = !preview
+  const handleClick = () => {
+    // when clicking mode switch
+    const next = !preview;
     setPreview(next);
     if (onToggle) {
       onToggle(next);
     }
-  }
+  };
 
   return (
     <button
@@ -44,9 +46,10 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
         border px-4 py-3 rounded-xl
         font-bold cursor-pointer transition-all duration-200
         ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
-        ${preview
-          ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
-          : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+        ${
+          preview
+            ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
+            : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
         }
       `}
     >

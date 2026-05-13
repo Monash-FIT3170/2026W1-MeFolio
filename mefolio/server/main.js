@@ -4,10 +4,10 @@ import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { UsersCollection } from "/imports/api/users";
-import './oauth-login/oauth.js';
+import "./oauth-login/oauth.js";
 
 Accounts.config({
-  loginExpirationInDays: 1
+  loginExpirationInDays: 1,
 });
 
 Meteor.startup(async () => {
@@ -18,12 +18,12 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       services: {
         password: "",
-        resume: ""
+        resume: "",
       },
       email: "superuser@example.com",
       profile: {
-        name: "Superuser"
-      }
+        name: "Superuser",
+      },
     });
   } else {
     // If user already exists, get the first user's _id
@@ -41,7 +41,7 @@ Meteor.startup(async () => {
       technologies: ["React", "Node.js"],
       githubLink: "https://github.com/sample/project",
       liveDemoLink: "https://sampleproject.com",
-      media: "" // Placeholder for media type
+      media: "", // Placeholder for media type
     });
   } else {
     // If project already exists, get the first project's _id
@@ -65,8 +65,8 @@ Meteor.startup(async () => {
           issuer: "Sample Issuer",
           issueDate: new Date(),
           badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge"
-        }
+          verificationUrl: "https://example.com/verify-badge",
+        },
       ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
@@ -75,8 +75,8 @@ Meteor.startup(async () => {
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
         resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true
-      }
+        allowAccess: true,
+      },
     });
   }
 });
@@ -129,11 +129,11 @@ Meteor.methods({
 
   async "portfolios.update"(portfolioId, updates) {
     return await PortfolioCollection.updateAsync(portfolioId, {
-      $set: updates
+      $set: updates,
     });
   },
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
-  }
+  },
 });

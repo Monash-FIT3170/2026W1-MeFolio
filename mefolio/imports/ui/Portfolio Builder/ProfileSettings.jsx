@@ -16,13 +16,13 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     name: profile.name || "",
     email: profile.email || "",
     title: aboutMe.title || "",
-    bio: aboutMe.bio || ""
+    bio: aboutMe.bio || "",
   });
 
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -68,7 +68,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
           console.error("Error updating portfolio:", error);
           alert("Failed to save changes. Please try again.");
         }
-      }
+      },
     );
   };
 

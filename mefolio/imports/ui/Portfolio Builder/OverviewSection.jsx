@@ -3,7 +3,9 @@ const StatCard = ({ stat }) => {
   return (
     <div className="stat-card">
       <div className="stat-card-top">
-        <span className="stat-change">{'\u2197'} {stat.change}</span>
+        <span className="stat-change">
+          {"\u2197"} {stat.change}
+        </span>
       </div>
 
       <h2>{stat.value}</h2>
