@@ -2,8 +2,8 @@ import React from "react";
 
 const ContactButtons = () => {
   return (
-    <div className="contact-buttons">
-      <button className="btn primary">
+    <div className="flex flex-wrap gap-4">
+      <button className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-[0.98]">
         <svg
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2"
@@ -14,7 +14,7 @@ const ContactButtons = () => {
         </svg>
         Get in touch
       </button>
-      <button className="btn ghost">
+      <button className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg transition-colors active:scale-[0.98]">
         <svg
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2"
