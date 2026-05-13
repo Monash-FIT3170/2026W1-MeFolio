@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../api/portfolio";
@@ -9,9 +9,6 @@ import {
 } from "../models/portfolioBuilderViewModel";
 
 import "./PortfolioBuilderView.css";
-import { useNavigate } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
-import { ModeSwitch } from "./ModeButton";
 import { PortfolioView } from "./PortfolioView";
 
 
@@ -45,7 +42,7 @@ const useDashboardData = () =>
   });
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-const DashboardLayout = () => {
+export const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { portfolios, isLoading: portfoliosLoading } = useTracker(() => {
     const handler = Meteor.subscribe("portfolios.all");
@@ -75,9 +72,6 @@ const DashboardLayout = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           profile={profile}
-          onPreviewToggle={(isPreview) => {
-            if (isPreview) navigate("/preview");
-          }}
         />
 
       <main className="builder-main">
@@ -85,17 +79,22 @@ const DashboardLayout = () => {
           <h1>{currentTab.label}</h1>
         </header>
 
-        <div className="builder-content">
-          {activeTab === "overview" ? (
-            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
-          ) : (
-            <PlaceholderSection title={currentTab.label} />
-          )}
-        </div>
-      </main>
-    </div>
-  );
-};
+          <div className="builder-content">
+            {activeTab === "overview" ? (
+              <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+            ) : activeTab === "about-me" ? (
+              <PlaceholderSection
+                title={currentTab.label}
+                description={`Placeholder for ${profile?.name || "the current user"}'s About Me details.`}
+              />
+            ) : (
+              <PlaceholderSection title={currentTab.label} />
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  };
 
 // Sidebar navigation for switching dashboard sections.
 const Sidebar = ({
@@ -114,7 +113,7 @@ const Sidebar = ({
 
         <button
           className="view-portfolio-btn"
-          onClick={() => navigate(`/portfolio/${profile?.username ?? "me"}`)}
+          onClick={() => navigate("/preview")}
         >
           View Portfolio
         </button>
