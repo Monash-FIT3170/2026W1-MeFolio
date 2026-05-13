@@ -6,7 +6,7 @@ import {
   sidebarItems,
   samplePortfolioProfileData,
   defaultPortfolioProfileData,
-} from "../ui/portfolioBuilderMockData";
+} from "../ui/Portfolio Builder/portfolioBuilderMockData";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
@@ -44,37 +44,43 @@ export const mapProfile = (user) => {
   if (!user) {
     return mockProfile;
   }
-
   const selectedUser = Array.isArray(user) ? user[0] : user;
 
-  if (!selectedUser) {
-    return mockProfile;
-  }
-
   return {
-    name: selectedUser.name || mockProfile.name,
-    role: selectedUser.role || mockProfile.role,
-    avatar: selectedUser.avatar || mockProfile.avatar,
+    name: selectedUser.profile?.name || "",
+    email: selectedUser.email || ""
   };
 };
 
 // Maps profile/about-me data into the settings tab format.
 export const mapAboutMe = (portfolio) => {
-  const source = portfolio || samplePortfolioProfileData || defaultPortfolioProfileData;
+  // const source = portfolio || samplePortfolioProfileData || defaultPortfolioProfileData;
 
-  return {
-    fullName: source?.fullName || defaultPortfolioProfileData.fullName,
-    professionalTitle:
-      source?.professionalTitle || defaultPortfolioProfileData.professionalTitle,
-    shortBio: source?.shortBio || defaultPortfolioProfileData.shortBio,
-    email: source?.email || defaultPortfolioProfileData.email,
-    phone: source?.phone || defaultPortfolioProfileData.phone,
-    location: source?.location || defaultPortfolioProfileData.location,
-    linkedIn: source?.linkedIn || defaultPortfolioProfileData.linkedIn,
-    github: source?.github || defaultPortfolioProfileData.github,
-    portfolioUrl:
-      source?.portfolioUrl || defaultPortfolioProfileData.portfolioUrl,
+    return {
+    ...defaultPortfolioProfileData,
+    ...portfolio,
+    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    recruiterInfo: {
+      ...defaultPortfolioProfileData.recruiterInfo,
+      ...(portfolio.recruiterInfo || {})
+    }
   };
+
+  //TODO: Check with Ankit
+  // return {
+  //   fullName: source?.fullName || defaultPortfolioProfileData.fullName,
+  //   professionalTitle:
+  //     source?.professionalTitle || defaultPortfolioProfileData.professionalTitle,
+  //   shortBio: source?.shortBio || defaultPortfolioProfileData.shortBio,
+  //   email: source?.email || defaultPortfolioProfileData.email,
+  //   phone: source?.phone || defaultPortfolioProfileData.phone,
+  //   location: source?.location || defaultPortfolioProfileData.location,
+  //   linkedIn: source?.linkedIn || defaultPortfolioProfileData.linkedIn,
+  //   github: source?.github || defaultPortfolioProfileData.github,
+  //   portfolioUrl:
+  //     source?.portfolioUrl || defaultPortfolioProfileData.portfolioUrl,
+  // };
 };
 
 // Maps project data into the project ordering format used by the Projects tab.
@@ -111,6 +117,10 @@ export const createDashboardViewModel = ({
 } = {}) => {
   if (isLoading) {
     return createLoadingViewModel();
+  }
+
+    if (!portfolios.length) {
+    return createMockDashboardViewModel(user);
   }
 
   return {
