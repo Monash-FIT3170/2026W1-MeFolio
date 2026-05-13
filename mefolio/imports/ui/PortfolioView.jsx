@@ -58,29 +58,6 @@ export const PortfolioView = () => {
           />
         </div>
       </section>
-
-      <section className="px-10 lg:px-20 py-20 border-t border-slate-100 bg-slate-50">
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-8">
-          Portfolios
-        </h2>
-        <div>Placeholder for portfolio UI</div>
-        <About />
-        <section className="portfolio-summary">
-          <h2>{portfolio?.title || "Portfolio Overview"}</h2>
-          {portfolio ? (
-            <div className="portfolio-details">
-              <p><strong>Owner:</strong> {portfolio.userId || "Unknown"}</p>
-              <p><strong>Theme:</strong> {portfolio.theme || "Minimal"}</p>
-              <p><strong>Projects:</strong> {portfolio.projects?.length ?? 0}</p>
-            </div>
-          ) : (
-            <p>
-              This portfolio is still being built. Check back later for an
-              updated summary of experience, interests, and technical skills.
-            </p>
-          )}
-        </section>
-      </section>
     </div>
   );
 };

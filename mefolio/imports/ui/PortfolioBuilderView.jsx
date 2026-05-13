@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../api/portfolio";
@@ -8,14 +8,11 @@ import {
   getCurrentTab,
 } from "./portfolioBuilderViewModel";
 import "./PortfolioBuilderView.css";
-import { useNavigate } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
-import { ModeSwitch } from "./ModeButton";
 import { PortfolioView } from "./PortfolioView";
 
 
 // Top-level dashboard view that coordinates tab state and renders the active section.
-export const PortfolioBuilderView = () => {
+export const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { portfolios, isLoading: portfoliosLoading } = useTracker(() => {
     const handler = Meteor.subscribe("portfolios.all");
@@ -45,9 +42,6 @@ export const PortfolioBuilderView = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           profile={profile}
-          onPreviewToggle={(isPreview) => {
-            if (isPreview) navigate("/preview");
-          }}
         />
 
         <main className="builder-main">
@@ -61,7 +55,7 @@ export const PortfolioBuilderView = () => {
             ) : activeTab === "about-me" ? (
               <PlaceholderSection
                 title={currentTab.label}
-                description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
+                description={`Placeholder for ${profile?.name || "the current user"}'s About Me details.`}
               />
             ) : (
               <PlaceholderSection title={currentTab.label} />
@@ -85,7 +79,7 @@ const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
 
         <button
           className="view-portfolio-btn"
-          onClick={() => navigate(`/portfolio/${profile?.username ?? "me"}`)}
+          onClick={() => navigate("/preview")}
         >
           View Portfolio
         </button>
