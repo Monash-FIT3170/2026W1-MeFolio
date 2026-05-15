@@ -20,8 +20,6 @@ export const PortfolioPreview = () => {
   const portfolio = useTracker(() => {
     const sub = Meteor.subscribe("portfolios.all");
 
-    console.log("subscription ready:", sub.ready());
-
     if (!sub.ready()) {return [];}
 
     return PortfolioCollection.findOne({ userId: "Superuser" }); 
@@ -34,7 +32,7 @@ export const PortfolioPreview = () => {
 
     if (!sub.ready() || !portfolio) {return [];}
 
-    return ProjectCollection.find({portfolioId: "abc" }).fetch();
+    return ProjectCollection.find({portfolioId: "abc" }).fetch(); //TODO CHANGE THE KEY TO THE KEY from "abc" TO portfolio._id
   });  
 
   /*
