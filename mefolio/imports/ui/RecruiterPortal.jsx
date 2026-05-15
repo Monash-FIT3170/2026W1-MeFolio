@@ -114,6 +114,7 @@ const RecruiterPortal = ({ portfolio }) => {
 
       <p className="mb-8">
         Upload and manage your resumes. Recruiters will have access to download these files.
+        The top file in the list is chosen for the "View Resume" button in the recruiter view.
       </p>
 
       <div className="mt-6 space-y-3">
