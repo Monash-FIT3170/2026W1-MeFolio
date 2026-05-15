@@ -1,6 +1,5 @@
 export const sidebarItems = [
   { id: "overview", label: "Overview" },
-  { id: "about-me", label: "About Me" },
   { id: "projects", label: "Projects" },
   { id: "analytics", label: "Analytics" },
   { id: "visitors", label: "Live Visitors" },
@@ -8,7 +7,7 @@ export const sidebarItems = [
   { id: "recruiter", label: "Recruiter Portal" },
   { id: "badges", label: "Badges" },
   { id: "themes", label: "Themes" },
-  { id: "settings", label: "Settings" },
+  { id: "settings", label: "Settings" }
 ];
 
 export const mockOverviewStats = [
@@ -17,29 +16,29 @@ export const mockOverviewStats = [
     value: "2,847",
     label: "Total Views",
     change: "+12%",
-    colour: "indigo",
+    colour: "indigo"
   },
   {
     id: "visitors-now",
     value: "3",
     label: "Visitors Right Now",
     change: "+8%",
-    colour: "purple",
+    colour: "purple"
   },
   {
     id: "interactions",
     value: "145",
     label: "Interactions",
     change: "+24%",
-    colour: "pink",
+    colour: "pink"
   },
   {
     id: "ai-used",
     value: "67",
     label: "AI Chatbot Used",
     change: "+18%",
-    colour: "orange",
-  },
+    colour: "orange"
+  }
 ];
 
 export const mockLiveVisitors = [
@@ -50,7 +49,7 @@ export const mockLiveVisitors = [
     activity: "Viewing Projects",
     location: "Sydney, AU",
     duration: "3:24",
-    active: true,
+    active: true
   },
   {
     id: "visitor-2",
@@ -59,7 +58,7 @@ export const mockLiveVisitors = [
     activity: "AI Chat Session",
     location: "Melbourne, AU",
     duration: "7:12",
-    active: true,
+    active: true
   },
   {
     id: "visitor-3",
@@ -68,20 +67,64 @@ export const mockLiveVisitors = [
     activity: "Viewing Skills",
     location: "Brisbane, AU",
     duration: "1:45",
-    active: false,
-  },
+    active: false
+  }
 ];
 
 export const mockProfile = {
   initials: "JD",
   name: "John Doe",
-  email: "john@example.com",
+  email: "john@example.com"
 };
 
-export const mockAboutMe = {
-  fullName: "John Doe",
-  signInEmail: "john@example.com",
-  linkedinUrl: "https://www.linkedin.com/in/johndoe",
-  githubUrl: "https://github.com/johndoe",
-  portfolioTitle: "Product Designer and Frontend Developer",
+// Default portfolio profile data aligned with the current PortfolioCollection shape in server/main.js.
+// This helps the UI safely load and display portfolio/user information even when fields are missing.
+
+export const defaultPortfolioProfileData = {
+  userId: "",
+  portfolioNumber: 1,
+  title: "",
+  bio: "",
+  createdAt: null,
+  projects: [],
+  theme: "minimal",
+  badges: [],
+  recruiterInfo: {
+    salaryExpectation: "",
+    phoneNumber: "",
+    currentLocation: "",
+    availability: "",
+    personalNote: "",
+    resumeLink: "",
+    allowAccess: false
+  }
+};
+
+// Temporary sample data for testing display before real database data is connected.
+export const samplePortfolioProfileData = {
+  userId: "Superuser",
+  portfolioNumber: 1,
+  title: "Sample Portfolio",
+  bio: "This is a sample portfolio.",
+  createdAt: new Date(),
+  projects: [],
+  theme: "minimal",
+  badges: [
+    {
+      title: "Sample Badge",
+      issuer: "Sample Issuer",
+      issueDate: new Date(),
+      badgeImageUrl: "https://example.com/badge.png",
+      verificationUrl: "https://example.com/verify-badge"
+    }
+  ],
+  recruiterInfo: {
+    salaryExpectation: "$70,000 - $90,000",
+    phoneNumber: "123-456-7890",
+    currentLocation: "Sydney NSW",
+    availability: "Immediate",
+    personalNote: "Looking for opportunities in full-stack development.",
+    resumeLink: "https://example.com/resume.pdf",
+    allowAccess: true
+  }
 };

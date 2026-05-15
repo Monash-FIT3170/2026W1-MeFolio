@@ -33,6 +33,36 @@ const handleSubmit = (e) => {
     });
   };
 
+const handleGoogleLogin = () => {
+  Meteor.loginWithGoogle(
+    {
+      requestPermissions: ["profile", "email"],
+    },
+    (err) => {
+      if (err) {
+        console.error("Google login failed:", err);
+      } else {
+        console.log("Google login successful");
+      }
+    }
+  );
+};
+
+const handleGithubLogin = () => {
+  Meteor.loginWithGithub(
+    {
+      requestPermissions: ["user:email"],
+    },
+    (err) => {
+      if (err) {
+        console.error("GitHub login failed:", err);
+      } else {
+        console.log("GitHub login successful");
+      }
+    }
+  );
+};
+
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans relative">
       {/* Dev Bypass - Top Right Corner */}
@@ -207,6 +237,7 @@ const handleSubmit = (e) => {
               <button
                 type="button"
                 className="flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-100 rounded-xl hover:border-indigo-600 hover:bg-indigo-50/50 transition-all group"
+                onClick={handleGithubLogin}
               >
                 <Github className="w-5 h-5 group-hover:text-indigo-600 transition-colors" />
                 <span className="font-bold text-gray-700 text-sm">GitHub</span>
@@ -214,6 +245,7 @@ const handleSubmit = (e) => {
               <button
                 type="button"
                 className="flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-100 rounded-xl hover:border-indigo-600 hover:bg-indigo-50/50 transition-all group"
+                onClick={handleGoogleLogin}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
