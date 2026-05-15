@@ -22,7 +22,7 @@ export const PortfolioPreview = () => {
 
     console.log("subscription ready:", sub.ready());
 
-    if (!sub.ready()) return [];
+    if (!sub.ready()) {return [];}
 
     return PortfolioCollection.findOne({ userId: "Superuser" }); 
   });
@@ -32,20 +32,10 @@ export const PortfolioPreview = () => {
   const projects = useTracker(() => {
     const sub = Meteor.subscribe("projects.all");
 
-    console.log("portfolio subscription handle:", sub);
-    console.log("subscription id:", sub.subscriptionId);
-    console.log("projects:",ProjectCollection.find({}).fetch());
+    if (!sub.ready() || !portfolio) {return [];}
 
-    console.log("subscription ready:", sub.ready());
-
-    if (!sub.ready() || !portfolio) return [];
-    console.log("Getting project collection")
-
-
-    return ProjectCollection.find({
-      portfolioId: "abc"
-    }).fetch();
-  }, [portfolio]);  
+    return ProjectCollection.find({portfolioId: "abc" }).fetch();
+  });  
 
   /*
   Above is 
