@@ -7,7 +7,9 @@ const ProfileSummary = ({ profile }) => {
       </div>
       <div className="min-w-0">
         <p className="font-bold text-gray-900 truncate">{profile.name}</p>
-        <span className="text-xs text-gray-500 truncate block">{profile.email}</span>
+        <span className="text-xs text-gray-500 truncate block">
+          {profile.email}
+        </span>
       </div>
     </div>
   );

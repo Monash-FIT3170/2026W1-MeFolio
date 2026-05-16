@@ -1,13 +1,12 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
-import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { UsersCollection } from "/imports/api/users";
-import './oauth-login/oauth.js';
+import "./oauth-login/oauth.js";
 
 Accounts.config({
-  loginExpirationInDays: 1
+  loginExpirationInDays: 1,
 });
 
 Meteor.startup(async () => {
@@ -18,12 +17,12 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       services: {
         password: "",
-        resume: ""
+        resume: "",
       },
       email: "superuser@example.com",
       profile: {
-        name: "Superuser"
-      }
+        name: "Superuser",
+      },
     });
   } else {
     const existingUser = await UsersCollection.findOneAsync();
@@ -35,68 +34,90 @@ Meteor.startup(async () => {
   if ((await ProjectCollection.find().countAsync()) === 0) {
     const project1Id = await ProjectCollection.insertAsync({
       title: "Personal Portfolio Website",
-      description: "A responsive portfolio website used to showcase projects, skills, and contact details.",
+      description:
+        "A responsive portfolio website used to showcase projects, skills, and contact details.",
       createdAt: new Date(),
       technologies: ["React", "CSS", "Meteor"],
       githubLink: "https://github.com/example/portfolio",
       liveDemoLink: "https://example-portfolio.com",
-      media: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80",
     });
 
     const project2Id = await ProjectCollection.insertAsync({
       title: "Task Management App",
-      description: "A simple task tracking app with project cards, status updates, and basic filtering.",
+      description:
+        "A simple task tracking app with project cards, status updates, and basic filtering.",
       createdAt: new Date(),
       technologies: ["JavaScript", "MongoDB", "Meteor"],
       githubLink: "https://github.com/example/task-app",
       liveDemoLink: "https://example-task-app.com",
-      media: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80",
     });
 
     const project3Id = await ProjectCollection.insertAsync({
       title: "Developer Blog Platform",
-      description: "A blog-style project used to share technical writeups and software engineering reflections.",
+      description:
+        "A blog-style project used to share technical writeups and software engineering reflections.",
       createdAt: new Date(),
       technologies: ["React", "Node.js", "CSS"],
       githubLink: "https://github.com/example/blog-platform",
       liveDemoLink: "https://example-blog.com",
-      media: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
     });
 
     const project4Id = await ProjectCollection.insertAsync({
       title: "E-Commerce Storefront",
-      description: "A full-stack online store with product listings, cart, and checkout flow.",
+      description:
+        "A full-stack online store with product listings, cart, and checkout flow.",
       createdAt: new Date(),
       technologies: ["React", "Node.js", "Stripe"],
       githubLink: "https://github.com/example/ecommerce",
       liveDemoLink: "https://example-store.com",
-      media: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
     });
 
     const project5Id = await ProjectCollection.insertAsync({
       title: "Real-Time Chat App",
-      description: "A websocket-powered chat application with rooms, presence indicators, and message history.",
+      description:
+        "A websocket-powered chat application with rooms, presence indicators, and message history.",
       createdAt: new Date(),
       technologies: ["Meteor", "React", "MongoDB"],
       githubLink: "https://github.com/example/chat-app",
       liveDemoLink: "https://example-chat.com",
-      media: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&q=80",
     });
 
     const project6Id = await ProjectCollection.insertAsync({
       title: "Data Visualisation Dashboard",
-      description: "An analytics dashboard with interactive charts, filters, and CSV export built for internal reporting.",
+      description:
+        "An analytics dashboard with interactive charts, filters, and CSV export built for internal reporting.",
       createdAt: new Date(),
       technologies: ["React", "D3.js", "Python"],
       githubLink: "https://github.com/example/dashboard",
       liveDemoLink: "https://example-dashboard.com",
-      media: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"
+      media:
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
     });
 
-    projectIds = [project1Id, project2Id, project3Id, project4Id, project5Id, project6Id];
+    projectIds = [
+      project1Id,
+      project2Id,
+      project3Id,
+      project4Id,
+      project5Id,
+      project6Id,
+    ];
   } else {
-    const existingProjects = await ProjectCollection.find({}, { sort: { createdAt: 1 } }).fetchAsync();
-    projectIds = existingProjects.map(p => p._id);
+    const existingProjects = await ProjectCollection.find(
+      {},
+      { sort: { createdAt: 1 } },
+    ).fetchAsync();
+    projectIds = existingProjects.map((p) => p._id);
   }
 
   // Insert sample portfolio data if collections are empty
@@ -115,8 +136,8 @@ Meteor.startup(async () => {
           issuer: "Sample Issuer",
           issueDate: new Date(),
           badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge"
-        }
+          verificationUrl: "https://example.com/verify-badge",
+        },
       ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
@@ -125,8 +146,8 @@ Meteor.startup(async () => {
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
         resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true
-      }
+        allowAccess: true,
+      },
     });
   }
 });
@@ -177,7 +198,9 @@ Meteor.methods({
   },
 
   async "portfolios.update"(portfolioId, updates) {
-    return await PortfolioCollection.updateAsync(portfolioId, { $set: updates });
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: updates,
+    });
   },
 
   async "portfolios.delete"(portfolioId) {

@@ -11,16 +11,64 @@ export const sidebarItems = [
 ];
 
 export const mockOverviewStats = [
-  { id: "total-views", value: "2,847", label: "Total Views", change: "+12%", colour: "indigo" },
-  { id: "visitors-now", value: "3", label: "Visitors Right Now", change: "+8%", colour: "purple" },
-  { id: "interactions", value: "145", label: "Interactions", change: "+24%", colour: "pink" },
-  { id: "ai-used", value: "67", label: "AI Chatbot Used", change: "+18%", colour: "orange" },
+  {
+    id: "total-views",
+    value: "2,847",
+    label: "Total Views",
+    change: "+12%",
+    colour: "indigo",
+  },
+  {
+    id: "visitors-now",
+    value: "3",
+    label: "Visitors Right Now",
+    change: "+8%",
+    colour: "purple",
+  },
+  {
+    id: "interactions",
+    value: "145",
+    label: "Interactions",
+    change: "+24%",
+    colour: "pink",
+  },
+  {
+    id: "ai-used",
+    value: "67",
+    label: "AI Chatbot Used",
+    change: "+18%",
+    colour: "orange",
+  },
 ];
 
 export const mockLiveVisitors = [
-  { id: "visitor-1", name: "James O'Brien", email: "james.obrien@canva.com", activity: "Viewing Projects", location: "Sydney, AU", duration: "3:24", active: true },
-  { id: "visitor-2", name: "Emily Zhang", email: "emily.z@atlassian.com", activity: "AI Chat Session", location: "Melbourne, AU", duration: "7:12", active: true },
-  { id: "visitor-3", name: "Liam Robertson", email: "lrobertson@seek.com.au", activity: "Viewing Skills", location: "Brisbane, AU", duration: "1:45", active: false },
+  {
+    id: "visitor-1",
+    name: "James O'Brien",
+    email: "james.obrien@canva.com",
+    activity: "Viewing Projects",
+    location: "Sydney, AU",
+    duration: "3:24",
+    active: true,
+  },
+  {
+    id: "visitor-2",
+    name: "Emily Zhang",
+    email: "emily.z@atlassian.com",
+    activity: "AI Chat Session",
+    location: "Melbourne, AU",
+    duration: "7:12",
+    active: true,
+  },
+  {
+    id: "visitor-3",
+    name: "Liam Robertson",
+    email: "lrobertson@seek.com.au",
+    activity: "Viewing Skills",
+    location: "Brisbane, AU",
+    duration: "1:45",
+    active: false,
+  },
 ];
 
 export const mockProfile = {
@@ -81,7 +129,8 @@ export const mockProjects = [
   {
     id: "project-1",
     title: "Personal Portfolio Website",
-    description: "A responsive portfolio website used to showcase projects, skills, and contact details.",
+    description:
+      "A responsive portfolio website used to showcase projects, skills, and contact details.",
     technologies: ["React", "CSS", "Meteor"],
     githubLink: "https://github.com/example/portfolio",
     liveDemoLink: "https://example-portfolio.com",
@@ -89,7 +138,8 @@ export const mockProjects = [
   {
     id: "project-2",
     title: "Task Management App",
-    description: "A simple task tracking app with project cards, status updates, and basic filtering.",
+    description:
+      "A simple task tracking app with project cards, status updates, and basic filtering.",
     technologies: ["JavaScript", "MongoDB", "Meteor"],
     githubLink: "https://github.com/example/task-app",
     liveDemoLink: "https://example-task-app.com",
@@ -97,7 +147,8 @@ export const mockProjects = [
   {
     id: "project-3",
     title: "Developer Blog Platform",
-    description: "A blog-style project used to share technical writeups and software engineering reflections.",
+    description:
+      "A blog-style project used to share technical writeups and software engineering reflections.",
     technologies: ["React", "Node.js", "CSS"],
     githubLink: "https://github.com/example/blog-platform",
     liveDemoLink: "https://example-blog.com",

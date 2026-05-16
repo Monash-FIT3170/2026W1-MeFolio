@@ -34,13 +34,16 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
       className={`
         border px-4 py-3 rounded-xl font-bold cursor-pointer transition-all duration-200
         ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
-        ${preview
-          ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
-          : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+        ${
+          preview
+            ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
+            : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
         }
       `}
     >
-      <span className="font-medium">{preview ? "Back to Builder" : "View Portfolio"}</span>
+      <span className="font-medium">
+        {preview ? "Back to Builder" : "View Portfolio"}
+      </span>
     </button>
   );
 };

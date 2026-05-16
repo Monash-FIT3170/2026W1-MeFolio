@@ -1,11 +1,19 @@
 import { ModeSwitch } from "../Portfolio Preview/ModeButton";
 import ProfileSummary from "./ProfileSummary";
 
-const Sidebar = ({ items, activeTab, onTabChange, profile, onPreviewToggle }) => {
+const Sidebar = ({
+  items,
+  activeTab,
+  onTabChange,
+  profile,
+  onPreviewToggle,
+}) => {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
       <div className="p-6 border-b border-gray-200">
-        <div className="text-2xl font-extrabold text-gray-900 mb-4">MeFolio</div>
+        <div className="text-2xl font-extrabold text-gray-900 mb-4">
+          MeFolio
+        </div>
         <ModeSwitch onToggle={onPreviewToggle} />
       </div>
 

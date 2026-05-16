@@ -11,7 +11,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
-import ProfileSummary from "./ProfileSummary";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
@@ -21,16 +20,20 @@ import Sidebar from "./Sidebar";
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
-    const projectsHandler = Meteor.subscribe("projects.all");
+    Meteor.subscribe("projects.all");
     const portfolios = PortfolioCollection.find({}).fetch();
 
     const portfolio = portfolios[0];
     const projects = portfolio?.projects?.length
       ? (() => {
           const projectMap = new Map(
-            ProjectCollection.find({ _id: { $in: portfolio.projects } }).fetch().map(p => [p._id, p])
+            ProjectCollection.find({ _id: { $in: portfolio.projects } })
+              .fetch()
+              .map((p) => [p._id, p]),
           );
-          return portfolio.projects.map(id => projectMap.get(id)).filter(Boolean);
+          return portfolio.projects
+            .map((id) => projectMap.get(id))
+            .filter(Boolean);
         })()
       : ProjectCollection.find({}).fetch();
 
@@ -56,7 +59,12 @@ const DashboardLayout = () => {
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
 
-  const { isLoading, portfolios, projects: dbProjects, user } = useDashboardData();
+  const {
+    isLoading,
+    portfolios,
+    projects: dbProjects,
+    user,
+  } = useDashboardData();
 
   const {
     isLoading: viewModelLoading,
@@ -66,7 +74,12 @@ const DashboardLayout = () => {
     profile,
     aboutMe,
     projects = [],
-  } = createDashboardViewModel({ isLoading, portfolios, projects: dbProjects, user });
+  } = createDashboardViewModel({
+    isLoading,
+    portfolios,
+    projects: dbProjects,
+    user,
+  });
 
   const projectsIdString = JSON.stringify(projects.map((p) => p?._id));
   useEffect(() => {
@@ -119,14 +132,20 @@ const DashboardLayout = () => {
 
       <main className="flex-1 overflow-y-auto">
         <header className="bg-white border-b border-gray-200 px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-gray-900">{currentTab.label}</h1>
+          <h1 className="text-2xl font-extrabold text-gray-900">
+            {currentTab.label}
+          </h1>
         </header>
 
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "settings" ? (
-            <ProfileSettings profile={profile} aboutMe={aboutMe} userId={user?.[0]?._id} />
+            <ProfileSettings
+              profile={profile}
+              aboutMe={aboutMe}
+              userId={user?.[0]?._id}
+            />
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}

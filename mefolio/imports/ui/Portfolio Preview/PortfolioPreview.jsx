@@ -1,13 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ProjectCard } from './ProjectCard.jsx';
+import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
-import { ProjectCollection } from '../../api/projects.js';
+import { ProjectCollection } from "../../api/projects.js";
 
 export const PortfolioPreview = () => {
-  const { portfolio, projects } = useTracker(() => {
+  const { projects } = useTracker(() => {
     const portfolioSub = Meteor.subscribe("portfolios.all");
     const projectsSub = Meteor.subscribe("projects.all");
 
@@ -19,9 +19,13 @@ export const PortfolioPreview = () => {
     if (!portfolio?.projects?.length) return { portfolio, projects: [] };
 
     const projectMap = new Map(
-      ProjectCollection.find({ _id: { $in: portfolio.projects } }).fetch().map(p => [p._id, p])
+      ProjectCollection.find({ _id: { $in: portfolio.projects } })
+        .fetch()
+        .map((p) => [p._id, p]),
     );
-    const projects = portfolio.projects.map(id => projectMap.get(id)).filter(Boolean);
+    const projects = portfolio.projects
+      .map((id) => projectMap.get(id))
+      .filter(Boolean);
 
     return { portfolio, projects };
   });
@@ -56,7 +60,7 @@ export const PortfolioPreview = () => {
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
         >
           Back to Dashboard
@@ -65,7 +69,7 @@ export const PortfolioPreview = () => {
 
       <div className="relative w-full">
         <div
-          className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? 'cursor-grabbing' : ''}`}
+          className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? "cursor-grabbing" : ""}`}
           ref={scrollRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
