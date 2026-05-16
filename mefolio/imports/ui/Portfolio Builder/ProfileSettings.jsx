@@ -2,6 +2,15 @@ import { useState } from "react";
 import { UsersCollection } from "../../api/users";
 import { PortfolioCollection } from "../../api/portfolio";
 
+/**
+ * Profile Settings component allows users to edit their profile information and portfolio details.
+ *
+ * @param {Object} profile - the user's profile details as output by the mapProfile function in the view model
+ * @param {Object} aboutMe - the user's portfolio details as output by the mapAboutMe function in the view model
+ * @param {string} userId - the current user's ID
+ *
+ * @returns Form element pre-populated with the user's current profile data, allowing them to make edits and save changes.
+ */
 const ProfileSettings = ({ profile, aboutMe, userId }) => {
   const [form, setForm] = useState({
     name: profile.name || "",
@@ -35,6 +44,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
       }
     });
 
+    // Get the user's portfolio. Assuming one portfolio per user for now.
     const userPortfolio = PortfolioCollection.find({ userId }).fetch();
     Meteor.call("portfolios.update", userPortfolio[0]?._id, aboutMeUpdates, (error) => {
       if (error) {

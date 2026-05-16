@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
+import { ProjectCollection } from "../../api/projects";
 import { UsersCollection } from "../../api/users";
 import {
   createDashboardViewModel,
@@ -9,7 +10,6 @@ import {
 } from "../../models/portfolioBuilderViewModel";
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
-import { ModeSwitch } from "../Portfolio Preview/ModeButton";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import ProfileSummary from "./ProfileSummary";
 import PlaceholderSection from "./PlaceholderSection";
@@ -21,14 +21,32 @@ import Sidebar from "./Sidebar";
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
+    const projectsHandler = Meteor.subscribe("projects.all");
     const portfolios = PortfolioCollection.find({}).fetch();
 
+    const portfolio = portfolios[0];
+    const projects = portfolio?.projects?.length
+      ? (() => {
+          const projectMap = new Map(
+            ProjectCollection.find({ _id: { $in: portfolio.projects } }).fetch().map(p => [p._id, p])
+          );
+          return portfolio.projects.map(id => projectMap.get(id)).filter(Boolean);
+        })()
+      : ProjectCollection.find({}).fetch();
+
+    /* HANDOVER
+    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet.
+    Will switch to Meteor.user() once authentication is implemented.
+
+    const user = Meteor.user();
+    */
     const usersHandler = Meteor.subscribe("users1.all");
     const user = UsersCollection.find({}).fetch();
 
     return {
       isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
       portfolios,
+      projects,
       user,
     };
   });
@@ -38,7 +56,7 @@ const DashboardLayout = () => {
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
 
-  const { isLoading, portfolios, user } = useDashboardData();
+  const { isLoading, portfolios, projects: dbProjects, user } = useDashboardData();
 
   const {
     isLoading: viewModelLoading,
@@ -51,8 +69,8 @@ const DashboardLayout = () => {
   } = createDashboardViewModel({ isLoading, portfolios, user });
 
   useEffect(() => {
-    setOrderedProjects(projects);
-  }, [projects]);
+    setOrderedProjects(dbProjects);
+  }, [dbProjects]);
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
   const handleProjectDragOver = (event) => event.preventDefault();

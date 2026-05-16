@@ -4,13 +4,14 @@ import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { UsersCollection } from "/imports/api/users";
+import './oauth-login/oauth.js';
 
 Accounts.config({
   loginExpirationInDays: 1
 });
 
 Meteor.startup(async () => {
-
+  // Insert sample user data if collections are empty
   let sampleUserId;
   if ((await UsersCollection.find().countAsync()) === 0) {
     sampleUserId = await UsersCollection.insertAsync({
@@ -29,6 +30,7 @@ Meteor.startup(async () => {
     sampleUserId = existingUser._id;
   }
 
+  // Insert sample project data if collections are empty
   let projectIds = [];
   if ((await ProjectCollection.find().countAsync()) === 0) {
     const project1Id = await ProjectCollection.insertAsync({
@@ -36,7 +38,7 @@ Meteor.startup(async () => {
       description: "A responsive portfolio website used to showcase projects, skills, and contact details.",
       createdAt: new Date(),
       technologies: ["React", "CSS", "Meteor"],
-      githubLink: "https://github.com/teknovizier/tekla_mcp_server",
+      githubLink: "https://github.com/example/portfolio",
       liveDemoLink: "https://example-portfolio.com",
       media: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80"
     });
@@ -97,6 +99,7 @@ Meteor.startup(async () => {
     projectIds = existingProjects.map(p => p._id);
   }
 
+  // Insert sample portfolio data if collections are empty
   if ((await PortfolioCollection.find().countAsync()) === 0) {
     await PortfolioCollection.insertAsync({
       userId: sampleUserId,
@@ -106,13 +109,15 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimal",
-      badges: [{
-        title: "Sample Badge",
-        issuer: "Sample Issuer",
-        issueDate: new Date(),
-        badgeImageUrl: "https://example.com/badge.png",
-        verificationUrl: "https://example.com/verify-badge"
-      }],
+      badges: [
+        {
+          title: "Sample Badge",
+          issuer: "Sample Issuer",
+          issueDate: new Date(),
+          badgeImageUrl: "https://example.com/badge.png",
+          verificationUrl: "https://example.com/verify-badge"
+        }
+      ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
         phoneNumber: "123-456-7890",
@@ -120,7 +125,7 @@ Meteor.startup(async () => {
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
         resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true,
+        allowAccess: true
       }
     });
   }
@@ -130,15 +135,16 @@ Meteor.publish("users1.all", function () {
   return UsersCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-Meteor.publish('projects.all', function () {
+Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-Meteor.publish('portfolios.all', function () {
+Meteor.publish("portfolios.all", function () {
   return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
+  // User methods
   async "users1.insert"(userData) {
     return await UsersCollection.insertAsync(userData);
   },
@@ -151,6 +157,7 @@ Meteor.methods({
     return await UsersCollection.removeAsync(userId);
   },
 
+  // Project methods
   async "projects.insert"(projectData) {
     return await ProjectCollection.insertAsync(projectData);
   },
@@ -163,6 +170,7 @@ Meteor.methods({
     return await ProjectCollection.removeAsync(projectId);
   },
 
+  // Portfolio methods
   async "portfolios.insert"(portfolioData) {
     portfolioData.userId = this.userId;
     return await PortfolioCollection.insertAsync(portfolioData);

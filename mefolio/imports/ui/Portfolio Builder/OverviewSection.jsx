@@ -1,3 +1,4 @@
+// Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6">
@@ -10,6 +11,7 @@ const StatCard = ({ stat }) => {
   );
 };
 
+// Displays one visitor row inside the live visitors list.
 const VisitorCard = ({ visitor }) => {
   return (
     <div className="flex items-start gap-4 px-6 py-4 border-b border-gray-200 last:border-b-0">
@@ -25,6 +27,7 @@ const VisitorCard = ({ visitor }) => {
   );
 };
 
+// Overview tab content that displays summary stats and recent visitor activity.
 const OverviewSection = ({ stats, visitors }) => {
   return (
     <>

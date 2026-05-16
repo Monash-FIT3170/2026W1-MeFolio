@@ -8,6 +8,7 @@ import {
   defaultPortfolioProfileData,
 } from "../ui/Portfolio Builder/portfolioBuilderMockData";
 
+// Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
   isLoading: true,
   sidebarItems: [],
@@ -18,27 +19,28 @@ export const createLoadingViewModel = () => ({
   projects: [],
 });
 
+// Maps raw portfolio analytics into the stat card format used by the overview tab.
 export const mapOverviewStats = (portfolios) => {
   return portfolios?.length ? mockOverviewStats : mockOverviewStats;
 };
 
+// Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
 };
 
+// Maps the current user or portfolio owner into the sidebar profile shape.
 export const mapProfile = (user) => {
-  if (!user) {
-    return mockProfile;
-  }
+  if (!user) return mockProfile;
   const selectedUser = Array.isArray(user) ? user[0] : user;
-
   return {
     name: selectedUser.profile?.name || "",
     email: selectedUser.email || "",
   };
 };
 
-export const mapAboutMe = (portfolio) => {
+// Maps current user and portfolio fields into the About Me editor/view shape.
+export const mapAboutMe = (portfolio = {}) => {
   return {
     ...defaultPortfolioProfileData,
     ...portfolio,
@@ -55,6 +57,7 @@ export const mapProjects = (portfolios) => {
   return portfolios?.length ? mockProjects : mockProjects;
 };
 
+// Returns the current mock-backed dashboard state while the API is not wired in.
 export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
@@ -65,22 +68,14 @@ export const createMockDashboardViewModel = (user) => ({
   projects: mockProjects,
 });
 
-export const getCurrentTab = (items, activeTab) => {
-  return items.find((item) => item.id === activeTab);
-};
-
+// Builds the single data object the UI consumes, from either loading, mock, or real data.
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
   user = null,
 } = {}) => {
-  if (isLoading) {
-    return createLoadingViewModel();
-  }
-
-  if (!portfolios.length) {
-    return createMockDashboardViewModel(user);
-  }
+  if (isLoading) return createLoadingViewModel();
+  if (!portfolios.length) return createMockDashboardViewModel(user);
 
   return {
     isLoading: false,
@@ -92,3 +87,7 @@ export const createDashboardViewModel = ({
     projects: mapProjects(portfolios),
   };
 };
+
+// Safely returns the currently selected tab, or a fallback if the list is empty.
+export const getCurrentTab = (items, activeTab) =>
+  items.find((item) => item.id === activeTab) ?? items[0] ?? null;

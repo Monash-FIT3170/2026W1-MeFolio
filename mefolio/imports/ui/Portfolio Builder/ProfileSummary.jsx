@@ -1,3 +1,4 @@
+// Small profile summary shown at the bottom of the sidebar.
 const ProfileSummary = ({ profile }) => {
   return (
     <div className="border-t border-gray-200 p-5 flex items-center gap-3">

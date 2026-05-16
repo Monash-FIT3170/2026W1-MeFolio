@@ -1,3 +1,4 @@
+// Generic placeholder used for dashboard tabs that are not built yet.
 const PlaceholderSection = ({ title, description = "This section is a placeholder for now." }) => {
   return (
     <section className="bg-white border border-gray-200 rounded-2xl p-7">
