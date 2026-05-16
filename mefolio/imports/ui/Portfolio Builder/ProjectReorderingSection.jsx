@@ -27,7 +27,7 @@ const ProjectReorderingSection = ({
       <div className="flex flex-col">
         {projects.map((project, index) => (
           <article
-            key={project.id}
+            key={project._id || project.id}
             draggable
             onDragStart={() => onDragStart(index)}
             onDragOver={onDragOver}

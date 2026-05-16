@@ -66,11 +66,14 @@ const DashboardLayout = () => {
     profile,
     aboutMe,
     projects = [],
-  } = createDashboardViewModel({ isLoading, portfolios, user });
+  } = createDashboardViewModel({ isLoading, portfolios, projects: dbProjects, user });
 
+  const projectsIdString = JSON.stringify(projects.map((p) => p?._id));
   useEffect(() => {
-    setOrderedProjects(dbProjects);
-  }, [dbProjects]);
+    if (projects.length > 0 && orderedProjects.length === 0) {
+      setOrderedProjects(projects);
+    }
+  }, [projectsIdString]);
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
   const handleProjectDragOver = (event) => event.preventDefault();

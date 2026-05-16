@@ -72,6 +72,7 @@ export const createMockDashboardViewModel = (user) => ({
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
+  projects = null,
   user = null,
 } = {}) => {
   if (isLoading) return createLoadingViewModel();
@@ -84,7 +85,7 @@ export const createDashboardViewModel = ({
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),
-    projects: mapProjects(portfolios),
+    projects: projects || mapProjects(portfolios),
   };
 };
 
