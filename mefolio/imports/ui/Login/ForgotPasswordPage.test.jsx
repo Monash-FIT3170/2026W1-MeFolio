@@ -1,6 +1,6 @@
 /**
  * UI Tests for ForgotPasswordPage.jsx
- * 
+ *
  * Ensures that the ForgotPasswordPage component renders correctly and handles user interactions as expected.
  */
 
@@ -20,7 +20,7 @@ if (Meteor.isClient) {
                     onPasswordReset={() => {}}
                 />
             );
-            
+
             expect(screen.getByText('Verify Your Identity')).to.exist;
             expect(screen.getByLabelText('Email Address')).to.exist;
             expect(screen.getByRole('button', { name: /verify email/i })).to.exist;
@@ -28,7 +28,7 @@ if (Meteor.isClient) {
 
         it('has a back button that can be clicked', () => {
             let clicked = false;
-            
+
             render(
                 <ForgotPasswordPage
                     onBackToLogin={() => clicked = true}
@@ -38,7 +38,7 @@ if (Meteor.isClient) {
 
             const backButton = screen.getAllByText('Back to Login')[0];
             fireEvent.click(backButton);
-            
+
             expect(clicked).to.be.true;
         });
     });

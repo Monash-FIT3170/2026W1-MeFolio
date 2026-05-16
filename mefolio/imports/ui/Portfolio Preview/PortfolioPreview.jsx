@@ -1,54 +1,31 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProjectCard } from './ProjectCard.jsx';
-
-const MOCK_PROJECTS = [
-  {
-    id: "1",
-    title: "E-Commerce Platform",
-    description: "A full-stack store with real-time inventory.",
-    tech: ["React", "Node.js", "Stripe"],
-    stars: 234,
-    challengeName: "Cart Logic Challenge"
-  },
-  {
-    id: "2",
-    title: "Task Management App",
-    description: "Collaborative tasks with real-time updates.",
-    tech: ["Vue.js", "Firebase", "Tailwind"],
-    stars: 156,
-    challengeName: "State Management"
-  },
-  {
-    id: "3",
-    title: "AI Content Generator",
-    description: "Generate high-quality blog posts using GPT-4 API endpoints.",
-    tech: ["Next.js", "OpenAI", "PostgreSQL"],
-    stars: 380,
-    challengeName: "API Rate Limiting",
-    imageUrl: ""
-  },
-  {
-    id: "4",
-    title: "ksksjkfase",
-    description: "awawfawfawf",
-    tech: ["Python", "React", "D3.js"],
-    stars: 89,
-    challengeName: "hfhejfhjf",
-    imageUrl: ""
-  },
-  {
-    id: "5",
-    title: "fesfsefsef",
-    description: "esfsfsefsefsefsef",
-    tech: ["React Native", "Express", "SQLite"],
-    stars: 412,
-    challengeName: "efsefsefsf",
-    imageUrl: ""
-  }
-];
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "../../api/portfolio.js";
+import { ProjectCollection } from '../../api/projects.js';
 
 export const PortfolioPreview = () => {
+  const { portfolio, projects } = useTracker(() => {
+    const portfolioSub = Meteor.subscribe("portfolios.all");
+    const projectsSub = Meteor.subscribe("projects.all");
+
+    if (!portfolioSub.ready() || !projectsSub.ready()) {
+      return { portfolio: null, projects: [] };
+    }
+
+    const portfolio = PortfolioCollection.findOne();
+    if (!portfolio?.projects?.length) return { portfolio, projects: [] };
+
+    const projectMap = new Map(
+      ProjectCollection.find({ _id: { $in: portfolio.projects } }).fetch().map(p => [p._id, p])
+    );
+    const projects = portfolio.projects.map(id => projectMap.get(id)).filter(Boolean);
+
+    return { portfolio, projects };
+  });
+
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -80,7 +57,7 @@ export const PortfolioPreview = () => {
         <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"        
+          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
         >
           Back to Dashboard
         </button>
@@ -95,8 +72,8 @@ export const PortfolioPreview = () => {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
         >
-          {MOCK_PROJECTS.map((project) => (
-            <div className="shrink-0 w-[380px]" key={project.id}>
+          {projects.map((project) => (
+            <div className="shrink-0 w-[380px]" key={project._id}>
               <ProjectCard project={project} />
             </div>
           ))}

@@ -1,6 +1,6 @@
 /**
  * UI Tests for LoginPage.jsx
- * 
+ *
  * Ensures that the LoginPage component renders correctly and handles user interactions as expected.
  */
 
