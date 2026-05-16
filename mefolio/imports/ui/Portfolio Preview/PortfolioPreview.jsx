@@ -3,43 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { ProjectCard } from './ProjectCard.jsx';
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-import { PortfolioCollection } from "../api/portfolio.js";
-import { ProjectCollection } from '../api/projects.js';
+import { PortfolioCollection } from "../../api/portfolio.js";
+import { ProjectCollection } from '../../api/projects.js';
 
 export const PortfolioPreview = () => {
-  /*
-  The js bellow subscribes to all portfolios and finds the Porfolio with the superuser id.
-  Using this portfolio, it then gets all projects with that id. 
+  const { portfolio, projects } = useTracker(() => {
+    const portfolioSub = Meteor.subscribe("portfolios.all");
+    const projectsSub = Meteor.subscribe("projects.all");
 
-  It will break if superuser starts having many portfolios with its current implementation. 
+    if (!portfolioSub.ready() || !projectsSub.ready()) {
+      return { portfolio: null, projects: [] };
+    }
 
-  Personnaly I (harry mills) think this should be refactored so a projects container recieves a portfolio id as
-  a component attributes and then sub to projects in thier once the whole page is set up to 
-  separate concerns between components.
-  */
-  const portfolio = useTracker(() => {
-    const sub = Meteor.subscribe("portfolios.all");
+    const portfolio = PortfolioCollection.findOne();
+    if (!portfolio?.projects?.length) return { portfolio, projects: [] };
 
-    if (!sub.ready()) {return [];}
+    const projectMap = new Map(
+      ProjectCollection.find({ _id: { $in: portfolio.projects } }).fetch().map(p => [p._id, p])
+    );
+    const projects = portfolio.projects.map(id => projectMap.get(id)).filter(Boolean);
 
-    return PortfolioCollection.findOne({ userId: "Superuser" }); 
+    return { portfolio, projects };
   });
 
-  console.log("port_id:", portfolio?._id)
-
-  const projects = useTracker(() => {
-    const sub = Meteor.subscribe("projects.all");
-
-    if (!sub.ready() || !portfolio) {return [];}
-
-    return ProjectCollection.find({portfolioId: "abc" }).fetch(); //TODO CHANGE THE KEY TO THE KEY from "abc" TO portfolio._id
-  });  
-
-  /*
-  Above is 
-  Below is related UI js
-  */
-  
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -71,7 +57,7 @@ export const PortfolioPreview = () => {
         <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"        
+          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
         >
           Back to Dashboard
         </button>
@@ -86,8 +72,8 @@ export const PortfolioPreview = () => {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
         >
-          {MONGO_PROJECTS.map((project) => (
-            <div className="shrink-0 w-[380px]"  key={project.priority }>
+          {projects.map((project) => (
+            <div className="shrink-0 w-[380px]" key={project._id}>
               <ProjectCard project={project} />
             </div>
           ))}

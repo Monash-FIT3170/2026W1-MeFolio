@@ -1,6 +1,6 @@
 /**
  * UI Tests for ProjectCard.jsx
- * 
+ *
  * Ensures that the ProjectCard component renders correctly and handles user interactions as expected.
  */
 
@@ -24,7 +24,7 @@ if (Meteor.isClient) {
       };
 
       render(<ProjectCard project={mockProject} />);
-      
+
       expect(screen.getByText('AI Portfolio Dashboard')).to.exist;
       expect(screen.getByText('An interactive portfolio with AI-powered analytics')).to.exist;
       expect(screen.getByText('React')).to.exist;
@@ -41,13 +41,13 @@ if (Meteor.isClient) {
       };
 
       render(<ProjectCard project={mockProject} />);
-      
+
       const tryButton = screen.getByRole('button', { name: /try challenge/i });
-      
+
       expect(screen.getByText('Fix the bug')).to.exist;
-      
+
       fireEvent.click(tryButton);
-      
+
       expect(screen.getByRole('button', { name: /try challenge/i })).to.exist;
     });
 
@@ -58,7 +58,7 @@ if (Meteor.isClient) {
       };
 
       render(<ProjectCard project={mockProject} />);
-      
+
       expect(screen.getByText('Voice Summary')).to.exist;
       expect(screen.getByText('Code')).to.exist;
       expect(screen.getByText('Demo')).to.exist;
@@ -72,7 +72,7 @@ if (Meteor.isClient) {
       };
 
       render(<ProjectCard project={mockProject} />);
-      
+
       expect(screen.getByText('Preview Coming Soon')).to.exist;
     });
   });
