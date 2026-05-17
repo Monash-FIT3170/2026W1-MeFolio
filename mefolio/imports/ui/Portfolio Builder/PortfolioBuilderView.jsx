@@ -16,33 +16,64 @@ import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
 
+const getProjectId = (project) => project?._id || project?.id;
+
+const getProjectOrderKey = (projects = []) =>
+  projects.map((project) => getProjectId(project)).join("|");
+
+const getProjectDataKey = (projects = []) =>
+  projects
+    .map((project) =>
+      [
+        getProjectId(project),
+        project?.title || "",
+        project?.isMissingProjectDocument ? "missing" : "loaded",
+      ].join(":"),
+    )
+    .join("|");
+
+const getPortfolioProjects = (portfolio, projectDocuments = []) => {
+  const projectsById = new Map(
+    projectDocuments.map((project) => [project._id, project]),
+  );
+
+  if (!portfolio?.projects?.length) return projectDocuments;
+
+  return portfolio.projects.map((projectId) => {
+    const project = projectsById.get(projectId);
+
+    return (
+      project || {
+        _id: projectId,
+        id: projectId,
+        title: "Project unavailable",
+        description: "This project could not be loaded yet.",
+        technologies: [],
+        githubLink: "",
+        liveDemoLink: "",
+        isMissingProjectDocument: true,
+      }
+    );
+  });
+};
+
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
-    Meteor.subscribe("projects.all");
-    const portfolios = PortfolioCollection.find({}).fetch();
-
-    const portfolio = portfolios[0];
-    const projects = portfolio?.projects?.length
-      ? (() => {
-          const projectMap = new Map(
-            ProjectCollection.find({ _id: { $in: portfolio.projects } })
-              .fetch()
-              .map((p) => [p._id, p]),
-          );
-          return portfolio.projects
-            .map((id) => projectMap.get(id))
-            .filter(Boolean);
-        })()
-      : ProjectCollection.find({}).fetch();
-
+    const projectsHandler = Meteor.subscribe("projects.all");
     const usersHandler = Meteor.subscribe("users.current");
+
+    const portfolios = PortfolioCollection.find({}).fetch();
+    const projectDocuments = ProjectCollection.find({}).fetch();
     const user = Meteor.user();
 
     return {
-      isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
+      isLoading:
+        !portfoliosHandler.ready() ||
+        !projectsHandler.ready() ||
+        !usersHandler.ready(),
       portfolios,
-      projects,
+      projectDocuments,
       user,
     };
   });
@@ -50,13 +81,16 @@ const useDashboardData = () =>
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
+  const [dataProjectKey, setDataProjectKey] = useState("");
+  const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
+  const [saveStatus, setSaveStatus] = useState("idle");
 
-  const {
-    isLoading,
-    portfolios,
-    projects: dbProjects,
-    user,
-  } = useDashboardData();
+  const { isLoading, portfolios, projectDocuments, user } = useDashboardData();
+  const selectedPortfolio = portfolios[0];
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    projectDocuments,
+  );
 
   const {
     isLoading: viewModelLoading,
@@ -69,16 +103,56 @@ const DashboardLayout = () => {
   } = createDashboardViewModel({
     isLoading,
     portfolios,
-    projects: dbProjects,
+    projects: databaseProjects,
     user,
   });
 
-  const projectsIdString = JSON.stringify(projects.map((p) => p?.id || p?._id));
   useEffect(() => {
-    if (projects.length > 0 && orderedProjects.length === 0) {
-      setOrderedProjects(projects);
+    const nextProjects = databaseProjects.length ? databaseProjects : projects;
+    const nextProjectDataKey = getProjectDataKey(nextProjects);
+    const nextProjectOrderKey = getProjectOrderKey(nextProjects);
+
+    if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
+      setOrderedProjects(nextProjects);
+      setDataProjectKey(nextProjectDataKey);
+      setSourceProjectOrderKey(nextProjectOrderKey);
+      setSaveStatus("idle");
     }
-  }, [projectsIdString]);
+  }, [databaseProjects, dataProjectKey, projects, saveStatus]);
+
+  const handleProjectsReorder = (nextProjects) => {
+    setOrderedProjects(nextProjects);
+    setSaveStatus(
+      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
+        ? "idle"
+        : "unsaved",
+    );
+  };
+
+  const handleSaveProjectOrder = () => {
+    if (!selectedPortfolio?._id) {
+      setSaveStatus("error");
+      return;
+    }
+
+    const projectIds = orderedProjects.map((project) => getProjectId(project));
+
+    setSaveStatus("saving");
+    Meteor.call(
+      "portfolios.update",
+      selectedPortfolio._id,
+      { projects: projectIds },
+      (error) => {
+        if (error) {
+          setSaveStatus("error");
+          return;
+        }
+
+        setSourceProjectOrderKey(projectIds.join("|"));
+        setSaveStatus("saved");
+      },
+    );
+  };
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
@@ -122,7 +196,9 @@ const DashboardLayout = () => {
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}
-              onProjectsReorder={setOrderedProjects}
+              onProjectsReorder={handleProjectsReorder}
+              onSaveOrder={handleSaveProjectOrder}
+              saveStatus={saveStatus}
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />

@@ -17,6 +17,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Menu } from "lucide-react";
 
+const getProjectId = (project) => project?._id || project?.id;
+
 const SortableProjectCard = ({ project, index }) => {
   const {
     attributes,
@@ -25,7 +27,7 @@ const SortableProjectCard = ({ project, index }) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: project.id });
+  } = useSortable({ id: getProjectId(project) });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -48,7 +50,7 @@ const SortableProjectCard = ({ project, index }) => {
 
       <div className="min-w-0 flex-1">
         <h3 className="m-0 text-[17px] font-bold text-gray-900">
-          {project.title}
+          {project.title || "Project unavailable"}
         </h3>
         <p className="mt-1 text-sm text-gray-500">{project.description}</p>
 
@@ -68,6 +70,7 @@ const SortableProjectCard = ({ project, index }) => {
             <a
               className="text-sm font-bold text-indigo-600 no-underline hover:underline"
               href={project.githubLink}
+              onClick={(event) => event.stopPropagation()}
             >
               GitHub
             </a>
@@ -76,6 +79,7 @@ const SortableProjectCard = ({ project, index }) => {
             <a
               className="text-sm font-bold text-indigo-600 no-underline hover:underline"
               href={project.liveDemoLink}
+              onClick={(event) => event.stopPropagation()}
             >
               Live Demo
             </a>
@@ -85,7 +89,7 @@ const SortableProjectCard = ({ project, index }) => {
 
       <div className="flex shrink-0 items-center">
         <button
-          aria-label={`Drag ${project.title}`}
+          aria-label={`Drag ${project.title || "project"}`}
           className="flex h-10 w-10 cursor-grab items-center justify-center rounded-lg border-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 active:cursor-grabbing"
           type="button"
           {...attributes}
@@ -98,7 +102,12 @@ const SortableProjectCard = ({ project, index }) => {
   );
 };
 
-const ProjectReorderingSection = ({ projects, onProjectsReorder }) => {
+const ProjectReorderingSection = ({
+  projects,
+  onProjectsReorder,
+  onSaveOrder,
+  saveStatus,
+}) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -109,8 +118,12 @@ const ProjectReorderingSection = ({ projects, onProjectsReorder }) => {
   const handleDragEnd = ({ active, over }) => {
     if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex((project) => project.id === active.id);
-    const newIndex = projects.findIndex((project) => project.id === over.id);
+    const oldIndex = projects.findIndex(
+      (project) => getProjectId(project) === active.id,
+    );
+    const newIndex = projects.findIndex(
+      (project) => getProjectId(project) === over.id,
+    );
 
     if (oldIndex === -1 || newIndex === -1) return;
 
@@ -130,40 +143,70 @@ const ProjectReorderingSection = ({ projects, onProjectsReorder }) => {
 
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 px-6 py-5">
-        <h2 className="m-0 text-xl font-bold text-gray-900">Project Order</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Drag the handle on each project card to set its display order.
-        </p>
+      <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
+        <div>
+          <h2 className="m-0 text-xl font-bold text-gray-900">
+            Project Order
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Drag the handle on each project card, then save to update its
+            display order.
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3">
+          {saveStatus === "saved" ? (
+            <span className="text-sm font-semibold text-emerald-600">Saved</span>
+          ) : null}
+          {saveStatus === "unsaved" ? (
+            <span className="text-sm font-semibold text-amber-600">
+              Unsaved changes
+            </span>
+          ) : null}
+          {saveStatus === "error" ? (
+            <span className="text-sm font-semibold text-red-600">
+              Could not save
+            </span>
+          ) : null}
+          <button
+            className="rounded-lg border-0 bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+            disabled={saveStatus === "saving"}
+            onClick={onSaveOrder}
+            type="button"
+          >
+            {saveStatus === "saving" ? "Saving..." : "Save Order"}
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col">
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          sensors={sensors}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
+      >
+        <SortableContext
+          items={projects.map((project) => getProjectId(project))}
+          strategy={verticalListSortingStrategy}
         >
-          <SortableContext
-            items={projects.map((project) => project.id)}
-            strategy={verticalListSortingStrategy}
-          >
+          <div className="flex flex-col">
             {projects.map((project, index) => (
               <SortableProjectCard
                 index={index}
-                key={project.id}
+                key={getProjectId(project)}
                 project={project}
               />
             ))}
-          </SortableContext>
-        </DndContext>
-      </div>
+          </div>
+        </SortableContext>
+      </DndContext>
     </section>
   );
 };
 
 SortableProjectCard.propTypes = {
   project: PropTypes.shape({
-    id: PropTypes.string.isRequired,
+    _id: PropTypes.string,
+    id: PropTypes.string,
     title: PropTypes.string,
     description: PropTypes.string,
     technologies: PropTypes.arrayOf(PropTypes.string),
@@ -176,6 +219,9 @@ SortableProjectCard.propTypes = {
 ProjectReorderingSection.propTypes = {
   projects: PropTypes.arrayOf(PropTypes.object).isRequired,
   onProjectsReorder: PropTypes.func.isRequired,
+  onSaveOrder: PropTypes.func.isRequired,
+  saveStatus: PropTypes.oneOf(["idle", "unsaved", "saving", "saved", "error"])
+    .isRequired,
 };
 
 export default ProjectReorderingSection;
