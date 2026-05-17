@@ -29,12 +29,38 @@ export const mapLiveVisitors = (portfolios) => {
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
 };
 
+// Maps project data into the project order cards used by the Projects tab.
+export const mapProjects = (projects) => {
+  if (!Array.isArray(projects) || !projects.length) return mockProjects;
+
+  return projects.map((project, index) => ({
+    ...project,
+    id: project.id || project._id || `project-${index + 1}`,
+    title: project.title || project.name || "Untitled project",
+    description: project.description || "",
+    technologies: Array.isArray(project.technologies) ? project.technologies : [],
+    githubLink: project.githubLink || project.githubUrl || "",
+    liveDemoLink: project.liveDemoLink || project.demoUrl || "",
+  }));
+};
+
 // Maps the current user or portfolio owner into the sidebar profile shape.
 export const mapProfile = (user) => {
   if (!user) return mockProfile;
+
   const selectedUser = Array.isArray(user) ? user[0] : user;
+  const name = selectedUser.profile?.name || "";
+
   return {
-    name: selectedUser.profile?.name || "",
+    initials:
+      name
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || mockProfile.initials,
+    name,
     email: selectedUser.email || selectedUser.emails?.[0]?.address || "",
   };
 };
@@ -51,10 +77,6 @@ export const mapAboutMe = (portfolio = {}) => {
       ...(portfolio.recruiterInfo || {}),
     },
   };
-};
-
-export const mapProjects = (portfolios) => {
-  return portfolios?.length ? mockProjects : mockProjects;
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
@@ -85,7 +107,7 @@ export const createDashboardViewModel = ({
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),
-    projects: projects || mapProjects(portfolios),
+    projects: mapProjects(projects),
   };
 };
 
