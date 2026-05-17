@@ -50,7 +50,6 @@ const useDashboardData = () =>
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
-  const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
 
   const {
     isLoading,
@@ -74,31 +73,12 @@ const DashboardLayout = () => {
     user,
   });
 
-  const projectsIdString = JSON.stringify(projects.map((p) => p?._id));
+  const projectsIdString = JSON.stringify(projects.map((p) => p?.id || p?._id));
   useEffect(() => {
     if (projects.length > 0 && orderedProjects.length === 0) {
       setOrderedProjects(projects);
     }
   }, [projectsIdString]);
-
-  const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
-  const handleProjectDragOver = (event) => event.preventDefault();
-
-  const handleProjectDrop = (dropIndex) => {
-    if (draggedProjectIndex === null || draggedProjectIndex === dropIndex) {
-      setDraggedProjectIndex(null);
-      return;
-    }
-
-    const updatedProjects = [...orderedProjects];
-    const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
-    updatedProjects.splice(dropIndex, 0, draggedProject);
-
-    setOrderedProjects(updatedProjects);
-    setDraggedProjectIndex(null);
-  };
-
-  const handleProjectDragEnd = () => setDraggedProjectIndex(null);
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
@@ -142,11 +122,7 @@ const DashboardLayout = () => {
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}
-              draggedProjectIndex={draggedProjectIndex}
-              onDragStart={handleProjectDragStart}
-              onDragOver={handleProjectDragOver}
-              onDrop={handleProjectDrop}
-              onDragEnd={handleProjectDragEnd}
+              onProjectsReorder={setOrderedProjects}
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />
