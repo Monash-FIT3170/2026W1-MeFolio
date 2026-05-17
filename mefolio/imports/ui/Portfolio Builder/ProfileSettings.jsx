@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -14,6 +14,15 @@ const ProfileSettings = ({ profile, aboutMe }) => {
     title: aboutMe.title || "",
     bio: aboutMe.bio || "",
   });
+
+  useEffect(() => {
+    setForm({
+      name: profile.name || "",
+      email: profile.email || "",
+      title: aboutMe.title || "",
+      bio: aboutMe.bio || "",
+    });
+  }, [aboutMe.bio, aboutMe.title, profile.email, profile.name]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

@@ -12,7 +12,14 @@ Accounts.config({
 
 Meteor.startup(async () => {
   let sampleUserId;
-  if ((await Meteor.users.find().countAsync()) === 0) {
+  const existingSampleUser =
+    (await Meteor.users.findOneAsync({
+      "emails.address": "superuser@example.com",
+    })) || (await Meteor.users.findOneAsync({ "profile.name": "Superuser" }));
+
+  if (existingSampleUser) {
+    sampleUserId = existingSampleUser._id;
+  } else {
     sampleUserId = await Meteor.users.insertAsync({
       createdAt: new Date(),
       emails: [{ address: "superuser@example.com", verified: false }],
@@ -21,9 +28,6 @@ Meteor.startup(async () => {
       },
     });
     Accounts.setPassword(sampleUserId, "superuser");
-  } else {
-    const existingUser = await Meteor.users.findOneAsync();
-    sampleUserId = existingUser._id;
   }
 
   let projectIds = [];
@@ -117,7 +121,28 @@ Meteor.startup(async () => {
   }
 
   let samplePortfolioId;
-  if ((await PortfolioCollection.find().countAsync()) === 0) {
+  const existingSamplePortfolio =
+    await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" }) ||
+    await PortfolioCollection.findOneAsync({ userId: sampleUserId });
+
+  if (existingSamplePortfolio) {
+    samplePortfolioId = existingSamplePortfolio._id;
+    const samplePortfolioUpdates = {};
+
+    if (existingSamplePortfolio.userId !== sampleUserId) {
+      samplePortfolioUpdates.userId = sampleUserId;
+    }
+
+    if (!existingSamplePortfolio.projects?.length && projectIds.length) {
+      samplePortfolioUpdates.projects = projectIds;
+    }
+
+    if (Object.keys(samplePortfolioUpdates).length) {
+      await PortfolioCollection.updateAsync(samplePortfolioId, {
+        $set: samplePortfolioUpdates
+      });
+    }
+  } else {
     samplePortfolioId = await PortfolioCollection.insertAsync({
       userId: sampleUserId,
       portfolioNumber: 1,
@@ -145,9 +170,6 @@ Meteor.startup(async () => {
         allowAccess: true,
       },
     });
-  } else {
-    const existingPortfolio = await PortfolioCollection.findOneAsync();
-    samplePortfolioId = existingPortfolio._id;
   }
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
