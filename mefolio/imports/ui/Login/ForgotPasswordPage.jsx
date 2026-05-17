@@ -63,7 +63,7 @@ export function ForgotPasswordPage({
         e.preventDefault();
         setError('');
         setSuccess('');
-        
+
         // Validate password
         const passwordError = validatePassword(newPassword);
         if (passwordError) {
@@ -78,7 +78,7 @@ export function ForgotPasswordPage({
 
         // Show success message
         setSuccess('Password successfully reset! Redirecting to login...');
-        
+
         // Redirect to login after 2 seconds
         setTimeout(() => {
             if (onPasswordReset) {
@@ -112,7 +112,7 @@ export function ForgotPasswordPage({
                     Dev Bypass
                 </button>
             </div>
-            
+
             {/* Left side - Branding */}
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 relative overflow-hidden">
                 <div className="absolute inset-0">
@@ -139,7 +139,7 @@ export function ForgotPasswordPage({
                     </h1>
 
                     <p className="text-xl opacity-80 mb-12 max-w-lg leading-relaxed mx-auto">
-                        {step === 'email' 
+                        {step === 'email'
                             ? "Enter your email to verify your identity and reset your password."
                             : "Create a new strong password for your account."}
                     </p>
@@ -249,7 +249,7 @@ export function ForgotPasswordPage({
                             </div>
                         </>
                     ) : (
-                        
+
                         // Reset Password
                         <>
                             <div className="mb-8">

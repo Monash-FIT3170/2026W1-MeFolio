@@ -6,7 +6,7 @@ import { Accounts } from 'meteor/accounts-base';
  * FEAT-01: User Authentication UI
  * This component implements the visual requirements for the MeFolio sign up page.
  */
-export function SignUpPage({ 
+export function SignUpPage({
   onSignUp,
   onSwitchToSignIn,
   onShowTerms,
@@ -38,13 +38,13 @@ export function SignUpPage({
       email: formData.email,
       password: formData.password,
       profile: {
-        userName: formData.portfolioUrl, 
+        userName: formData.portfolioUrl,
         fullName: formData.name,
       }
     }, (error) => {
       if (error) {
         // If the email is already taken or password is too weak
-        setError(`Registration Failed: ${error.reason}`); 
+        setError(`Registration Failed: ${error.reason}`);
       } else {
         console.log('User created successfully')
         onSignUp();

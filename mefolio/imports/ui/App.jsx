@@ -2,12 +2,12 @@ import React from 'react';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { LoginPage } from "./LoginPage.jsx";
-import { SignUpPage } from "./SignUpPage.jsx";
-import { ForgotPasswordPage } from "./ForgotPasswordPage.jsx"; 
-import { TermsOfServicePage } from "./TermsOfServicePage.jsx";
-import { PrivacyPolicyPage } from "./PrivacyPolicyPage.jsx";
-import { PortfolioBuilderView } from './PortfolioBuilderView.jsx';
+import { LoginPage } from "./Login/LoginPage.jsx";
+import { SignUpPage } from "./Login/SignUpPage.jsx";
+import { ForgotPasswordPage } from "./Login/ForgotPasswordPage.jsx";
+import { TermsOfServicePage } from "./Terms & Conditions/TermsOfServicePage.jsx";
+import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
+import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
