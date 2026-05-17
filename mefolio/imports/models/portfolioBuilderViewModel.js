@@ -2,6 +2,7 @@ import {
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
+  mockProjects,
   sidebarItems,
   samplePortfolioProfileData,
   defaultPortfolioProfileData
@@ -13,6 +14,7 @@ export const createLoadingViewModel = () => ({
   sidebarItems: [],
   overviewStats: [],
   liveVisitors: [],
+  projects: [],
   profile: {},
   aboutMe: {}
 });
@@ -35,6 +37,24 @@ export const mapLiveVisitors = (portfolios) => {
     { id, name, email, activity, location, duration, active }
   */
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
+};
+
+// Maps portfolio project data into the project order cards used by the Projects tab.
+export const mapProjects = (portfolios) => {
+  const portfolioProjects = portfolios?.[0]?.projects;
+
+  if (!Array.isArray(portfolioProjects) || !portfolioProjects.length) {
+    return mockProjects;
+  }
+
+  return portfolioProjects.map((project, index) => ({
+    id: project.id || project._id || `project-${index + 1}`,
+    title: project.title || project.name || "Untitled project",
+    description: project.description || "",
+    technologies: Array.isArray(project.technologies) ? project.technologies : [],
+    githubLink: project.githubLink || project.githubUrl || "",
+    liveDemoLink: project.liveDemoLink || project.demoUrl || ""
+  }));
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
@@ -70,6 +90,7 @@ export const createMockDashboardViewModel = (user) => ({
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
+  projects: mockProjects,
   profile: mapProfile(user),
   aboutMe: mapAboutMe(samplePortfolioProfileData)
 });
@@ -93,6 +114,7 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
+    projects: mapProjects(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0])
   };

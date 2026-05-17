@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { Route, Routes, useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
+import ProjectReorderingSection from "./Portfolio Builder/ProjectReorderingSection";
 
 // Custom hook to fetch real portfolio data from MongoDB via Meteor.
 const useDashboardData = () =>
@@ -32,6 +33,12 @@ const useDashboardData = () =>
     };
   });
 
+const getProjectSetKey = (projects = []) =>
+  projects
+    .map((project) => project.id)
+    .sort()
+    .join("|");
+
 // Top-level dashboard view that coordinates tab state and renders the active section.
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -41,11 +48,53 @@ const DashboardLayout = () => {
     sidebarItems,
     overviewStats,
     liveVisitors,
+    projects,
     profile,
     aboutMe
   } = createDashboardViewModel({ isLoading, portfolios, user });
+  const [orderedProjects, setOrderedProjects] = useState([]);
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
+
+  useEffect(() => {
+    setOrderedProjects((currentProjects) =>
+      getProjectSetKey(currentProjects) === getProjectSetKey(projects)
+        ? currentProjects
+        : projects || []
+    );
+  }, [projects]);
+
+  const moveProject = (currentIndex, direction) => {
+    const newIndex = currentIndex + direction;
+
+    if (newIndex < 0 || newIndex >= orderedProjects.length) {
+      return;
+    }
+
+    const updatedProjects = [...orderedProjects];
+    const [movedProject] = updatedProjects.splice(currentIndex, 1);
+    updatedProjects.splice(newIndex, 0, movedProject);
+
+    setOrderedProjects(updatedProjects);
+  };
+
+  const reorderProject = (fromIndex, toIndex) => {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= orderedProjects.length ||
+      toIndex >= orderedProjects.length
+    ) {
+      return;
+    }
+
+    const updatedProjects = [...orderedProjects];
+    const [movedProject] = updatedProjects.splice(fromIndex, 1);
+    updatedProjects.splice(toIndex, 0, movedProject);
+
+    setOrderedProjects(updatedProjects);
+  };
 
   if (viewModelLoading) {
     return <p className="p-8 text-[1.2rem]">Loading...</p>;
@@ -77,6 +126,12 @@ const DashboardLayout = () => {
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "projects" ? (
+            <ProjectReorderingSection
+              projects={orderedProjects}
+              onMoveProject={moveProject}
+              onReorderProject={reorderProject}
+            />
           ) : activeTab === "settings" ? (
             <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : (
