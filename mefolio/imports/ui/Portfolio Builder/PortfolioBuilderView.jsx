@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
+import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
 import {
   createDashboardViewModel,
@@ -32,49 +33,79 @@ const getProjectDataKey = (projects = []) =>
     )
     .join("|");
 
-const getPortfolioProjects = (portfolio, projectDocuments = []) => {
+const getUserEmail = (user) =>
+  user?.email ||
+  user?.emails?.[0]?.address ||
+  user?.services?.google?.email ||
+  user?.services?.github?.email ||
+  "";
+
+const getSelectedPortfolio = (portfolios = [], user) => {
+  const ownedPortfolio = portfolios.find(
+    (portfolio) => portfolio.userId === user?._id,
+  );
+
+  if (ownedPortfolio) return ownedPortfolio;
+  if (getUserEmail(user) === "test@example.com") return portfolios[0];
+  return portfolios[0] ?? null;
+};
+
+const createUnavailableProject = (projectId) => ({
+  _id: projectId,
+  id: projectId,
+  title: "Project unavailable",
+  description: "This project could not be loaded yet.",
+  technologies: [],
+  githubLink: "",
+  liveDemoLink: "",
+  isMissingProjectDocument: true,
+});
+
+const getPortfolioProjects = (
+  portfolio,
+  projectDocuments = [],
+  projectOrderDocuments = [],
+) => {
   const projectsById = new Map(
     projectDocuments.map((project) => [project._id, project]),
   );
 
-  if (!portfolio?.projects?.length) return projectDocuments;
+  if (!portfolio?._id) return projectDocuments;
 
-  return portfolio.projects.map((projectId) => {
-    const project = projectsById.get(projectId);
+  const savedProjectIds = projectOrderDocuments
+    .filter((projectOrder) => projectOrder.portfolioId === portfolio._id)
+    .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    .map((projectOrder) => projectOrder.projectId);
 
-    return (
-      project || {
-        _id: projectId,
-        id: projectId,
-        title: "Project unavailable",
-        description: "This project could not be loaded yet.",
-        technologies: [],
-        githubLink: "",
-        liveDemoLink: "",
-        isMissingProjectDocument: true,
-      }
-    );
-  });
+  const projectIds = savedProjectIds.length
+    ? savedProjectIds
+    : portfolio.projects || [];
+
+  return projectIds.map(
+    (projectId) => projectsById.get(projectId) || createUnavailableProject(projectId),
+  );
 };
 
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
     const projectsHandler = Meteor.subscribe("projects.all");
-    const usersHandler = Meteor.subscribe("users.current");
-
-    const portfolios = PortfolioCollection.find({}).fetch();
-    const projectDocuments = ProjectCollection.find({}).fetch();
-    const user = Meteor.user();
+    const portfolioProjectsHandler = Meteor.subscribe("portfolioProjects.all");
+    const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     return {
       isLoading:
         !portfoliosHandler.ready() ||
         !projectsHandler.ready() ||
-        !usersHandler.ready(),
-      portfolios,
-      projectDocuments,
-      user,
+        !portfolioProjectsHandler.ready() ||
+        !currentUserHandler.ready(),
+      portfolios: PortfolioCollection.find({}).fetch(),
+      projectDocuments: ProjectCollection.find({}).fetch(),
+      projectOrderDocuments: PortfolioProjectsCollection.find(
+        {},
+        { sort: { orderIndex: 1 } },
+      ).fetch(),
+      user: Meteor.user(),
     };
   });
 
@@ -85,11 +116,19 @@ const DashboardLayout = () => {
   const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
 
-  const { isLoading, portfolios, projectDocuments, user } = useDashboardData();
-  const selectedPortfolio = portfolios[0];
+  const {
+    isLoading,
+    portfolios,
+    projectDocuments,
+    projectOrderDocuments,
+    user,
+  } = useDashboardData();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
   const databaseProjects = getPortfolioProjects(
     selectedPortfolio,
     projectDocuments,
+    projectOrderDocuments,
   );
 
   const {
@@ -99,16 +138,15 @@ const DashboardLayout = () => {
     liveVisitors,
     profile,
     aboutMe,
-    projects = [],
   } = createDashboardViewModel({
     isLoading,
-    portfolios,
+    portfolios: visiblePortfolios,
     projects: databaseProjects,
     user,
   });
 
   useEffect(() => {
-    const nextProjects = databaseProjects.length ? databaseProjects : projects;
+    const nextProjects = databaseProjects;
     const nextProjectDataKey = getProjectDataKey(nextProjects);
     const nextProjectOrderKey = getProjectOrderKey(nextProjects);
 
@@ -118,7 +156,7 @@ const DashboardLayout = () => {
       setSourceProjectOrderKey(nextProjectOrderKey);
       setSaveStatus("idle");
     }
-  }, [databaseProjects, dataProjectKey, projects, saveStatus]);
+  }, [databaseProjects, dataProjectKey, saveStatus]);
 
   const handleProjectsReorder = (nextProjects) => {
     setOrderedProjects(nextProjects);
@@ -139,9 +177,11 @@ const DashboardLayout = () => {
 
     setSaveStatus("saving");
     Meteor.call(
-      "portfolios.update",
-      selectedPortfolio._id,
-      { projects: projectIds },
+      "portfolioProjects.reorder",
+      {
+        portfolioId: selectedPortfolio._id,
+        projectIds,
+      },
       (error) => {
         if (error) {
           setSaveStatus("error");
@@ -188,11 +228,7 @@ const DashboardLayout = () => {
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "settings" ? (
-            <ProfileSettings
-              profile={profile}
-              aboutMe={aboutMe}
-              userId={user?._id}
-            />
+            <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}

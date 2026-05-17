@@ -3,6 +3,7 @@ import { Accounts } from "meteor/accounts-base";
 import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "./oauth-login/oauth.js";
 
 Accounts.config({
@@ -10,7 +11,6 @@ Accounts.config({
 });
 
 Meteor.startup(async () => {
-  // Insert sample user data if no Meteor account exists yet
   let sampleUserId;
   if ((await Meteor.users.find().countAsync()) === 0) {
     sampleUserId = await Meteor.users.insertAsync({
@@ -22,12 +22,10 @@ Meteor.startup(async () => {
     });
     Accounts.setPassword(sampleUserId, "superuser");
   } else {
-    // If user already exists, get the first user's _id
     const existingUser = await Meteor.users.findOneAsync();
     sampleUserId = existingUser._id;
   }
 
-  // Insert sample project data if collections are empty
   let projectIds = [];
   if ((await ProjectCollection.find().countAsync()) === 0) {
     const project1Id = await ProjectCollection.insertAsync({
@@ -115,12 +113,12 @@ Meteor.startup(async () => {
       {},
       { sort: { createdAt: 1 } },
     ).fetchAsync();
-    projectIds = existingProjects.map((p) => p._id);
+    projectIds = existingProjects.map((project) => project._id);
   }
 
-  // Insert sample portfolio data if collections are empty
+  let samplePortfolioId;
   if ((await PortfolioCollection.find().countAsync()) === 0) {
-    await PortfolioCollection.insertAsync({
+    samplePortfolioId = await PortfolioCollection.insertAsync({
       userId: sampleUserId,
       portfolioNumber: 1,
       title: "Sample Portfolio",
@@ -147,6 +145,34 @@ Meteor.startup(async () => {
         allowAccess: true,
       },
     });
+  } else {
+    const existingPortfolio = await PortfolioCollection.findOneAsync();
+    samplePortfolioId = existingPortfolio._id;
+  }
+
+  const portfolios = await PortfolioCollection.find().fetchAsync();
+  for (const portfolio of portfolios) {
+    const existingOrderCount = await PortfolioProjectsCollection.find({
+      portfolioId: portfolio._id,
+    }).countAsync();
+    if (existingOrderCount > 0) continue;
+
+    const savedProjectIds = portfolio.projects?.length
+      ? portfolio.projects
+      : portfolio._id === samplePortfolioId
+        ? projectIds
+        : [];
+
+    await Promise.all(
+      savedProjectIds.map((projectId, index) =>
+        PortfolioProjectsCollection.insertAsync({
+          portfolioId: portfolio._id,
+          projectId,
+          orderIndex: index,
+          createdAt: new Date(),
+        }),
+      ),
+    );
   }
 });
 
@@ -159,14 +185,39 @@ Meteor.publish("portfolios.all", function () {
 });
 
 Meteor.publish("users.current", function () {
+  if (!this.userId) return this.ready();
   return Meteor.users.find(this.userId);
 });
 
+Meteor.publish("currentUser.profile", function () {
+  if (!this.userId) return this.ready();
+
+  return Meteor.users.find(
+    { _id: this.userId },
+    {
+      fields: {
+        emails: 1,
+        profile: 1,
+        "services.google.email": 1,
+        "services.google.name": 1,
+        "services.github.email": 1,
+        "services.github.username": 1,
+      },
+    },
+  );
+});
+
+Meteor.publish("portfolioProjects.all", function () {
+  return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
+});
+
 Meteor.methods({
-  // User methods
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
-      throw new Meteor.Error("not-authorized", "You may only update your own account.");
+      throw new Meteor.Error(
+        "not-authorized",
+        "You may only update your own account.",
+      );
     }
 
     check(userId, String);
@@ -182,18 +233,48 @@ Meteor.methods({
     }
 
     if (updates.email) {
-      const currentUser = await Meteor.users.findOneAsync(userId, { fields: { emails: 1 } });
+      const currentUser = await Meteor.users.findOneAsync(userId, {
+        fields: { emails: 1 },
+      });
       const currentEmail = currentUser?.emails?.[0]?.address;
       if (currentEmail && currentEmail !== updates.email) {
-        await Meteor.users.updateAsync(userId, { $pull: { emails: { address: currentEmail } } });
-        await Meteor.users.updateAsync(userId, { $push: { emails: { address: updates.email, verified: false } } });
+        await Meteor.users.updateAsync(userId, {
+          $pull: { emails: { address: currentEmail } },
+        });
+        await Meteor.users.updateAsync(userId, {
+          $push: { emails: { address: updates.email, verified: false } },
+        });
       } else if (!currentEmail) {
-        await Meteor.users.updateAsync(userId, { $push: { emails: { address: updates.email, verified: false } } });
+        await Meteor.users.updateAsync(userId, {
+          $push: { emails: { address: updates.email, verified: false } },
+        });
       }
     }
   },
 
-  // Project methods
+  async "users.updateCurrentProfile"(updates) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "users.updateCurrentProfile.notLoggedIn",
+        "You must be logged in to update your profile.",
+      );
+    }
+
+    check(updates, Object);
+
+    const safeUpdates = {};
+    if (updates?.profile?.name) {
+      safeUpdates["profile.name"] = updates.profile.name;
+    }
+    if (updates?.email) {
+      safeUpdates["emails.0.address"] = updates.email;
+    }
+
+    if (!Object.keys(safeUpdates).length) return 0;
+
+    return await Meteor.users.updateAsync(this.userId, { $set: safeUpdates });
+  },
+
   async "projects.insert"(projectData) {
     return await ProjectCollection.insertAsync(projectData);
   },
@@ -206,7 +287,6 @@ Meteor.methods({
     return await ProjectCollection.removeAsync(projectId);
   },
 
-  // Portfolio methods
   async "portfolios.insert"(portfolioData) {
     portfolioData.userId = this.userId;
     return await PortfolioCollection.insertAsync(portfolioData);
@@ -220,5 +300,46 @@ Meteor.methods({
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
+  },
+
+  async "portfolioProjects.reorder"({ portfolioId, projectIds }) {
+    if (!portfolioId || !Array.isArray(projectIds)) {
+      throw new Meteor.Error(
+        "portfolioProjects.reorder.invalid",
+        "A portfolio ID and ordered project IDs are required.",
+      );
+    }
+
+    const uniqueProjectIds = [...new Set(projectIds.filter(Boolean))];
+
+    await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { projects: uniqueProjectIds },
+    });
+
+    await Promise.all(
+      uniqueProjectIds.map((projectId, index) =>
+        PortfolioProjectsCollection.upsertAsync(
+          { portfolioId, projectId },
+          {
+            $set: {
+              portfolioId,
+              projectId,
+              orderIndex: index,
+              updatedAt: new Date(),
+            },
+            $setOnInsert: {
+              createdAt: new Date(),
+            },
+          },
+        ),
+      ),
+    );
+
+    await PortfolioProjectsCollection.removeAsync({
+      portfolioId,
+      projectId: { $nin: uniqueProjectIds },
+    });
+
+    return uniqueProjectIds;
   },
 });
