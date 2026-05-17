@@ -1,12 +1,20 @@
 // Small profile summary shown at the bottom of the sidebar.
 const ProfileSummary = ({ profile }) => {
   return (
-    <div className="sidebar-profile">
-      <div className="profile-avatar">{profile.initials}</div>
+    <div className="border-t border-gray-200 p-4">
+      <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+          {profile.initials}
+        </div>
 
-      <div className="profile-text">
-        <p>{profile.name}</p>
-        <span>{profile.email}</span>
+        <div className="min-w-0">
+          <p className="m-0 truncate text-sm font-semibold text-gray-900">
+            {profile.name}
+          </p>
+          <span className="block truncate text-xs text-gray-500">
+            {profile.email}
+          </span>
+        </div>
       </div>
     </div>
   );
