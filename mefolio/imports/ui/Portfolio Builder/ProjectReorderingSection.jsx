@@ -50,7 +50,7 @@ const SortableProjectCard = ({ project, index }) => {
 
       <div className="min-w-0 flex-1">
         <h3 className="m-0 text-[17px] font-bold text-gray-900">
-          {project.title || "Untitled project"}
+          {project.title || "Project unavailable"}
         </h3>
         <p className="mt-1 text-sm text-gray-500">{project.description}</p>
 

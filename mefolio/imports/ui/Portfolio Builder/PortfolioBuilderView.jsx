@@ -46,26 +46,45 @@ const getProjectId = (project) => project?._id || project?.id;
 const getProjectOrderKey = (projects = []) =>
   projects.map((project) => getProjectId(project)).join("|");
 
+const getProjectDataKey = (projects = []) =>
+  projects
+    .map((project) =>
+      [
+        getProjectId(project),
+        project?.title || "",
+        project?.isMissingProjectDocument ? "missing" : "loaded"
+      ].join(":")
+    )
+    .join("|");
+
 const getPortfolioProjects = (portfolio, projectDocuments = []) => {
   const projectsById = new Map(
     projectDocuments.map((project) => [project._id, project])
   );
 
   if (!portfolio?.projects?.length) {
-    return projectDocuments;
+    return [];
   }
 
-  const orderedProjects = portfolio.projects
-    .map((projectId) => projectsById.get(projectId))
-    .filter(Boolean);
+  return portfolio.projects.map((projectId) => {
+    const project = projectsById.get(projectId);
 
-  return orderedProjects.length ? orderedProjects : projectDocuments;
+    return project || {
+      _id: projectId,
+      title: "Project unavailable",
+      description: "This project could not be loaded yet.",
+      technologies: [],
+      githubLink: "",
+      liveDemoLink: "",
+      isMissingProjectDocument: true
+    };
+  });
 };
 
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
-  const [dataProjectOrderKey, setDataProjectOrderKey] = useState("");
+  const [dataProjectKey, setDataProjectKey] = useState("");
   const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
 
@@ -85,15 +104,16 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     const nextProjects = databaseProjects.length ? databaseProjects : projects;
+    const nextProjectDataKey = getProjectDataKey(nextProjects);
     const nextProjectOrderKey = getProjectOrderKey(nextProjects);
 
-    if (nextProjectOrderKey !== dataProjectOrderKey) {
+    if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
       setOrderedProjects(nextProjects);
-      setDataProjectOrderKey(nextProjectOrderKey);
+      setDataProjectKey(nextProjectDataKey);
       setSourceProjectOrderKey(nextProjectOrderKey);
       setSaveStatus("idle");
     }
-  }, [databaseProjects, dataProjectOrderKey, projects]);
+  }, [databaseProjects, dataProjectKey, projects, saveStatus]);
 
   const handleProjectsReorder = (nextProjects) => {
     setOrderedProjects(nextProjects);
