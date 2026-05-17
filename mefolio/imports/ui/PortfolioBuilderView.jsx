@@ -64,38 +64,6 @@ const DashboardLayout = () => {
     );
   }, [projects]);
 
-  const moveProject = (currentIndex, direction) => {
-    const newIndex = currentIndex + direction;
-
-    if (newIndex < 0 || newIndex >= orderedProjects.length) {
-      return;
-    }
-
-    const updatedProjects = [...orderedProjects];
-    const [movedProject] = updatedProjects.splice(currentIndex, 1);
-    updatedProjects.splice(newIndex, 0, movedProject);
-
-    setOrderedProjects(updatedProjects);
-  };
-
-  const reorderProject = (fromIndex, toIndex) => {
-    if (
-      fromIndex === toIndex ||
-      fromIndex < 0 ||
-      toIndex < 0 ||
-      fromIndex >= orderedProjects.length ||
-      toIndex >= orderedProjects.length
-    ) {
-      return;
-    }
-
-    const updatedProjects = [...orderedProjects];
-    const [movedProject] = updatedProjects.splice(fromIndex, 1);
-    updatedProjects.splice(toIndex, 0, movedProject);
-
-    setOrderedProjects(updatedProjects);
-  };
-
   if (viewModelLoading) {
     return <p className="p-8 text-[1.2rem]">Loading...</p>;
   }
@@ -129,8 +97,7 @@ const DashboardLayout = () => {
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}
-              onMoveProject={moveProject}
-              onReorderProject={reorderProject}
+              onProjectsReorder={setOrderedProjects}
             />
           ) : activeTab === "settings" ? (
             <ProfileSettings profile={profile} aboutMe={aboutMe} />

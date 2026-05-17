@@ -1,12 +1,125 @@
-import { useState } from "react";
+/* eslint-disable react/prop-types */
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Menu } from "lucide-react";
 
-const ProjectReorderingSection = ({
-  projects,
-  onMoveProject,
-  onReorderProject
-}) => {
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
+const SortableProjectCard = ({ project, index }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  };
+
+  return (
+    <article
+      className={
+        isDragging
+          ? "z-10 flex gap-[18px] border-b border-gray-200 bg-white px-6 py-5 opacity-70 shadow-lg last:border-b-0"
+          : "flex gap-[18px] border-b border-gray-200 bg-white px-6 py-5 last:border-b-0"
+      }
+      ref={setNodeRef}
+      style={style}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-sm font-extrabold text-indigo-600">
+        {index + 1}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="m-0 text-[17px] font-bold text-gray-900">
+          {project.title}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">{project.description}</p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(project.technologies || []).map((technology) => (
+            <span
+              className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700"
+              key={technology}
+            >
+              {technology}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-3 flex gap-3.5">
+          {project.githubLink ? (
+            <a
+              className="text-sm font-bold text-indigo-600 no-underline hover:underline"
+              href={project.githubLink}
+            >
+              GitHub
+            </a>
+          ) : null}
+          {project.liveDemoLink ? (
+            <a
+              className="text-sm font-bold text-indigo-600 no-underline hover:underline"
+              href={project.liveDemoLink}
+            >
+              Live Demo
+            </a>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center">
+        <button
+          aria-label={`Drag ${project.title}`}
+          className="flex h-10 w-10 cursor-grab items-center justify-center rounded-lg border-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 active:cursor-grabbing"
+          type="button"
+          {...attributes}
+          {...listeners}
+        >
+          <Menu aria-hidden="true" size={20} strokeWidth={2.5} />
+        </button>
+      </div>
+    </article>
+  );
+};
+
+const ProjectReorderingSection = ({ projects, onProjectsReorder }) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = projects.findIndex((project) => project.id === active.id);
+    const newIndex = projects.findIndex((project) => project.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    onProjectsReorder(arrayMove(projects, oldIndex, newIndex));
+  };
 
   if (!projects.length) {
     return (
@@ -24,113 +137,29 @@ const ProjectReorderingSection = ({
       <div className="border-b border-gray-200 px-6 py-5">
         <h2 className="m-0 text-xl font-bold text-gray-900">Project Order</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Drag project cards or use the move buttons to set their display order.
+          Drag the handle on each project card to set its display order.
         </p>
       </div>
 
       <div className="flex flex-col">
-        {projects.map((project, index) => (
-          <article
-            className={
-              draggedIndex === index
-                ? "flex cursor-grabbing gap-[18px] border-b border-gray-200 px-6 py-5 opacity-60 last:border-b-0"
-                : dragOverIndex === index
-                  ? "flex cursor-grab gap-[18px] border-b border-gray-200 bg-indigo-50 px-6 py-5 shadow-[inset_4px_0_0_#4f46e5] last:border-b-0"
-                  : "flex cursor-grab gap-[18px] border-b border-gray-200 px-6 py-5 last:border-b-0"
-            }
-            draggable
-            key={project.id}
-            onDragStart={(event) => {
-              setDraggedIndex(index);
-              event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("text/plain", String(index));
-            }}
-            onDragOver={(event) => {
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "move";
-              setDragOverIndex(index);
-            }}
-            onDragLeave={() => {
-              setDragOverIndex((currentIndex) =>
-                currentIndex === index ? null : currentIndex
-              );
-            }}
-            onDrop={(event) => {
-              event.preventDefault();
-              const sourceIndex = Number(
-                event.dataTransfer.getData("text/plain")
-              );
-              onReorderProject(sourceIndex, index);
-              setDraggedIndex(null);
-              setDragOverIndex(null);
-            }}
-            onDragEnd={() => {
-              setDraggedIndex(null);
-              setDragOverIndex(null);
-            }}
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
+        >
+          <SortableContext
+            items={projects.map((project) => project.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-sm font-extrabold text-indigo-600">
-              {index + 1}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <h3 className="m-0 text-[17px] font-bold text-gray-900">
-                {project.title}
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">{project.description}</p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(project.technologies || []).map((technology) => (
-                  <span
-                    className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700"
-                    key={technology}
-                  >
-                    {technology}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-3 flex gap-3.5">
-                {project.githubLink ? (
-                  <a
-                    className="text-sm font-bold text-indigo-600 no-underline hover:underline"
-                    href={project.githubLink}
-                  >
-                    GitHub
-                  </a>
-                ) : null}
-                {project.liveDemoLink ? (
-                  <a
-                    className="text-sm font-bold text-indigo-600 no-underline hover:underline"
-                    href={project.liveDemoLink}
-                  >
-                    Live Demo
-                  </a>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="flex shrink-0 flex-col gap-2">
-              <button
-                className="rounded-lg border-0 bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                disabled={index === 0}
-                onClick={() => onMoveProject(index, -1)}
-                type="button"
-              >
-                Move Up
-              </button>
-
-              <button
-                className="rounded-lg border-0 bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-                disabled={index === projects.length - 1}
-                onClick={() => onMoveProject(index, 1)}
-                type="button"
-              >
-                Move Down
-              </button>
-            </div>
-          </article>
-        ))}
+            {projects.map((project, index) => (
+              <SortableProjectCard
+                index={index}
+                key={project.id}
+                project={project}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
     </section>
   );
