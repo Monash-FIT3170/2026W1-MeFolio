@@ -98,6 +98,11 @@ Meteor.publish('portfolios.byUsername', function(username){
   return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
+Meteor.publish('portfolios.byUsername', function(username){
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
+});
+
 Meteor.methods({
   // User methods
   async "users1.insert"(userData) {

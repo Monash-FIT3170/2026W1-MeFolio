@@ -13,6 +13,7 @@ const About = () => {
           <SocialLinks />
         </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
         <div className="about-right">
           <AboutCard
             name={bio.fullName || "John Doe"}
@@ -25,6 +26,9 @@ const About = () => {
 =======
         <div className="flex justify-center"></div>
 >>>>>>> 165f97f (FEAT-05: Restore portfolio builder changes, exclude OAuth credentials)
+=======
+        <div className="flex justify-center"></div>
+>>>>>>> 165f97f79e9c62bbb8dfd611c1a9f7dc25053faa
       </div>
     </section>
   );
