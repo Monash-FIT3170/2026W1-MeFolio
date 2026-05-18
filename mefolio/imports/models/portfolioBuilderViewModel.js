@@ -6,7 +6,7 @@ import {
   sidebarItems,
   samplePortfolioProfileData,
   defaultPortfolioProfileData,
-} from "./portfolioBuilderMockData";
+} from "../ui/portfolioBuilderMockData";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
