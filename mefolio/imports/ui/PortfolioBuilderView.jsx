@@ -8,7 +8,7 @@ import { UsersCollection } from "../api/users";
 import {
   createDashboardViewModel,
   getCurrentTab,
-} from "./portfolioBuilderViewModel";
+} from "../models/portfolioBuilderViewModel";
 
 import AboutMeLinksEditor from "./components/AboutMeLinksEditor.jsx";
 import { PortfolioView } from "./PortfolioView";
