@@ -1,20 +1,25 @@
 import React from "react";
-import AboutCard from "./AboutCard.jsx";
 import AboutDetails from "./AboutDetails.jsx";
 import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";
+import SocialLinksRow from "./SocialLinksRow.jsx";
 
-const About = () => {
+const About = ({ aboutMe = {} }) => {
   return (
     <section id="about" className="about-section">
       <div className="about-grid">
         <div className="about-left">
-          <AboutDetails />
+          <AboutDetails aboutMe={aboutMe} />
           <SkillsList />
           <ContactButtons />
+          <SocialLinksRow
+            email={aboutMe.contact?.email}
+            github={aboutMe.socials?.github}
+            linkedin={aboutMe.socials?.linkedin}
+            otherLinks={aboutMe.socials?.other || []}
+          />
         </div>
-        <div className="about-right">
-        </div>
+        <div className="about-right" />
       </div>
     </section>
   );
