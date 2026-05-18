@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 
 import React from "react";
 import ProfileCard from "./ProfileCard.jsx";
@@ -21,4 +19,3 @@ const Hero = () => (
 );
 
 export default Hero;
->>>>>>> 165f97f79e9c62bbb8dfd611c1a9f7dc25053faa
