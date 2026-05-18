@@ -1,13 +1,13 @@
 import { Meteor } from "meteor/meteor";
+import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
-import { Random } from "meteor/random";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { UsersCollection } from "/imports/api/users";
-import './oauth-login/oauth.js';
+import "./oauth-login/oauth.js";
 
 Accounts.config({
-  loginExpirationInDays: 1
+  loginExpirationInDays: 1,
 });
 
 Meteor.startup(async () => {
@@ -18,15 +18,14 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       services: {
         password: "",
-        resume: ""
+        resume: "",
       },
       email: "superuser@example.com",
       profile: {
-        name: "Superuser"
-      }
+        name: "Superuser",
+      },
     });
   } else {
-    // If user already exists, get the first user's _id
     const existingUser = await UsersCollection.findOneAsync();
     sampleUserId = existingUser._id;
   }
@@ -41,10 +40,9 @@ Meteor.startup(async () => {
       technologies: ["React", "Node.js"],
       githubLink: "https://github.com/sample/project",
       liveDemoLink: "https://sampleproject.com",
-      media: "" // Placeholder for media type
+      media: "",
     });
   } else {
-    // If project already exists, get the first project's _id
     const existingProject = await ProjectCollection.findOneAsync();
     sampleProjectId = existingProject._id;
   }
@@ -53,20 +51,62 @@ Meteor.startup(async () => {
   if ((await PortfolioCollection.find().countAsync()) === 0) {
     await PortfolioCollection.insertAsync({
       userId: sampleUserId,
-      portfolioNumber: 1, //Allows for multiple portfolios per user in the future
+      portfolioNumber: 1,
+
+      // Legacy fields kept for compatibility
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.",
+
+      // Agreed FEAT-05 structure
+      profile: {
+        fullName: "John Doe",
+        headline: "Product Designer and Frontend Developer",
+        avatarUrl: "",
+        location: "Sydney, NSW",
+        availability: {
+          isAvailable: true,
+          label: "Available for hire",
+        },
+      },
+
+      about: {
+        summary:
+          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+        highlights: ["React", "UI Design", "Frontend Development"],
+        yearsOfExperience: 3,
+      },
+
+      contact: {
+        email: "john@example.com",
+        phone: "",
+        website: "",
+      },
+
+      socials: {
+        github: "https://github.com/johndoe",
+        linkedin: "https://www.linkedin.com/in/johndoe",
+        twitter: "",
+        other: [],
+      },
+
+      cta: {
+        resumeUrl: "https://example.com/resume.pdf",
+        contactEnabled: true,
+      },
+
       createdAt: new Date(),
-      projects: [sampleProjectId], // Array to hold project IDs
+      updatedAt: new Date(),
+      projects: [sampleProjectId],
       theme: "minimal",
+      username: "me",
       badges: [
         {
           title: "Sample Badge",
           issuer: "Sample Issuer",
           issueDate: new Date(),
           badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge"
-        }
+          verificationUrl: "https://example.com/verify-badge",
+        },
       ],
       recruiterInfo: {
         salaryExpectation: "$70,000 - $90,000",
@@ -75,8 +115,8 @@ Meteor.startup(async () => {
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
         resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true
-      }
+        allowAccess: true,
+      },
     });
   }
 });
@@ -91,6 +131,11 @@ Meteor.publish("projects.all", function () {
 
 Meteor.publish("portfolios.all", function () {
   return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
+});
+
+Meteor.publish("portfolios.byUsername", function (username) {
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
@@ -122,18 +167,17 @@ Meteor.methods({
 
   // Portfolio methods
   async "portfolios.insert"(portfolioData) {
-    // Ensure userId is set to the current user's _id
-    portfolioData.userId = this.userId;
+    portfolioData.userId = this.userId || portfolioData.userId;
     return await PortfolioCollection.insertAsync(portfolioData);
   },
 
   async "portfolios.update"(portfolioId, updates) {
     return await PortfolioCollection.updateAsync(portfolioId, {
-      $set: updates
+      $set: updates,
     });
   },
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
-  }
+  },
 });

@@ -7,7 +7,7 @@ export const sidebarItems = [
   { id: "recruiter", label: "Recruiter Portal" },
   { id: "badges", label: "Badges" },
   { id: "themes", label: "Themes" },
-  { id: "settings", label: "Settings" }
+  { id: "settings", label: "Settings" },
 ];
 
 export const mockOverviewStats = [
@@ -16,29 +16,29 @@ export const mockOverviewStats = [
     value: "2,847",
     label: "Total Views",
     change: "+12%",
-    colour: "indigo"
+    colour: "indigo",
   },
   {
     id: "visitors-now",
     value: "3",
     label: "Visitors Right Now",
     change: "+8%",
-    colour: "purple"
+    colour: "purple",
   },
   {
     id: "interactions",
     value: "145",
     label: "Interactions",
     change: "+24%",
-    colour: "pink"
+    colour: "pink",
   },
   {
     id: "ai-used",
     value: "67",
     label: "AI Chatbot Used",
     change: "+18%",
-    colour: "orange"
-  }
+    colour: "orange",
+  },
 ];
 
 export const mockLiveVisitors = [
@@ -49,7 +49,7 @@ export const mockLiveVisitors = [
     activity: "Viewing Projects",
     location: "Sydney, AU",
     duration: "3:24",
-    active: true
+    active: true,
   },
   {
     id: "visitor-2",
@@ -58,7 +58,7 @@ export const mockLiveVisitors = [
     activity: "AI Chat Session",
     location: "Melbourne, AU",
     duration: "7:12",
-    active: true
+    active: true,
   },
   {
     id: "visitor-3",
@@ -67,19 +67,18 @@ export const mockLiveVisitors = [
     activity: "Viewing Skills",
     location: "Brisbane, AU",
     duration: "1:45",
-    active: false
-  }
+    active: false,
+  },
 ];
 
 export const mockProfile = {
   initials: "JD",
   name: "John Doe",
-  email: "john@example.com"
+  email: "john@example.com",
 };
 
 // Default portfolio profile data aligned with the current PortfolioCollection shape in server/main.js.
 // This helps the UI safely load and display portfolio/user information even when fields are missing.
-
 export const defaultPortfolioProfileData = {
   userId: "",
   portfolioNumber: 1,
@@ -96,8 +95,43 @@ export const defaultPortfolioProfileData = {
     availability: "",
     personalNote: "",
     resumeLink: "",
-    allowAccess: false
-  }
+    allowAccess: false,
+  },
+
+  profile: {
+    fullName: "",
+    headline: "",
+    avatarUrl: "",
+    location: "",
+    availability: {
+      isAvailable: false,
+      label: "",
+    },
+  },
+
+  about: {
+    summary: "",
+    highlights: [],
+    yearsOfExperience: 0,
+  },
+
+  contact: {
+    email: "",
+    phone: "",
+    website: "",
+  },
+
+  socials: {
+    github: "",
+    linkedin: "",
+    twitter: "",
+    other: [],
+  },
+
+  cta: {
+    resumeUrl: "",
+    contactEnabled: true,
+  },
 };
 
 // Temporary sample data for testing display before real database data is connected.
@@ -115,8 +149,8 @@ export const samplePortfolioProfileData = {
       issuer: "Sample Issuer",
       issueDate: new Date(),
       badgeImageUrl: "https://example.com/badge.png",
-      verificationUrl: "https://example.com/verify-badge"
-    }
+      verificationUrl: "https://example.com/verify-badge",
+    },
   ],
   recruiterInfo: {
     salaryExpectation: "$70,000 - $90,000",
@@ -125,6 +159,99 @@ export const samplePortfolioProfileData = {
     availability: "Immediate",
     personalNote: "Looking for opportunities in full-stack development.",
     resumeLink: "https://example.com/resume.pdf",
-    allowAccess: true
-  }
+    allowAccess: true,
+  },
+
+  profile: {
+    fullName: "John Doe",
+    headline: "Product Designer and Frontend Developer",
+    avatarUrl: "",
+    location: "Sydney, NSW",
+    availability: {
+      isAvailable: true,
+      label: "Available for hire",
+    },
+  },
+
+  about: {
+    summary:
+      "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+    highlights: ["React", "UI Design", "Frontend Development"],
+    yearsOfExperience: 3,
+  },
+
+  contact: {
+    email: "john@example.com",
+    phone: "",
+    website: "",
+  },
+
+  socials: {
+    github: "https://github.com/johndoe",
+    linkedin: "https://www.linkedin.com/in/johndoe",
+    twitter: "",
+    other: [],
+  },
+
+  cta: {
+    resumeUrl: "https://example.com/resume.pdf",
+    contactEnabled: true,
+  },
+};
+
+export const mockAboutMe = {
+  fullName: "John Doe",
+  email: "john@example.com",
+  headline: "Product Designer and Frontend Developer",
+  professionalSummary:
+    "Passionate about creating beautiful and functional digital experiences. Experienced in React, UI/UX design, and full-stack development.",
+  location: "Sydney, Australia",
+  yearsOfExperience: 5,
+  phone: "+61 2 1234 5678",
+  highlights: ["React Expert", "UI/UX Design", "Full-Stack Development"],
+  signInEmail: "john@example.com",
+  linkedinUrl: "https://www.linkedin.com/in/johndoe",
+  githubUrl: "https://github.com/johndoe",
+  portfolioTitle: "Product Designer and Frontend Developer",
+
+  profile: {
+    fullName: "John Doe",
+    headline: "Product Designer and Frontend Developer",
+    avatarUrl: "",
+    location: "Sydney, NSW",
+    availability: {
+      isAvailable: true,
+      label: "Available for hire",
+    },
+  },
+
+  about: {
+    summary:
+      "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+    highlights: ["React", "UI Design", "Frontend Development"],
+    yearsOfExperience: 3,
+  },
+
+  contact: {
+    email: "john@example.com",
+    phone: "",
+    website: "",
+  },
+
+  socials: {
+    github: "https://github.com/johndoe",
+    linkedin: "https://www.linkedin.com/in/johndoe",
+    twitter: "",
+    other: [
+      {
+        label: "",
+        url: "",
+      },
+    ],
+  },
+
+  cta: {
+    resumeUrl: "",
+    contactEnabled: true,
+  },
 };
