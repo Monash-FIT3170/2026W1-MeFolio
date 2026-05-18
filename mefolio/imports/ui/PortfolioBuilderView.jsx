@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-import { PortfolioCollection } from "/imports/api/portfolio";
+import { PortfolioCollection } from "../api/portfolio";
+import { UsersCollection } from "../api/users";
 import {
   createDashboardViewModel,
-  getCurrentTab,
-} from "./portfolioBuilderViewModel";
+  getCurrentTab
+} from "../models/portfolioBuilderViewModel";
+
 import "./PortfolioBuilderView.css";
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
@@ -14,29 +16,57 @@ import { PortfolioView } from "./PortfolioView";
 import RecruiterPortal from "./RecruiterPortal";
 
 
+import ProfileSummary from "./Portfolio Builder/ProfileSummary";
+import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
+import OverviewSection from "./Portfolio Builder/OverviewSection";
+import ProfileSettings from "./Portfolio Builder/ProfileSettings";
+
+
+
+// Custom hook to fetch real portfolio data from MongoDB via Meteor
+const useDashboardData = () =>
+  useTracker(() => {
+    const portfoliosHandler = Meteor.subscribe("portfolios.all");
+    const portfolios = PortfolioCollection.find({}).fetch();
+
+    /* HANDOVER
+    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet. 
+    Will switch to Meteor.user() once authentication is implemented.
+
+    const user = Meteor.user(); 
+    */
+    const usersHandler = Meteor.subscribe("users1.all");
+    const user = UsersCollection.find({}).fetch();
+
+    return {
+      isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
+      portfolios,
+      user
+    };
+  });
+
 // Top-level dashboard view that coordinates tab state and renders the active section.
-  const DashboardLayout = () => {
-    const [activeTab, setActiveTab] = useState("overview");
-    const { portfolios, isLoading } = useTracker(() => {
-      const handler = Meteor.subscribe("portfolios.all");
-      return {
-        portfolios: PortfolioCollection.find({}).fetch(),
-        isLoading: !handler.ready(),
-      };
-    });
+const DashboardLayout = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const { isLoading, portfolios, user } = useDashboardData();
+  const {
+    isLoading: viewModelLoading,
+    sidebarItems,
+    overviewStats,
+    liveVisitors,
+    profile,
+    aboutMe,
+    portfolio
+  } = createDashboardViewModel({ isLoading, portfolios, user });
+  const navigate = useNavigate();
+  const currentTab = getCurrentTab(sidebarItems, activeTab);
+  if (viewModelLoading) {
+    return <p className="builder-loading">Loading...</p>;
+  }
 
-    const { sidebarItems, overviewStats, liveVisitors, profile, aboutMe, portfolio } =
-      createDashboardViewModel({ isLoading, portfolios });
-    const navigate = useNavigate();
-    const currentTab = getCurrentTab(sidebarItems, activeTab);
-
-    if (isLoading) {
-      return <p className="builder-loading">Loading...</p>;
-    }
-
-    if (!currentTab) {
-      return <p className="builder-loading">No dashboard sections available.</p>;
-    }
+  if (!currentTab) {
+    return <p className="builder-loading">No dashboard sections available.</p>;
+  }
 
     return (
       <div className="builder-layout">
@@ -107,88 +137,6 @@ import RecruiterPortal from "./RecruiterPortal";
 
         <ProfileSummary profile={profile} />
       </aside>
-    );
-  };
-
-  // Small profile summary shown at the bottom of the sidebar.
-  const ProfileSummary = ({ profile }) => {
-    return (
-      <div className="sidebar-profile">
-        <div className="profile-avatar">{profile.initials}</div>
-
-        <div className="profile-text">
-          <p>{profile.name}</p>
-          <span>{profile.email}</span>
-        </div>
-      </div>
-    );
-  };
-
-  // Overview tab content that displays summary stats and recent visitor activity.
-  const OverviewSection = ({ stats, visitors }) => {
-    return (
-      <>
-        <section className="stats-grid">
-          {stats.map((stat) => (
-            <StatCard key={stat.id} stat={stat} />
-          ))}
-        </section>
-
-        <section className="live-visitors-card">
-          <div className="live-visitors-header">
-            <h2>Live Visitors</h2>
-            <button>View all</button>
-          </div>
-
-          <div className="visitor-list">
-            {visitors.map((visitor) => (
-              <Visitor key={visitor.id} visitor={visitor} />
-            ))}
-          </div>
-        </section>
-      </>
-    );
-  };
-
-  // Reusable card for a single dashboard statistic.
-  const StatCard = ({ stat }) => {
-    return (
-      <div className="stat-card">
-        <div className="stat-card-top">
-          <span className="stat-change">-^ {stat.change}</span>
-        </div>
-
-        <h2>{stat.value}</h2>
-        <p>{stat.label}</p>
-      </div>
-    );
-  };
-
-  // Displays one visitor row inside the live visitors list.
-  const Visitor = ({ visitor }) => {
-    return (
-      <div className="visitor-row">
-        <div className={visitor.active ? "visitor-dot active" : "visitor-dot"} />
-
-        <div className="visitor-details">
-          <h3>{visitor.name}</h3>
-          <p>{visitor.email}</p>
-          <p>{visitor.activity}</p>
-          <span>{visitor.location} · 2 min ago</span>
-        </div>
-
-        <div className="visitor-duration">{visitor.duration}</div>
-      </div>
-    );
-  };
-
-  // Generic placeholder used for dashboard tabs that are not built yet.
-  const PlaceholderSection = ({ title, description = "This section is a placeholder for now." }) => {
-    return (
-      <section className="placeholder-card">
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </section>
     );
   };
 

@@ -1,10 +1,11 @@
 import {
-  mockAboutMe,
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   sidebarItems,
-} from "./portfolioBuilderMockData";
+  samplePortfolioProfileData,
+  defaultPortfolioProfileData
+} from "../ui/portfolioBuilderMockData";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
@@ -13,7 +14,7 @@ export const createLoadingViewModel = () => ({
   overviewStats: [],
   liveVisitors: [],
   profile: {},
-  aboutMe: {},
+  aboutMe: {}
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -37,79 +38,54 @@ export const mapLiveVisitors = (portfolios) => {
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
-export const mapProfile = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper from the current user or portfolio owner
-    into: { initials, name, email }
-  */
-  return portfolio ? mockProfile : mockProfile;
+export const mapProfile = (user) => {
+  if (!user) {
+    return mockProfile;
+  }
+
+  return {
+    name: user.profile?.name || "",
+    email: user.email || ""
+  };
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
-export const mapAboutMe = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper that returns:
-    {
-      fullName,
-      signInEmail,
-      linkedinUrl,
-      githubUrl,
-      portfolioTitle,
+export const mapAboutMe = (portfolio = {}) => {
+  return {
+    ...defaultPortfolioProfileData,
+    ...portfolio,
+    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    recruiterInfo: {
+      ...defaultPortfolioProfileData.recruiterInfo,
+      ...(portfolio.recruiterInfo || {})
     }
-
-    Example source fields may come from the signed-in user record plus the
-    portfolio document being edited.
-  */
-  return portfolio ? mockAboutMe : mockAboutMe;
+  };
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
-export const createMockDashboardViewModel = () => ({
+// TODO: Replace with generic view to be used when users have no portfolio data, or during loading.
+export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
-  profile: mockProfile,
-  aboutMe: mockAboutMe,
+  profile: mapProfile(user),
+  aboutMe: mapAboutMe(samplePortfolioProfileData)
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
+  user = null
 } = {}) => {
   if (isLoading) {
     return createLoadingViewModel();
   }
 
-  /*
-    Suggested Meteor integration skeleton:
-
-    import { Meteor } from "meteor/meteor";
-    import { useTracker } from "meteor/react-meteor-data";
-    import { PortfolioCollection } from "../api/portfolio";
-
-    const useDashboardData = () =>
-      useTracker(() => {
-        const portfoliosHandler = Meteor.subscribe("portfolios.all");
-        const portfolios = PortfolioCollection.find({}).fetch();
-
-        return {
-          isLoading: !portfoliosHandler.ready(),
-          portfolios,
-        };
-      });
-
-    In the component:
-
-    const { isLoading, portfolios } = useDashboardData();
-    const viewModel = createDashboardViewModel({ isLoading, portfolios });
-  */
-
   if (!portfolios.length) {
-    return createMockDashboardViewModel();
+    return createMockDashboardViewModel(user);
   }
 
   return {

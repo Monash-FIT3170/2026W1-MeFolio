@@ -26,3 +26,6 @@ ostrio:files
 accounts-password
 accounts-base
 meteortesting:mocha
+service-configuration
+accounts-google
+accounts-github
