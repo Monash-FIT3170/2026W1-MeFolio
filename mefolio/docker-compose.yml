@@ -12,7 +12,7 @@ services:
       PORT: 3000
       METEOR_WATCH_FORCE_POLLING: "true"
     restart: unless-stopped
- 
+
 volumes:
   meteor_local:
   node_modules:

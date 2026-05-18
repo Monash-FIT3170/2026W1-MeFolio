@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UsersCollection } from "../../api/users";
+import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "../../api/portfolio";
 
 /**
@@ -16,38 +16,28 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     name: profile.name || "",
     email: profile.email || "",
     title: aboutMe.title || "",
-    bio: aboutMe.bio || ""
+    bio: aboutMe.bio || "",
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSave = (form) => {
     const updates = {};
 
-    // Email
-    if (form.email) {
-      updates.email = form.email;
-    }
+    if (form.email) updates.email = form.email;
 
-    // Profile fields
     const profileUpdates = {};
     if (form.name) profileUpdates.name = form.name;
-    if (Object.keys(profileUpdates).length > 0) {
+    if (Object.keys(profileUpdates).length > 0)
       updates.profile = profileUpdates;
-    }
 
-    // About Me fields
     const aboutMeUpdates = {};
     if (form.title) aboutMeUpdates.title = form.title;
     if (form.bio) aboutMeUpdates.bio = form.bio;
-    if (Object.keys(aboutMeUpdates).length > 0) {
+    if (Object.keys(aboutMeUpdates).length > 0)
       updates.aboutMe = aboutMeUpdates;
-    }
 
     Meteor.call("users1.update", userId, updates, (error) => {
       if (error) {
@@ -57,8 +47,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     });
 
     // Get the user's portfolio. Assuming one portfolio per user for now.
-    const userPortfolio = PortfolioCollection.find({ userId: userId }).fetch();
-
+    const userPortfolio = PortfolioCollection.find({ userId }).fetch();
     Meteor.call(
       "portfolios.update",
       userPortfolio[0]?._id,
@@ -68,7 +57,7 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
           console.error("Error updating portfolio:", error);
           alert("Failed to save changes. Please try again.");
         }
-      }
+      },
     );
   };
 
