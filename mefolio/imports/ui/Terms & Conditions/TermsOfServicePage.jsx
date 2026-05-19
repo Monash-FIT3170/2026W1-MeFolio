@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 /**
  * FEAT-01: Terms of Service Page
@@ -80,7 +81,7 @@ export function TermsOfServicePage({ onBack }) {
               5. Service Availability
             </h2>
             <p>
-              MeFolio is provided "as is" and "as available." We do not
+              MeFolio is provided &quot;as is&quot; and &quot;as available.&quot; We do not
               guarantee that the service will be uninterrupted or error-free. We
               reserve the right to modify or discontinue the service at any
               time.
@@ -105,3 +106,7 @@ export function TermsOfServicePage({ onBack }) {
     </div>
   );
 }
+
+TermsOfServicePage.propTypes = {
+  onBack: PropTypes.func.isRequired,
+};

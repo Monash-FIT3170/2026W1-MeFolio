@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useState, useRef, useEffect } from "react";
 
 /**
@@ -58,4 +59,9 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
       </span>
     </button>
   );
+};
+
+ModeSwitch.propTypes = {
+  initialPreview: PropTypes.bool,
+  onToggle: PropTypes.func,
 };

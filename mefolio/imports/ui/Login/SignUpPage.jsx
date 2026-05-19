@@ -12,6 +12,8 @@ import {
   Trophy,
   BarChart3,
 } from "lucide-react";
+import PropTypes from "prop-types";
+import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 
 /**
@@ -410,3 +412,10 @@ export function SignUpPage({
     </div>
   );
 }
+
+SignUpPage.propTypes = {
+  onSignUp: PropTypes.func,
+  onSwitchToSignIn: PropTypes.func.isRequired,
+  onShowTerms: PropTypes.func.isRequired,
+  onShowPrivacy: PropTypes.func.isRequired,
+};

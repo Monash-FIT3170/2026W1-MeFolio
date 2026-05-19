@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { ModeSwitch } from "../Portfolio Preview/ModeButton";
 import ProfileSummary from "./ProfileSummary";
 
@@ -36,6 +37,23 @@ const Sidebar = ({
       <ProfileSummary profile={profile} />
     </aside>
   );
+};
+
+Sidebar.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      label: PropTypes.string,
+    }),
+  ).isRequired,
+  activeTab: PropTypes.string.isRequired,
+  onTabChange: PropTypes.func.isRequired,
+  profile: PropTypes.shape({
+    initials: PropTypes.string,
+    name: PropTypes.string,
+    email: PropTypes.string,
+  }).isRequired,
+  onPreviewToggle: PropTypes.func.isRequired,
 };
 
 export default Sidebar;

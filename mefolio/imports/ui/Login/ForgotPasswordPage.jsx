@@ -7,9 +7,9 @@ import {
   Sparkles,
   Shield,
   ArrowLeft,
-  CheckCircle,
   Github,
 } from "lucide-react";
+import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 
@@ -468,3 +468,8 @@ export function ForgotPasswordPage({ onBackToLogin, onPasswordReset }) {
     </div>
   );
 }
+
+ForgotPasswordPage.propTypes = {
+  onBackToLogin: PropTypes.func.isRequired,
+  onPasswordReset: PropTypes.func,
+};

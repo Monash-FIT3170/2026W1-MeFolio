@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { Github, ExternalLink, Code, Play, Star, Mic } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 
 export function ProjectCard({ project }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [, setImageError] = useState(false);
   const [githubStars, setGithubStars] = useState(null);
 
   const data = project || {
@@ -120,3 +121,15 @@ export function ProjectCard({ project }) {
     </Card>
   );
 }
+
+ProjectCard.propTypes = {
+  project: PropTypes.shape({
+    _id: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    technologies: PropTypes.arrayOf(PropTypes.string),
+    githubLink: PropTypes.string,
+    liveDemoLink: PropTypes.string,
+    media: PropTypes.string,
+  }),
+};

@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 // Small profile summary shown at the bottom of the sidebar.
 const ProfileSummary = ({ profile }) => {
   return (
@@ -13,6 +15,14 @@ const ProfileSummary = ({ profile }) => {
       </div>
     </div>
   );
+};
+
+ProfileSummary.propTypes = {
+  profile: PropTypes.shape({
+    initials: PropTypes.string,
+    name: PropTypes.string,
+    email: PropTypes.string,
+  }).isRequired,
 };
 
 export default ProfileSummary;
