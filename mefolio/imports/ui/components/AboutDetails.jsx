@@ -1,6 +1,6 @@
 import React from "react";
 
-const AboutDetails = () => {
+const AboutDetails = ({ portfolio }) => {
   return (
     <div className="flex flex-col items-start gap-6">
       <span className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-full">
@@ -16,12 +16,11 @@ const AboutDetails = () => {
       </span>
 
       <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-gray-900 m-0">
-        Full-Stack Developer & Problem Solver
+        {portfolio?.title || "Full-Stack Developer & Problem Solver"}
       </h1>
 
       <p className="text-lg leading-relaxed text-gray-500 max-w-[34rem] m-0">
-        I build scalable web applications and solve complex technical
-        challenges. Specializing in React, Node.js, and cloud architecture.
+        {portfolio?.bio || "No bio provided yet."}
       </p>
     </div>
   );

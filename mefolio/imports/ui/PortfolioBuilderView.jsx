@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
+
 import { PortfolioCollection } from "../api/portfolio";
 import { UsersCollection } from "../api/users";
 import {
@@ -54,11 +55,11 @@ const DashboardLayout = () => {
     overviewStats,
     liveVisitors,
     profile,
-    aboutMe,
-    portfolio
+    aboutMe
   } = createDashboardViewModel({ isLoading, portfolios, user });
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
+
   if (viewModelLoading) {
     return <p className="builder-loading">Loading...</p>;
   }
@@ -72,72 +73,74 @@ const DashboardLayout = () => {
         <Sidebar
           items={sidebarItems}
           activeTab={activeTab}
-          onTabChange={(tabId) => {
-            setActiveTab(tabId);
-          }}
-
+          onTabChange={setActiveTab}
           profile={profile}
-          navigate={navigate}
+          onPreviewToggle={(isPreview) => {
+            if (isPreview) navigate("/preview");
+          }}
         />
 
-        <main className="builder-main">
-          <header className="builder-header">
-            <h1>{currentTab.label}</h1>
-          </header>
+      <main className="builder-main">
+        <header className="builder-header">
+          <h1>{currentTab.label}</h1>
+        </header>
 
-          <div className="builder-content">
-            {activeTab === "overview" ? (
-              <OverviewSection stats={overviewStats} visitors={liveVisitors} />
-            ) : activeTab === "about-me" ? (
-              <PlaceholderSection
-                title={currentTab.label}
-                description={`Placeholder for ${aboutMe.fullName || "the current user"}'s About Me details.`}
-              />
-            ) : activeTab === "recruiter" ? (
-              <RecruiterPortal portfolio={portfolio} />
-            ) : (
-              <PlaceholderSection title={currentTab.label} />
-            )}
-          </div>
-        </main>
-      </div>
-    );
-  };
+        <div className="builder-content">
+          {activeTab === "overview" ? (
+            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "settings" ? (
+            <ProfileSettings
+              profile={profile}
+              aboutMe={aboutMe}
+              userId={user[0]?._id}
+            />
+          ) : (
+            <PlaceholderSection title={currentTab.label} />
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
 
-  // Sidebar navigation for switching dashboard sections.
-  const Sidebar = ({ items, activeTab, onTabChange, profile, navigate }) => {
-    return (
-      <aside className="builder-sidebar">
-        <div className="sidebar-top">
-          <div className="builder-logo">
-            <span>MeFolio</span>
-          </div>
-
-          <ModeSwitch onToggle={(isPreview) => {
-            if (isPreview) navigate("/preview");
-          }} />
+// Sidebar navigation for switching dashboard sections.
+const Sidebar = ({
+  items,
+  activeTab,
+  onTabChange,
+  profile,
+  onPreviewToggle
+}) => {
+  return (
+    <aside className="builder-sidebar">
+      <div className="sidebar-top">
+        <div className="builder-logo">
+          <span>MeFolio</span>
         </div>
 
-        <nav className="builder-nav">
-          {items.map((item) => (
-            <button
-              key={item.id}
-              className={
-                activeTab === item.id
-                  ? "builder-nav-item active"
-                  : "builder-nav-item"
-              }
-              onClick={() => onTabChange(item.id)}
-            >
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+        <ModeSwitch onToggle={onPreviewToggle} />
+      </div>
 
-        <ProfileSummary profile={profile} />
-      </aside>
-    );
-  };
+      <nav className="builder-nav">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            className={
+              activeTab === item.id
+                ? "builder-nav-item active"
+                : "builder-nav-item"
+            }
+            onClick={() => onTabChange(item.id)}
+          >
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <ProfileSummary profile={profile} />
+    </aside>
+  );
+};
 
 export const PortfolioBuilderView = () => {
   return(
@@ -145,5 +148,6 @@ export const PortfolioBuilderView = () => {
       <Route path="/" element={<DashboardLayout />} />
       <Route path="/preview" element={<PortfolioView />} />
     </Routes>
-  )
-}
+
+  );
+};

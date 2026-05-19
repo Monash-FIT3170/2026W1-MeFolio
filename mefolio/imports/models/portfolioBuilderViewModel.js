@@ -52,8 +52,8 @@ export const mapProfile = (user) => {
 // Maps current user and portfolio fields into the About Me editor/view shape.
 export const mapAboutMe = (portfolio = {}) => {
   return {
-    defaultPortfolioProfileData,
-    portfolio,
+    ...defaultPortfolioProfileData,
+    ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo: {
@@ -93,9 +93,8 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(portfolios[0]),
-    aboutMe: mapAboutMe(portfolios[0]),
-    portfolio: portfolios[0],
+    profile: mapProfile(user[0]),
+    aboutMe: mapAboutMe(portfolios[0])
   };
 };
 

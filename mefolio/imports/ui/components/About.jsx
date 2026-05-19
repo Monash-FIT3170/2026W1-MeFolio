@@ -34,7 +34,7 @@ const About = () => {
       <div className="about-grid">
 
         <div className="about-left">
-          <AboutDetails />
+          <AboutDetails portfolio={portfolio} />
           <SkillsList />
 
           {/* PASS PORTFOLIO */}
