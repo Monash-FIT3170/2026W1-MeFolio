@@ -1,5 +1,6 @@
 import { PortfolioCollection } from "../api/portfolio";
 import { useTracker } from "meteor/react-meteor-data";
+import { mapAboutMe, mapProfile } from "../models/portfolioBuilderViewModel";
 
 import About from "./components/About.jsx";
 import Navbar from "./components/Navbar.jsx";
@@ -21,6 +22,13 @@ export const PortfolioView = () => {
   const removePortfolio = (id) => {
     Meteor.call("portfolios.remove", id);
   };
+
+  if (isLoading) return <p>Loading...</p>;
+
+  const portfolio = portfolios[0];
+  const aboutMe = mapAboutMe(portfolio);      // reuse exact same mapper
+  const profile = mapProfile(portfolio);      // reuse exact same mapper
+
   return (
     <div>
       <Navbar />
@@ -29,7 +37,7 @@ export const PortfolioView = () => {
 
       {/* Left column */}
         <div className="flex flex-col gap-6">
-          <About />
+          <About aboutMe={aboutMe} profile={profile} />
         </div>
       
       {/* Right column- profile card */}
