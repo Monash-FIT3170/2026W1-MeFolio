@@ -14,66 +14,52 @@ export const createLoadingViewModel = () => ({
   overviewStats: [],
   liveVisitors: [],
   profile: {},
-  aboutMe: {},
-  portfolioId: null
+  aboutMe: {}
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
 export const mapOverviewStats = (portfolios) => {
+  /*
+    Teammate handoff:
+    Replace this mock fallback with a pure transformation from collection data.
+    Example inputs could be portfolio analytics, engagement counts, or AI usage.
+  */
   return portfolios?.length ? mockOverviewStats : mockOverviewStats;
 };
 
 // Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
+  /*
+    Teammate handoff:
+    Replace this with a pure mapper from raw visitor/session data into:
+    { id, name, email, activity, location, duration, active }
+  */
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
-export const mapProfile = (portfolio) => {
-  if (!portfolio) {
+export const mapProfile = (user) => {
+  if (!user) {
     return mockProfile;
   }
 
-  const bio = typeof portfolio.bio === "object" ? portfolio.bio : {};
-  const name = bio.fullName || portfolio.title || "Portfolio Owner";
-  const email = bio.email || portfolio.userId || "";
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("") || "PO";
-
   return {
-    initials,
-    name,
-    email,
-    username: portfolio.username || "me",
+    name: user.profile?.name || "",
+    email: user.email || ""
   };
 };
 
-export const mapAboutMe = (portfolio) => {
-  if (!portfolio) {
-    return mockAboutMe;
-  }
-
-  const bio = typeof portfolio.bio === "object" ? portfolio.bio : {
-    professionalSummary: portfolio.bio,
-  };
-
+// Maps current user and portfolio fields into the About Me editor/view shape.
+export const mapAboutMe = (portfolio = {}) => {
   return {
-    fullName: bio.fullName || "",
-    email: bio.email || "",
-    headline: bio.headline || "",
-    professionalSummary: bio.professionalSummary || "",
-    location: bio.location || "",
-    yearsOfExperience: bio.yearsOfExperience ?? 0,
-    phone: bio.phone || "",
-    highlights: Array.isArray(bio.highlights) ? bio.highlights : [],
-    signInEmail: bio.signInEmail || "",
-    linkedinUrl: bio.linkedinUrl || "",
-    githubUrl: bio.githubUrl || "",
-    portfolioTitle: portfolio.title || "",
+    defaultPortfolioProfileData,
+    portfolio,
+    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    recruiterInfo: {
+      ...defaultPortfolioProfileData.recruiterInfo,
+      ...(portfolio.recruiterInfo || {})
+    }
   };
 };
 
@@ -84,6 +70,8 @@ export const createMockDashboardViewModel = (user) => ({
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
+  profile: mapProfile(user),
+  aboutMe: mapAboutMe(samplePortfolioProfileData)
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
@@ -105,6 +93,9 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
+    profile: mapProfile(portfolios[0]),
+    aboutMe: mapAboutMe(portfolios[0]),
+    portfolio: portfolios[0],
   };
 };
 
