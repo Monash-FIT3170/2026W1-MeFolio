@@ -1,27 +1,49 @@
 import React from "react";
+import { useTracker } from "meteor/react-meteor-data";
+import { Meteor } from "meteor/meteor";
+
+import { PortfolioCollection } from "/imports/api/portfolio";
+
+import AboutCard from "./AboutCard.jsx";
 import AboutDetails from "./AboutDetails.jsx";
+import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";
-import SocialLinks from "./SocialLinks.jsx";
 
 const About = () => {
+
+  // Subscribe to portfolios
+  const { portfolio, isLoading } = useTracker(() => {
+
+    const handle = Meteor.subscribe("portfolios.all");
+
+    const portfolio = PortfolioCollection.findOne();
+
+    return {
+      portfolio,
+      isLoading: !handle.ready(),
+    };
+  });
+
+  // Loading state
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
   return (
-    <section id="about" className="py-16 md:py-20">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 md:grid-cols-[1fr_420px] gap-8 md:gap-12 items-center">
-        <div className="flex flex-col items-start gap-6">
+    <section id="about" className="about-section">
+      <div className="about-grid">
+
+        <div className="about-left">
           <AboutDetails />
-          <ContactButtons />
-          <SocialLinks />
+          <SkillsList />
+
+          {/* PASS PORTFOLIO */}
+          <ContactButtons portfolio={portfolio} />
         </div>
+
         <div className="about-right">
-          <AboutCard
-            name={bio.fullName || "John Doe"}
-            title={bio.headline || "Full-Stack Developer"}
-            location={bio.location || "Sydney, NSW"}
-            summary={bioSummary || "A concise one-line summary or tagline goes here. Team can replace with real content."}
-          />
-          <AboutCard />
         </div>
-        <div className="flex justify-center"></div>
+
       </div>
     </section>
   );
