@@ -43,7 +43,10 @@ export function ProjectCard({ project }) {
           <img
             src={data.media}
             alt={data.title}
+            width="400"        
+            height="192"
             loading="lazy"         
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
