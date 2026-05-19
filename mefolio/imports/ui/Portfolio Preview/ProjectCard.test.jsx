@@ -76,5 +76,20 @@ if (Meteor.isClient) {
 
       expect(screen.getByText("Preview Coming Soon")).to.exist;
     });
+
+    it("ensures image asset elements utilize native lazy-loading for page speed efficiency", () => {
+      const mockProject = {
+        title: "Performance Test Project",
+        technologies: ["React"],
+        media: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8",
+      };
+
+      render(<ProjectCard project={mockProject} />);
+
+      const imageElement = screen.getByRole("img");
+      
+      expect(imageElement.getAttribute("loading")).to.equal("lazy");
+      expect(imageElement.getAttribute("decoding")).to.equal("async");
+    });
   });
 }
