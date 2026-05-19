@@ -17,17 +17,23 @@ export function ProjectCard({ project }) {
 
   useEffect(() => {
     if (!data.githubLink) return;
-    const match = data.githubLink.match(/github\.com\/([^/]+)\/([^/]+)/);
-    if (!match) return;
-    const [, owner, repo] = match;
-    fetch(`https://api.github.com/repos/${owner}/${repo}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.stargazers_count !== undefined)
-          setGithubStars(json.stargazers_count);
-      })
-      .catch(() => {});
-  }, [data.githubLink]);
+    if (data.githubLink.includes("github.com/example/")) {
+    setGithubStars(0);
+    return;
+  }
+
+  const match = data.githubLink.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (!match) return;
+  const [, owner, repo] = match;
+
+  fetch(`https://api.github.com/repos/${owner}/${repo}`)
+    .then((res) => res.json())
+    .then((json) => {
+      if (json.stargazers_count !== undefined)
+        setGithubStars(json.stargazers_count);
+    })
+    .catch(() => {});
+}, [data.githubLink]);
 
   return (
     <Card className="overflow-hidden bg-white border-2 border-slate-100 rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
@@ -37,6 +43,7 @@ export function ProjectCard({ project }) {
           <img
             src={data.media}
             alt={data.title}
+            loading="lazy"         
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
