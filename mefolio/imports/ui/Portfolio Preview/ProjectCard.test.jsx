@@ -17,7 +17,7 @@ if (Meteor.isClient) {
       const mockProject = {
         title: "AI Portfolio Dashboard",
         description: "An interactive portfolio with AI-powered analytics",
-        technologies: ["React", "Meteor", "Tailwind"], 
+        technologies: ["React", "Meteor", "Tailwind"],
         stars: 42,
       };
 
@@ -25,7 +25,7 @@ if (Meteor.isClient) {
 
       expect(screen.getByText("AI Portfolio Dashboard")).to.exist;
       expect(
-        screen.getByText("An interactive portfolio with AI-powered analytics")
+        screen.getByText("An interactive portfolio with AI-powered analytics"),
       ).to.exist;
       expect(screen.getByText("React")).to.exist;
       expect(screen.getByText("Meteor")).to.exist;
@@ -41,8 +41,9 @@ if (Meteor.isClient) {
 
       render(<ProjectCard project={mockProject} />);
 
-      // Asserts default challenge feature string state
-      expect(screen.getByText("Challenge feature coming soon")).to.exist;
+      expect(screen.getByTestId("challenge-placeholder").textContent).to.equal(
+        "Challenge feature coming soon",
+      );
 
       const tryButton = screen.getByRole("button", { name: /try challenge/i });
       fireEvent.click(tryButton);
@@ -53,7 +54,7 @@ if (Meteor.isClient) {
     it("displays Voice Summary, Code, and Demo buttons", () => {
       const mockProject = {
         title: "Test Project",
-        technologies: ["React"], 
+        technologies: ["React"],
       };
 
       render(<ProjectCard project={mockProject} />);
@@ -66,8 +67,8 @@ if (Meteor.isClient) {
     it("displays preview placeholder when image is not provided or fails to load", () => {
       const mockProject = {
         title: "Test Project",
-        technologies: ["React"], 
-        media: "",             
+        technologies: ["React"],
+        media: "",
       };
 
       render(<ProjectCard project={mockProject} />);
@@ -78,14 +79,14 @@ if (Meteor.isClient) {
     it("ensures image asset elements utilize native lazy-loading for page speed efficiency", () => {
       const mockProject = {
         title: "Performance Test Project",
-        technologies: ["React"],                         
+        technologies: ["React"],
         media: "https://example.com/project-preview.png",
       };
 
       render(<ProjectCard project={mockProject} />);
 
       const imageElement = screen.getByRole("img");
-      
+
       expect(imageElement.getAttribute("loading")).to.equal("lazy");
       expect(imageElement.getAttribute("decoding")).to.equal("async");
     });
