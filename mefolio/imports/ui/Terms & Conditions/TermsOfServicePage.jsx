@@ -81,10 +81,10 @@ export function TermsOfServicePage({ onBack }) {
               5. Service Availability
             </h2>
             <p>
-              MeFolio is provided &quot;as is&quot; and &quot;as available.&quot; We do not
-              guarantee that the service will be uninterrupted or error-free. We
-              reserve the right to modify or discontinue the service at any
-              time.
+              MeFolio is provided &quot;as is&quot; and &quot;as
+              available.&quot; We do not guarantee that the service will be
+              uninterrupted or error-free. We reserve the right to modify or
+              discontinue the service at any time.
             </p>
           </section>
 
