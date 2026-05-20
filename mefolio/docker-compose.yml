@@ -30,7 +30,7 @@ services:
       mongo:
         condition: service_healthy
     restart: unless-stopped
- 
+
 volumes:
   meteor_local:
   node_modules:
