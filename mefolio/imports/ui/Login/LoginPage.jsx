@@ -11,6 +11,7 @@ import {
   LineChart,
   Bot,
 } from "lucide-react";
+import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 
@@ -335,3 +336,9 @@ export function LoginPage({ onSignIn, onSwitchToSignUp, onForgotPassword }) {
     </div>
   );
 }
+
+LoginPage.propTypes = {
+  onSignIn: PropTypes.func,
+  onSwitchToSignUp: PropTypes.func.isRequired,
+  onForgotPassword: PropTypes.func.isRequired,
+};

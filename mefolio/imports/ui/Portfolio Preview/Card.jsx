@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export function Card({ className = "", children, ...props }) {
   return (
@@ -37,3 +38,13 @@ export function CardContent({ className = "", children, ...props }) {
     </div>
   );
 }
+
+const sharedPropTypes = {
+  className: PropTypes.string,
+  children: PropTypes.node,
+};
+
+Card.propTypes = sharedPropTypes;
+CardHeader.propTypes = sharedPropTypes;
+CardTitle.propTypes = sharedPropTypes;
+CardContent.propTypes = sharedPropTypes;

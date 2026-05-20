@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 const ProjectReorderingSection = ({
   projects,
   draggedProjectIndex,
@@ -88,6 +90,15 @@ const ProjectReorderingSection = ({
       </div>
     </section>
   );
+};
+
+ProjectReorderingSection.propTypes = {
+  projects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  draggedProjectIndex: PropTypes.number,
+  onDragStart: PropTypes.func.isRequired,
+  onDragOver: PropTypes.func.isRequired,
+  onDrop: PropTypes.func.isRequired,
+  onDragEnd: PropTypes.func.isRequired,
 };
 
 export default ProjectReorderingSection;

@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 /**
  * FEAT-01: Privacy Policy Page
@@ -37,8 +38,8 @@ export function PrivacyPolicyPage({ onBack }) {
             <ul className="list-disc pl-5 space-y-2">
               <li>Provide, maintain, and improve our services.</li>
               <li>
-                Personalize your experience and deliver the "AI Portfolio Twin"
-                features.
+                Personalize your experience and deliver the &quot;AI Portfolio
+                Twin&quot; features.
               </li>
               <li>
                 Analyze usage patterns and visitor engagement through our
@@ -103,3 +104,7 @@ export function PrivacyPolicyPage({ onBack }) {
     </div>
   );
 }
+
+PrivacyPolicyPage.propTypes = {
+  onBack: PropTypes.func.isRequired,
+};

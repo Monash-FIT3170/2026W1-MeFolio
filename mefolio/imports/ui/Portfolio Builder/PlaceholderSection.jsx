@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 // Generic placeholder used for dashboard tabs that are not built yet.
 const PlaceholderSection = ({
   title,
@@ -9,6 +11,11 @@ const PlaceholderSection = ({
       <p className="text-gray-500">{description}</p>
     </section>
   );
+};
+
+PlaceholderSection.propTypes = {
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string,
 };
 
 export default PlaceholderSection;

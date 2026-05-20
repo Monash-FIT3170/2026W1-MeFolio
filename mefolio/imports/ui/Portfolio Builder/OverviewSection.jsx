@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
@@ -60,6 +62,32 @@ const OverviewSection = ({ stats, visitors }) => {
       </section>
     </>
   );
+};
+
+StatCard.propTypes = {
+  stat: PropTypes.shape({
+    id: PropTypes.string,
+    value: PropTypes.string,
+    label: PropTypes.string,
+    change: PropTypes.string,
+  }).isRequired,
+};
+
+VisitorCard.propTypes = {
+  visitor: PropTypes.shape({
+    id: PropTypes.string,
+    name: PropTypes.string,
+    email: PropTypes.string,
+    activity: PropTypes.string,
+    location: PropTypes.string,
+    duration: PropTypes.string,
+    active: PropTypes.bool,
+  }).isRequired,
+};
+
+OverviewSection.propTypes = {
+  stats: PropTypes.arrayOf(PropTypes.object).isRequired,
+  visitors: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default OverviewSection;

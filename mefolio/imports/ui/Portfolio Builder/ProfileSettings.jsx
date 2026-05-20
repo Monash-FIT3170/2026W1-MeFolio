@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -132,6 +133,18 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
       </div>
     </div>
   );
+};
+
+ProfileSettings.propTypes = {
+  profile: PropTypes.shape({
+    name: PropTypes.string,
+    email: PropTypes.string,
+  }).isRequired,
+  aboutMe: PropTypes.shape({
+    title: PropTypes.string,
+    bio: PropTypes.string,
+  }).isRequired,
+  userId: PropTypes.string,
 };
 
 export default ProfileSettings;
