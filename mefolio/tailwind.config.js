@@ -4,7 +4,14 @@ module.exports = {
     "./client/*.{js,jsx,ts,tsx,html}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        'mobile': '320px',
+        'tablet': '768px',
+        'desktop': '1024px',
+        'wide': '1280px',
+      },
+    },
   },
   plugins: [],
 };
