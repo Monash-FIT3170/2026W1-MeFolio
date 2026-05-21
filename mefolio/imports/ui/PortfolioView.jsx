@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-import { PortfolioCollection } from "../api/portfolio";
+import { mapAboutMe, mapProfile } from "../models/portfolioBuilderViewModel";
+
 import About from "./components/About.jsx";
 import Navbar from "./components/Navbar.jsx";
 import { ProfileCard } from "./components/ProfileCard.jsx";
@@ -69,18 +70,19 @@ export const PortfolioView = () => {
     };
   });
 
-  if (isLoading) {
-    return (
-      <div>
-        <Navbar displayName="Loading..." />
-        <main className="portfolio-loading">
-          <p>Loading portfolio...</p>
-        </main>
-      </div>
-    );
-  }
+  const addPortfolio = () => {
+    Meteor.call("portfolios.insert", portfolioData);
+    setPortfolioData({}); 
+  };
+  const removePortfolio = (id) => {
+    Meteor.call("portfolios.remove", id);
+  };
 
-  const aboutMe = mapPortfolioToAboutMe(portfolio);
+  if (isLoading) return <p>Loading...</p>;
+
+  const portfolio = portfolios[0];
+  const aboutMe = mapAboutMe(portfolio);      // reuse exact same mapper
+  const profile = mapProfile(portfolio);      // reuse exact same mapper
 
   return (
     <div>
@@ -90,7 +92,7 @@ export const PortfolioView = () => {
       <section className="grid grid-cols-1 lg:grid-cols-[1fr_500px] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-12 lg:py-0">
         {/* Left column */}
         <div className="flex flex-col gap-6">
-          <About aboutMe={aboutMe} />
+          <About aboutMe={aboutMe} profile={profile} />
         </div>
 
         {/* Right column- profile card */}
@@ -112,5 +114,5 @@ export const PortfolioView = () => {
         <div>Placeholder for portfolio UI</div>
       </section>
     </div>
-  );
+  ); //TODO: Create UI to edit portfolio details instead of returning none.
 };
