@@ -3,53 +3,80 @@ import { Meteor } from "meteor/meteor";
 import PropTypes from "prop-types";
 
 const EMPTY_FORM = {
-    title: "",
-    description: "",
-    technologies: "",
-    githubLink: "",
-    liveDemoLink: "",
-    status: "live",
-    media: null,
-    createdAt: null
+  title: "",
+  description: "",
+  technologies: [],
+  githubLink: "",
+  liveDemoLink: "",
+  status: "live",
+  media: null,
+  createdAt: null,
 };
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
 const TECH_SUGGESTIONS = [
-    "React", "Vue", "Angular", "Svelte", "Next.js", "Nuxt", "TypeScript",
-    "JavaScript", "Node.js", "Express", "FastAPI", "Django", "Laravel",
-    "Spring Boot", "MongoDB", "PostgreSQL", "MySQL", "Firebase", "Supabase",
-    "Redis", "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Tailwind CSS",
-    "GraphQL", "REST",
-]
+  "React",
+  "Vue",
+  "Angular",
+  "Svelte",
+  "Next.js",
+  "Nuxt",
+  "TypeScript",
+  "JavaScript",
+  "Node.js",
+  "Express",
+  "FastAPI",
+  "Django",
+  "Laravel",
+  "Spring Boot",
+  "MongoDB",
+  "PostgreSQL",
+  "MySQL",
+  "Firebase",
+  "Supabase",
+  "Redis",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "GCP",
+  "Azure",
+  "Tailwind CSS",
+  "GraphQL",
+  "REST",
+];
 
 const TechStackInput = ({ value, onChange }) => {
-    const [text, setText] = useState("");
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const inputRef = useRef(null);
+  const [text, setText] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef(null);
 
-    const filtered = text.trim()
+  const filtered = text.trim()
     ? TECH_SUGGESTIONS.filter(
-        (s) => s.toLowerCase().includes(text.toLowerCase()) && !value.includes(s)).slice(0, 6): [];
+        (s) =>
+          s.toLowerCase().includes(text.toLowerCase()) && !value.includes(s),
+      ).slice(0, 6)
+    : [];
 
-    const add = (tag) => {
-        const t = tag.trim();
-        if (t && !value.includes(t)) onChange([...value, t]);
-        setText("");
-        setShowSuggestions(false);
-        inputRef.current?.focus();
-    };
+  const add = (tag) => {
+    const t = tag.trim();
+    if (t && !value.includes(t)) onChange([...value, t]);
+    setText("");
+    setShowSuggestions(false);
+    inputRef.current?.focus();
+  };
 
-    const remove = (tag) => onChange(value.filter((v) => v !== tag));
+  const remove = (tag) => onChange(value.filter((v) => v !== tag));
 
-    const onKey = (e) => {
+  const onKey = (e) => {
     if (["Enter", ",", "Tab"].includes(e.key)) {
       e.preventDefault();
       if (text.trim()) add(text);
     } else if (e.key === "Backspace" && !text && value.length) {
       remove(value[value.length - 1]);
     }
-  };return (
+  };
+  return (
     <div className="relative">
       <div
         className="flex flex-wrap gap-1.5 p-2 border border-gray-300 rounded-lg bg-white min-h-[44px] items-center cursor-text focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition"
@@ -63,7 +90,10 @@ const TechStackInput = ({ value, onChange }) => {
             {tag}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); remove(tag); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                remove(tag);
+              }}
               aria-label={`Remove ${tag}`}
               className="text-indigo-500 hover:text-indigo-700 leading-none"
             >
@@ -74,16 +104,21 @@ const TechStackInput = ({ value, onChange }) => {
         <input
           ref={inputRef}
           value={text}
-          onChange={(e) => { setText(e.target.value); setShowSuggestions(true); }}
+          onChange={(e) => {
+            setText(e.target.value);
+            setShowSuggestions(true);
+          }}
           onKeyDown={onKey}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          placeholder={value.length === 0 ? "e.g. React, Node.js... press Enter" : ""}
+          placeholder={
+            value.length === 0 ? "e.g. React, Node.js... press Enter" : ""
+          }
           data-testid="tags-text-input"
           className="flex-1 min-w-[140px] border-none outline-none text-sm text-gray-900 bg-transparent"
         />
       </div>
- 
+
       {showSuggestions && filtered.length > 0 && (
         <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-50 py-1">
           {filtered.map((s) => (
@@ -102,44 +137,59 @@ const TechStackInput = ({ value, onChange }) => {
 };
 
 const MediaUpload = ({ file, onChange }) => {
-    const inputRef = useRef(null);
-    const [dragging, setDragging] = useState(false);
+  const inputRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
 
-    const handle = (f) => {
-        if (f && (f.type.startsWith("image/") || f.type.startsWith("video/")))
-            onChange(f);
-    };
+  const handle = (f) => {
+    if (f && (f.type.startsWith("image/") || f.type.startsWith("video/")))
+      onChange(f);
+  };
 
-    if (file) {
-        return (
-            <div data-testid="upload-preview" className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
-                <span className="text-xl">upload</span>
-                <span className="flex-1 text-sm text-gray-600 font-mono truncate">{file.name}</span>
-                <button
-                type="button"
-                onClick={() => onChange(null)}
-                aria-label="Remove file"
-                className="text-gray-400 hover:text-red-500 text-lg leading-none transition">
-                x
-                </button>
-            </div>
-        );
-    }
-return (
+  if (file) {
+    return (
+      <div
+        data-testid="upload-preview"
+        className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50"
+      >
+        <span className="text-xl">upload</span>
+        <span className="flex-1 text-sm text-gray-600 font-mono truncate">
+          {file.name}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          aria-label="Remove file"
+          className="text-gray-400 hover:text-red-500 text-lg leading-none transition"
+        >
+          x
+        </button>
+      </div>
+    );
+  }
+  return (
     <div
       data-testid="upload-zone"
       onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
       onDragLeave={() => setDragging(false)}
-      onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files[0]); }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        handle(e.dataTransfer.files[0]);
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
       aria-label="Upload project media"
       className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition
-        ${dragging
-          ? "border-indigo-500 bg-indigo-50"
-          : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50"}`}
+        ${
+          dragging
+            ? "border-indigo-500 bg-indigo-50"
+            : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50"
+        }`}
     >
       <input
         ref={inputRef}
@@ -149,42 +199,48 @@ return (
         onChange={(e) => handle(e.target.files[0])}
         data-testid="file-input"
       />
-      <p className="text-2xl mb-2">o</p>
       <p className="text-sm text-gray-500">
-        <span className="text-indigo-600 font-semibold">Click to upload</span> or drag & drop
+        <span className="text-indigo-600 font-semibold">Click to upload</span>{" "}
+        or drag & drop
       </p>
-      <p className="text-xs text-gray-400 mt-1">PNG · JPG · GIF · WEBP · MP4 · WEBM</p>
+      <p className="text-xs text-gray-400 mt-1">
+        PNG · JPG · GIF · WEBP · MP4 · WEBM
+      </p>
     </div>
   );
 };
 
 const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
-    const [form, setForm] = useState(EMPTY_FORM);
-    const [errors, setErrors] = useState({});
-    const overlayRef = useRef(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const overlayRef = useRef(null);
 
-    useEffect(() => {
-        if (!isOpen) return;
-        const handler = (e) => { if (e.key === "Escape") handleCancel(); };
-        document.addEventListener("keydown", handler);
-        return () => document.removeEventListener("keydown", handler);
-    }, [isOpen]);
-
-    useEffect(() => {
-        document.body.style.overflow = isOpen ? "hidden" : "";
-        return () => { document.body.style.overflow = ""; };
-    }, [isOpen]);
-
-    if (!isOpen) return null;
-    
-    const set = (k, v) => {
-        setForm((f) => ({ ...f, [k]: v}));
-        if (errors[k]) setErrors((e) => ({ ...e, [k]: "" }));
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (e.key === "Escape") handleCancel();
     };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isOpen]);
 
-    const validate = () => {
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const set = (k, v) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    if (errors[k]) setErrors((e) => ({ ...e, [k]: "" }));
+  };
+
+  const validate = () => {
     const e = {};
-    if (!form.title.trim())       e.title = "Project title is required.";
+    if (!form.title.trim()) e.title = "Project title is required.";
     if (!form.description.trim()) e.description = "Description is required.";
     if (form.githubLink && !/^https?:\/\/.+/.test(form.githubLink))
       e.githubLink = "Enter a valid URL (starting with https://)";
@@ -195,19 +251,29 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = () => {
     const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-      Meteor.call("projects.insert", {
+    if (Object.keys(e).length) {
+      setErrors(e);
+      return;
+    }
+    Meteor.call(
+      "projects.insert",
+      {
         title: form.title,
         description: form.description,
         stack: form.technologies,
         github: form.githubLink,
         demo: form.liveDemoLink,
         status: form.status,
-      }, (err, newId) => {
-        if (err) { console.error(err); return; }
+      },
+      (err, newId) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
         onAdd({ ...form, _id: newId });
         handleCancel();
-      });
+      },
+    );
   };
 
   const handleCancel = () => {
@@ -215,14 +281,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
     setErrors({});
     onClose();
   };
-return (
+  return (
     <div
       ref={overlayRef}
       data-testid="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      onClick={(e) => { if (e.target === overlayRef.current) handleCancel(); }}
+      onClick={(e) => {
+        if (e.target === overlayRef.current) handleCancel();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-gray-900/50 backdrop-blur-sm"
     >
       {/* Panel */}
@@ -249,13 +317,15 @@ return (
             x
           </button>
         </div>
- 
+
         {/* Form body */}
         <div className="px-6 py-5 flex flex-col gap-5">
- 
           {/* Title */}
           <div>
-            <label htmlFor="mf-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label
+              htmlFor="mf-title"
+              className="block text-sm font-semibold text-gray-700 mb-1.5"
+            >
               Project Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -271,13 +341,21 @@ return (
                 ${errors.title ? "border-red-400 bg-red-50" : "border-gray-300"}`}
             />
             {errors.title && (
-              <p data-testid="error-title" className="text-xs text-red-500 mt-1">{errors.title}</p>
+              <p
+                data-testid="error-title"
+                className="text-xs text-red-500 mt-1"
+              >
+                {errors.title}
+              </p>
             )}
           </div>
- 
+
           {/* Description */}
           <div>
-            <label htmlFor="mf-desc" className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label
+              htmlFor="mf-desc"
+              className="block text-sm font-semibold text-gray-700 mb-1.5"
+            >
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -292,21 +370,29 @@ return (
                 ${errors.description ? "border-red-400 bg-red-50" : "border-gray-300"}`}
             />
             {errors.description && (
-              <p data-testid="error-description" className="text-xs text-red-500 mt-1">{errors.description}</p>
+              <p
+                data-testid="error-description"
+                className="text-xs text-red-500 mt-1"
+              >
+                {errors.description}
+              </p>
             )}
           </div>
- 
+
           {/* Tech Stack */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Tech Stack
             </label>
-            <TechStackInput value={form.technologies} onChange={(v) => set("technologies", v)} />
+            <TechStackInput
+              value={form.technologies}
+              onChange={(v) => set("technologies", v)}
+            />
             <p className="text-xs text-gray-400 mt-1">
               Press Enter or comma to add · Backspace to remove last
             </p>
           </div>
- 
+
           {/* Status */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -319,22 +405,27 @@ return (
                   type="button"
                   onClick={() => set("status", s)}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium border capitalize transition
-                    ${form.status === s
-                      ? "border-indigo-600 bg-indigo-100 text-indigo-700"
-                      : "border-gray-200 text-gray-500 hover:border-indigo-400"}`}
+                    ${
+                      form.status === s
+                        ? "border-indigo-600 bg-indigo-100 text-indigo-700"
+                        : "border-gray-200 text-gray-500 hover:border-indigo-400"
+                    }`}
                 >
-                  {s === "live" ? "o" : ""}{s}
+                  {s}
                 </button>
               ))}
             </div>
           </div>
- 
+
           <hr className="border-gray-100 -mx-6" />
- 
+
           {/* GitHub + Demo */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="mf-github" className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label
+                htmlFor="mf-github"
+                className="block text-sm font-semibold text-gray-700 mb-1.5"
+              >
                 GitHub Repo
               </label>
               <input
@@ -349,11 +440,19 @@ return (
                   ${errors.githubLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
               />
               {errors.githubLink && (
-                <p data-testid="error-githubLink" className="text-xs text-red-500 mt-1">{errors.githubLink}</p>
+                <p
+                  data-testid="error-githubLink"
+                  className="text-xs text-red-500 mt-1"
+                >
+                  {errors.githubLink}
+                </p>
               )}
             </div>
             <div>
-              <label htmlFor="mf-demo" className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label
+                htmlFor="mf-demo"
+                className="block text-sm font-semibold text-gray-700 mb-1.5"
+              >
                 Live Demo URL
               </label>
               <input
@@ -368,11 +467,16 @@ return (
                   ${errors.liveDemoLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
               />
               {errors.liveDemoLink && (
-                <p data-testid="error-liveDemoLink" className="text-xs text-red-500 mt-1">{errors.liveDemoLink}</p>
+                <p
+                  data-testid="error-liveDemoLink"
+                  className="text-xs text-red-500 mt-1"
+                >
+                  {errors.liveDemoLink}
+                </p>
               )}
             </div>
           </div>
- 
+
           {/* Media */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
@@ -384,7 +488,7 @@ return (
             </p>
           </div>
         </div>
- 
+
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sticky bottom-0">
           <p className="text-xs text-gray-400">
@@ -405,13 +509,29 @@ return (
               onClick={handleSubmit}
               className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
             >
-              + Add Project
+              Add Project
             </button>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+TechStackInput.propTypes = {
+  value: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
+MediaUpload.propTypes = {
+  file: PropTypes.object,
+  onChange: PropTypes.func.isRequired,
+};
+
+AddProjectModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onAdd: PropTypes.func.isRequired,
 };
 
 export default AddProjectModal;
