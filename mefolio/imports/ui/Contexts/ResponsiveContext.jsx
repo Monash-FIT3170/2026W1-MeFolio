@@ -1,3 +1,10 @@
+/**
+ * FEAT-09: Responsive Context Provider for Automatic Layout Adjustment
+ * 
+ * Provides breakpoint detection and allows componenets to conditionally render based on screen size.
+ * 
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
