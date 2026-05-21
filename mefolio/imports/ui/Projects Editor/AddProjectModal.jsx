@@ -1,0 +1,266 @@
+const EMPTY_FORM = {
+    title: "",
+    description: "",
+    technologies: "",
+    githubLink: "",
+    liveDemoLink: "",
+    status: "live",
+    media: null,
+    createdAt: null
+};
+
+const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
+    const [form, setForm] = useState(EMPTY_FORM);
+    const [errors, setErrors] = useState({});
+    const overlayRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e) => { if (e.key === "Escape") handleCancel(); };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [isOpen]);
+
+    useEffect(() => {
+        document.body.style.overflow = isOpen ? "hidden" : "";
+        return () => { document.body.style.overflow = ""; };
+    }, [isOpen]);
+
+    if (!isOpen) return null;
+    
+    const set = (k, v) => {
+        setForm((f) => ({ ...f, [k]: v}));
+        if (errors[k]) setErrors((e) => ({ ...e, [k]: "" }));
+    };
+
+    const validate = () => {
+    const e = {};
+    if (!form.title.trim())       e.title = "Project title is required.";
+    if (!form.description.trim()) e.description = "Description is required.";
+    if (form.githubLink && !/^https?:\/\/.+/.test(form.githubLink))
+      e.githubLink = "Enter a valid URL (starting with https://)";
+    if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
+      e.liveDemoLink = "Enter a valid URL (starting with https://)";
+    return e;
+  };
+
+  const handleSubmit = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+      Meteor.call("projects.insert", {
+        title: form.title,
+        description: form.description,
+        stack: form.stack,
+        github: form.github,
+        demo: form.demo,
+        status: form.status,
+      }, (err, newId) => {
+        if (err) { console.error(err); return; }
+        onAdd({ ...form, _id: newId });
+        handleCancel();
+      });
+  };
+
+  const handleCancel = () => {
+    setForm(EMPTY_FORM);
+    setErrors({});
+    onClose();
+  };
+return (
+    <div
+      ref={overlayRef}
+      data-testid="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      onClick={(e) => { if (e.target === overlayRef.current) handleCancel(); }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-gray-900/50 backdrop-blur-sm"
+    >
+      {/* Panel */}
+      <div
+        data-testid="modal-panel"
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+          <div>
+            <h2 id="modal-title" className="text-lg font-bold text-gray-900">
+              Add New Project
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Fill in the details below to add it to your portfolio
+            </p>
+          </div>
+          <button
+            data-testid="modal-close-btn"
+            onClick={handleCancel}
+            aria-label="Close modal"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg w-8 h-8 flex items-center justify-center text-xl transition"
+          >
+            x
+          </button>
+        </div>
+ 
+        {/* Form body */}
+        <div className="px-6 py-5 flex flex-col gap-5">
+ 
+          {/* Title */}
+          <div>
+            <label htmlFor="mf-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Project Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="mf-title"
+              data-testid="field-title"
+              type="text"
+              placeholder="e.g. E-Commerce Platform"
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              autoFocus
+              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
+                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
+                ${errors.title ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+            />
+            {errors.title && (
+              <p data-testid="error-title" className="text-xs text-red-500 mt-1">{errors.title}</p>
+            )}
+          </div>
+ 
+          {/* Description */}
+          <div>
+            <label htmlFor="mf-desc" className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="mf-desc"
+              data-testid="field-description"
+              placeholder="What does this project do? What problem does it solve?"
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+              rows={3}
+              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none resize-y leading-relaxed transition
+                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
+                ${errors.description ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+            />
+            {errors.description && (
+              <p data-testid="error-description" className="text-xs text-red-500 mt-1">{errors.description}</p>
+            )}
+          </div>
+ 
+          {/* Tech Stack */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Tech Stack
+            </label>
+            <TechStackInput value={form.technologies} onChange={(v) => set("technologies", v)} />
+            <p className="text-xs text-gray-400 mt-1">
+              Press Enter or comma to add · Backspace to remove last
+            </p>
+          </div>
+ 
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Project Status
+            </label>
+            <div className="flex gap-2">
+              {STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => set("status", s)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium border capitalize transition
+                    ${form.status === s
+                      ? "border-indigo-600 bg-indigo-100 text-indigo-700"
+                      : "border-gray-200 text-gray-500 hover:border-indigo-400"}`}
+                >
+                  {s === "live" ? "o" : ""}{s}
+                </button>
+              ))}
+            </div>
+          </div>
+ 
+          <hr className="border-gray-100 -mx-6" />
+ 
+          {/* GitHub + Demo */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="mf-github" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                GitHub Repo
+              </label>
+              <input
+                id="mf-github"
+                data-testid="field-githubLink"
+                type="url"
+                placeholder="https://github.com/..."
+                value={form.githubLink}
+                onChange={(e) => set("githubLink", e.target.value)}
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
+                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
+                  ${errors.githubLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              />
+              {errors.githubLink && (
+                <p data-testid="error-githubLink" className="text-xs text-red-500 mt-1">{errors.githubLink}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="mf-demo" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Live Demo URL
+              </label>
+              <input
+                id="mf-demo"
+                data-testid="field-liveDemoLink"
+                type="url"
+                placeholder="https://yourproject.com"
+                value={form.liveDemoLink}
+                onChange={(e) => set("liveDemoLink", e.target.value)}
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
+                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
+                  ${errors.liveDemoLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              />
+              {errors.liveDemoLink && (
+                <p data-testid="error-liveDemoLink" className="text-xs text-red-500 mt-1">{errors.liveDemoLink}</p>
+              )}
+            </div>
+          </div>
+ 
+          {/* Media */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Project Media
+            </label>
+            <MediaUpload file={form.media} onChange={(f) => set("media", f)} />
+            <p className="text-xs text-gray-400 mt-1">
+              Optional: screenshot, demo GIF, or video
+            </p>
+          </div>
+        </div>
+ 
+        {/* Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sticky bottom-0">
+          <p className="text-xs text-gray-400">
+            <span className="text-red-500">*</span> Required fields
+          </p>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              data-testid="btn-cancel"
+              onClick={handleCancel}
+              className="px-5 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-testid="btn-submit"
+              onClick={handleSubmit}
+              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+            >
+              + Add Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
