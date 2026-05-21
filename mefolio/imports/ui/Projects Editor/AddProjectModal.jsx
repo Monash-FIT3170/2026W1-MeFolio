@@ -100,6 +100,63 @@ const TechStackInput = ({ value, onChange }) => {
   );
 };
 
+const MediaUpload = ({ file, onChange }) => {
+    const inputRef = useRef(null);
+    const [dragging, setDragging] = useState(false);
+
+    const handle = (f) => {
+        if (f && (f.type.startsWith("image/") || f.type.startsWith("video/")))
+            onChange(f);
+    };
+
+    if (file) {
+        return (
+            <div data-testid="upload-preview" className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                <span className="text-xl">upload</span>
+                <span className="flex-1 text-sm text-gray-600 font-mono truncate">{file.name}</span>
+                <button
+                type="button"
+                onClick={() => onChange(null)}
+                aria-label="Remove file"
+                className="text-gray-400 hover:text-red-500 text-lg leading-none transition">
+                x
+                </button>
+            </div>
+        );
+    }
+return (
+    <div
+      data-testid="upload-zone"
+      onClick={() => inputRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => { e.preventDefault(); setDragging(false); handle(e.dataTransfer.files[0]); }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+      aria-label="Upload project media"
+      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition
+        ${dragging
+          ? "border-indigo-500 bg-indigo-50"
+          : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50"}`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={(e) => handle(e.target.files[0])}
+        data-testid="file-input"
+      />
+      <p className="text-2xl mb-2">o</p>
+      <p className="text-sm text-gray-500">
+        <span className="text-indigo-600 font-semibold">Click to upload</span> or drag & drop
+      </p>
+      <p className="text-xs text-gray-400 mt-1">PNG · JPG · GIF · WEBP · MP4 · WEBM</p>
+    </div>
+  );
+};
+
 const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
@@ -355,3 +412,5 @@ return (
     </div>
   );
 };
+
+export default AddProjectModal;
