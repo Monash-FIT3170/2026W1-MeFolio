@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ModeSwitch } from "../Portfolio Preview/ModeButton";
 import ProfileSummary from "./ProfileSummary";
-import { useResponsive } from "../contexts/ResponsiveContext";
+import { useResponsive } from "../Contexts/ResponsiveContext";
 
 const Sidebar = ({
   items,
@@ -34,9 +34,9 @@ const Sidebar = ({
               setIsMobileMenuOpen(false);
             }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors min-h-[44px] ${
-            activeTab === item.id
-            ? "bg-indigo-50 text-indigo-600"
-            : "text-gray-700 hover:bg-gray-100"
+              activeTab === item.id
+                ? "bg-indigo-50 text-indigo-600"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <span>{item.label}</span>
@@ -64,7 +64,7 @@ const Sidebar = ({
       {/* Mobile Drawer */}
       {isMobile && isMobileMenuOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={() => setIsMobileMenuOpen(false)}
           />

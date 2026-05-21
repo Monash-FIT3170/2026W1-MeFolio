@@ -1,8 +1,6 @@
-@import "tailwindcss";
-
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  
+
   /* Automatic scaling on all devices */
   --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
   --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
@@ -47,7 +45,6 @@ h3 {
   font-size: var(--text-xl);
   font-weight: 600;
 }
-
 
 .container-fluid {
   width: 100%;
@@ -134,7 +131,9 @@ img {
   height: auto;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   min-height: 44px;
 }
 
