@@ -1,4 +1,5 @@
 .meteor/local
+_build
 node_modules
 .git
 .DS_Store
