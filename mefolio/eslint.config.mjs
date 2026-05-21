@@ -26,6 +26,9 @@ export default defineConfig([
     },
     rules: {
       "react/react-in-jsx-scope": "off",
+      // Count identifiers referenced in JSX as "used" so imported components
+      // and icons aren't falsely flagged by no-unused-vars.
+      "react/jsx-uses-vars": "error",
     },
   },
 ]);
