@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Meteor } from "meteor/meteor"
+import { Meteor } from "meteor/meteor";
+import PropTypes from "prop-types";
 
 const EMPTY_FORM = {
     title: "",
@@ -198,9 +199,9 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
       Meteor.call("projects.insert", {
         title: form.title,
         description: form.description,
-        stack: form.stack,
-        github: form.github,
-        demo: form.demo,
+        stack: form.technologies,
+        github: form.githubLink,
+        demo: form.liveDemoLink,
         status: form.status,
       }, (err, newId) => {
         if (err) { console.error(err); return; }
