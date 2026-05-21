@@ -1,9 +1,16 @@
+/**
+ * FEAT-09: Responsive Context Provider for Automatic Layout Adjustment Tests
+ * 
+ * Tests for breakpoint detection, touch target sizes, and responsive CSS classes
+ */
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { expect } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
 import { Meteor } from 'meteor/meteor';
 import { ResponsiveProvider, useResponsive } from '../contexts/ResponsiveContext';
+
 
 // Test component that uses responsive hook
 const TestComponent = () => {
