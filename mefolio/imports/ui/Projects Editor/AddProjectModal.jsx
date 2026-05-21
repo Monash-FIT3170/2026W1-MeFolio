@@ -255,26 +255,38 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
       setErrors(e);
       return;
     }
-    Meteor.call(
-      "projects.insert",
-      {
+
+    // Persist with canonical field names + a createdAt (used for newest-first
+    // ordering). Media is stored as a data-URL string so it can be rendered.
+    const insert = (mediaValue) => {
+      const payload = {
         title: form.title,
         description: form.description,
         technologies: form.technologies,
         githubLink: form.githubLink,
         liveDemoLink: form.liveDemoLink,
+        media: mediaValue,
         status: form.status,
-        media: form.media,
-      },
-      (err, newId) => {
+        createdAt: new Date(),
+      };
+      Meteor.call("projects.insert", payload, (err, newId) => {
         if (err) {
           console.error(err);
           return;
         }
-        onAdd({ ...form, _id: newId });
+        onAdd({ ...payload, _id: newId });
         handleCancel();
-      },
-    );
+      });
+    };
+
+    if (form.media instanceof File) {
+      const reader = new FileReader();
+      reader.onload = () => insert(reader.result);
+      reader.onerror = () => insert("");
+      reader.readAsDataURL(form.media);
+    } else {
+      insert(typeof form.media === "string" ? form.media : "");
+    }
   };
 
   const handleCancel = () => {
