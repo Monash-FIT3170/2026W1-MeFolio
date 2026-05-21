@@ -15,6 +15,7 @@ import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
+import AddProjectModal from "../Projects Editor/AddProjectModal";
 import Sidebar from "./Sidebar";
 
 const getProjectId = (project) => project?._id || project?.id;
@@ -115,6 +116,8 @@ const DashboardLayout = () => {
   const [dataProjectKey, setDataProjectKey] = useState("");
   const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const {
     isLoading,
@@ -194,6 +197,12 @@ const DashboardLayout = () => {
     );
   };
 
+  const handleProjectDragEnd = () => setDraggedProjectIndex(null);
+  const handleAddProject = (newProject) => {
+    setOrderedProjects((prev) => [...prev, newProject]);
+  };
+
+
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
 
@@ -218,10 +227,18 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
+        <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-gray-900">
             {currentTab.label}
           </h1>
+          {activeTab === "projects" && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+            >
+              Add Project
+            </button>
+          )}
         </header>
 
         <div className="p-8">
@@ -241,6 +258,11 @@ const DashboardLayout = () => {
           )}
         </div>
       </main>
+      <AddProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddProject}
+      />
     </div>
   );
 };
