@@ -3,7 +3,7 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   
-  /* Automatic scaleing on all devices */
+  /* Automatic scaling on all devices */
   --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
   --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
   --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
@@ -120,4 +120,26 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+}
+
+.page,
+.main {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+input, select, textarea {
+  min-height: 44px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 80px;
+  }
 }
