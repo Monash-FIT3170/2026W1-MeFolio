@@ -14,8 +14,9 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
-import ProjectReorderingSection from "./ProjectReorderingSection";
+import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
+import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 
 const getProjectId = (project) => project?._id || project?.id;
@@ -87,6 +88,10 @@ const getPortfolioProjects = (
   );
 };
 
+// Newest project first (falls back to insertion order when createdAt is absent).
+const byNewestFirst = (a, b) =>
+  new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
+
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
@@ -118,6 +123,7 @@ const DashboardLayout = () => {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
 
   const {
     isLoading,
@@ -198,8 +204,30 @@ const DashboardLayout = () => {
   };
 
   const handleProjectDragEnd = () => setDraggedProjectIndex(null);
+
+  // New project becomes the first card in the display.
   const handleAddProject = (newProject) => {
-    setOrderedProjects((prev) => [...prev, newProject]);
+    setOrderedProjects((prev) => [newProject, ...prev]);
+  };
+
+  const handleEditProject = (project) => setEditingProject(project);
+
+  const handleSaveProject = (projectId, updates) => {
+    Meteor.call("projects.update", projectId, updates, (error) => {
+      if (error) {
+        console.error("Failed to update project:", error);
+        return;
+      }
+      // Reflect the change immediately in the locally ordered list.
+      setOrderedProjects((prev) =>
+        prev.map((project) =>
+          (project._id || project.id) === projectId
+            ? { ...project, ...updates }
+            : project,
+        ),
+      );
+      setEditingProject(null);
+    });
   };
 
 
@@ -247,11 +275,20 @@ const DashboardLayout = () => {
           ) : activeTab === "settings" ? (
             <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : activeTab === "projects" ? (
-            <ProjectReorderingSection
+            <ProjectsSection
               projects={orderedProjects}
+<<<<<<< HEAD
               onProjectsReorder={handleProjectsReorder}
               onSaveOrder={handleSaveProjectOrder}
               saveStatus={saveStatus}
+=======
+              onEdit={handleEditProject}
+              draggedProjectIndex={draggedProjectIndex}
+              onDragStart={handleProjectDragStart}
+              onDragOver={handleProjectDragOver}
+              onDrop={handleProjectDrop}
+              onDragEnd={handleProjectDragEnd}
+>>>>>>> 51b1620 (FEAT-04: show projects as draggable cards (newest first), replace reorder list, wire add/edit modals)
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />
@@ -262,6 +299,12 @@ const DashboardLayout = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
+      />
+      <EditProjectModal
+        isOpen={Boolean(editingProject)}
+        project={editingProject}
+        onClose={() => setEditingProject(null)}
+        onSave={handleSaveProject}
       />
     </div>
   );
