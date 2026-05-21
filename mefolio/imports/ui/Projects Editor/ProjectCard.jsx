@@ -141,37 +141,61 @@ export function ProjectCard({
           </div>
         )}
 
-        {/* Links */}
-        {(githubLink || liveDemoLink) && (
-          <div className="flex gap-3">
-            {githubLink && (
-              <a
-                data-testid="project-card-github"
-                href={githubLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-500 transition-all hover:bg-slate-50"
-              >
-                <Github className="h-4 w-4" />
-                Code
-              </a>
-            )}
-            {liveDemoLink && (
-              <a
-                data-testid="project-card-demo"
-                href={liveDemoLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-700"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Demo
-              </a>
-            )}
-          </div>
-        )}
+        {/* Links — always shown. When a URL is missing the button is dimmed,
+            non-clickable, and explains why on hover. */}
+        <div className="flex gap-3">
+          {githubLink ? (
+            <a
+              data-testid="project-card-github"
+              href={githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-500 transition-all hover:bg-slate-50"
+            >
+              <Github className="h-4 w-4" />
+              Code
+            </a>
+          ) : (
+            <button
+              type="button"
+              data-testid="project-card-github-disabled"
+              disabled
+              title="No GitHub link added"
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 py-2.5 text-sm font-bold text-slate-300"
+            >
+              <Github className="h-4 w-4" />
+              Code
+            </button>
+          )}
+
+          {liveDemoLink ? (
+            <a
+              data-testid="project-card-demo"
+              href={liveDemoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-700"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Demo
+            </a>
+          ) : (
+            <button
+              type="button"
+              data-testid="project-card-demo-disabled"
+              disabled
+              title="No live demo link added"
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-indigo-300/60 py-2.5 text-sm font-bold text-white"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Demo
+            </button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
