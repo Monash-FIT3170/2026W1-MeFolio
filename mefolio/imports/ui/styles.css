@@ -4,7 +4,9 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-body, html, #react-target {
+body,
+html,
+#react-target {
   margin: 0;
   padding: 0;
   width: 100%;
