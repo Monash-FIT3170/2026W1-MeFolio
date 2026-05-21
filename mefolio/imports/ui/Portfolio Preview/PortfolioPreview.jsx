@@ -5,6 +5,9 @@ import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { ProjectCollection } from "../../api/projects.js";
+import About from "../components/About.jsx";
+import Navbar from "../components/Navbar.jsx";
+import { ProfileCard } from "../components/ProfileCard.jsx";
 
 export const PortfolioPreview = () => {
   const { projects } = useTracker(() => {
@@ -66,6 +69,27 @@ export const PortfolioPreview = () => {
           Back to Dashboard
         </button>
       </header>
+    <div>
+      <Navbar />
+      {/* Hero - two-column grid */}
+      <section className="grid grid-cols-1 lg:grid-cols-[1fr_500px] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-12 lg:py-0">
+
+      {/* Left column */}
+        <div className="flex flex-col gap-6">
+          <About />
+        </div>
+      
+      {/* Right column- profile card */}
+        <div className="flex justify-center items-center py-4 order-first lg:order-last">
+          <ProfileCard
+            name="John Doe"
+            title="Full-Stack Developer"
+            location="Sydney, NSW"
+            summary="A concise one-line summary or tagline goes here. Team can replace with real content."
+            imageUrl={null}
+          />
+        </div>
+      </section>
 
       <div className="relative w-full">
         <div
@@ -88,6 +112,7 @@ export const PortfolioPreview = () => {
         {/* Tailwind-powered Gradient Hint */}
         <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
+    </div>
     </div>
   );
 };
