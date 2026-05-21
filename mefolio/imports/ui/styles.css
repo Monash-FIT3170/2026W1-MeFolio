@@ -4,7 +4,9 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-body, html, #react-target {
+body,
+html,
+#react-target {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -343,109 +345,3 @@ a {
   /* background-color: white; */
 }
 
-/* ============ About — Hero-style content ============ */
-.about-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.about-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: 0.4rem 0.85rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-primary);
-  background-color: hsl(4, 70%, 95%); /* fallback */
-  background-color: color-mix(in oklab, var(--color-primary) 12%, white);
-  border-radius: 999px;
-  width: fit-content;
-}
-
-.about-badge svg {
-  flex-shrink: 0;
-}
-
-.about-headline {
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--color-foreground);
-  margin: 0;
-}
-
-.about-summary {
-  font-size: 1.05rem;
-  line-height: 1.6;
-  color: var(--color-muted);
-  max-width: 38rem;
-  margin: 0;
-}
-
-/* Buttons */
-.contact-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: inherit;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color var(--transition-fast),
-              border-color var(--transition-fast),
-              transform var(--transition-fast);
-}
-
-.btn.primary {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.btn.primary:hover {
-  background-color: var(--color-primary-hover);
-}
-
-.btn.ghost {
-  background-color: transparent;
-  color: var(--color-foreground);
-  border-color: var(--color-border);
-}
-
-.btn.ghost:hover {
-  background-color: var(--color-card);
-  border-color: var(--color-muted);
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-/* Social icon row */
-.social-links {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-.social-links a {
-  color: var(--color-muted);
-  display: inline-flex;
-  transition: color var(--transition-fast);
-}
-
-.social-links a:hover {
-  color: var(--color-foreground);
-}

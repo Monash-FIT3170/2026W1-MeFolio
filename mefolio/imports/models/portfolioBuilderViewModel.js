@@ -3,10 +3,15 @@ import {
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
+  mockProjects,
   sidebarItems,
   samplePortfolioProfileData,
   defaultPortfolioProfileData,
+<<<<<<< HEAD
 } from "../ui/portfolioBuilderMockData";
+=======
+} from "../ui/Portfolio Builder/portfolioBuilderMockData";
+>>>>>>> FEAT-05-Merge-Dev
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
@@ -16,6 +21,10 @@ export const createLoadingViewModel = () => ({
   liveVisitors: [],
   profile: {},
   aboutMe: {},
+<<<<<<< HEAD
+=======
+  projects: [],
+>>>>>>> FEAT-05-Merge-Dev
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.
@@ -29,34 +38,12 @@ export const mapLiveVisitors = (portfolios) => {
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
-export const mapProfile = (portfolio) => {
-  if (!portfolio) {
-    return mockProfile;
-  }
-
-  const bio = typeof portfolio.bio === "object" ? portfolio.bio : {};
-  const name =
-    portfolio.profile?.fullName ||
-    bio.fullName ||
-    portfolio.title ||
-    "Portfolio Owner";
-  const email =
-    portfolio.contact?.email ||
-    bio.email ||
-    portfolio.userId ||
-    "";
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("") || "PO";
-
+export const mapProfile = (user) => {
+  if (!user) return mockProfile;
+  const selectedUser = Array.isArray(user) ? user[0] : user;
   return {
-    initials,
-    name,
-    email,
-    username: portfolio.username || "me",
+    name: selectedUser.profile?.name || "",
+    email: selectedUser.email || "",
   };
 };
 
@@ -157,43 +144,44 @@ export const mapAboutMe = (portfolio) => {
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
-      ...samplePortfolioProfileData.recruiterInfo,
       ...(portfolio.recruiterInfo || {}),
     },
   };
 };
 
+export const mapProjects = (portfolios) => {
+  return portfolios?.length ? mockProjects : mockProjects;
+};
+
 // Returns the current mock-backed dashboard state while the API is not wired in.
-// TODO: Replace with generic view to be used when users have no portfolio data, or during loading.
-export const createMockDashboardViewModel = () => ({
+export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
   liveVisitors: mockLiveVisitors,
-  profile: mockProfile,
-  aboutMe: mockAboutMe,
+  profile: mapProfile(user),
+  aboutMe: mapAboutMe(samplePortfolioProfileData),
+  projects: mockProjects,
 });
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
+  projects = null,
+  user = null,
 } = {}) => {
-  if (isLoading) {
-    return createLoadingViewModel();
-  }
-
-  if (!portfolios.length) {
-    return createMockDashboardViewModel();
-  }
+  if (isLoading) return createLoadingViewModel();
+  if (!portfolios.length) return createMockDashboardViewModel(user);
 
   return {
     isLoading: false,
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(portfolios[0]),
+    profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),
+    projects: projects || mapProjects(portfolios),
   };
 };
 
