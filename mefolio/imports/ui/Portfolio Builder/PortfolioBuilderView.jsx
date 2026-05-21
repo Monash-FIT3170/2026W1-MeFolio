@@ -230,6 +230,19 @@ const DashboardLayout = () => {
     });
   };
 
+  const handleDeleteProject = (projectId) => {
+    Meteor.call("projects.delete", projectId, (error) => {
+      if (error) {
+        console.error("Failed to delete project:", error);
+        return;
+      }
+      // Remove the card from the display and close the modal.
+      setOrderedProjects((prev) =>
+        prev.filter((project) => (project._id || project.id) !== projectId),
+      );
+      setEditingProject(null);
+    });
+  };
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
@@ -277,18 +290,12 @@ const DashboardLayout = () => {
           ) : activeTab === "projects" ? (
             <ProjectsSection
               projects={orderedProjects}
-<<<<<<< HEAD
-              onProjectsReorder={handleProjectsReorder}
-              onSaveOrder={handleSaveProjectOrder}
-              saveStatus={saveStatus}
-=======
               onEdit={handleEditProject}
               draggedProjectIndex={draggedProjectIndex}
               onDragStart={handleProjectDragStart}
               onDragOver={handleProjectDragOver}
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
->>>>>>> 51b1620 (FEAT-04: show projects as draggable cards (newest first), replace reorder list, wire add/edit modals)
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />
@@ -305,6 +312,7 @@ const DashboardLayout = () => {
         project={editingProject}
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
       />
     </div>
   );

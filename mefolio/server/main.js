@@ -333,6 +333,13 @@ Meteor.methods({
   },
 
   async "projects.delete"(projectId) {
+    // Unlink the project from any portfolio that references it so it doesn't
+    // reappear on reload, then remove the project document itself.
+    await PortfolioCollection.updateAsync(
+      { projects: projectId },
+      { $pull: { projects: projectId } },
+      { multi: true },
+    );
     return await ProjectCollection.removeAsync(projectId);
   },
 

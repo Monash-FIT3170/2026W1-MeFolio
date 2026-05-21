@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 
 // Modal form for editing an existing project's details. Pre-fills from the
 // given project and reports the updated fields back through onSave.
-const EditProjectModal = ({ isOpen, project, onClose, onSave }) => {
+const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -13,6 +13,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave }) => {
     media: "",
   });
   const [errors, setErrors] = useState({});
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const overlayRef = useRef(null);
 
   // Re-seed the form whenever a different project is opened for editing.
@@ -28,6 +29,11 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave }) => {
     });
     setErrors({});
   }, [project]);
+
+  // Reset the delete confirmation each time the modal opens.
+  useEffect(() => {
+    if (isOpen) setConfirmingDelete(false);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -265,23 +271,63 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave }) => {
           </div>
         </div>
 
-        <div className="sticky bottom-0 flex items-center justify-end gap-2.5 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-4">
-          <button
-            type="button"
-            data-testid="edit-btn-cancel"
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            data-testid="edit-btn-save"
-            onClick={handleSubmit}
-            className="rounded-lg bg-indigo-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-800"
-          >
-            Save Changes
-          </button>
+        <div className="sticky bottom-0 flex items-center justify-between gap-2.5 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-4">
+          {/* Delete (left). First click asks for confirmation. */}
+          <div className="flex items-center gap-2">
+            {onDelete &&
+              (confirmingDelete ? (
+                <>
+                  <span className="text-xs font-medium text-gray-600">
+                    Delete this project?
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="edit-btn-delete-confirm"
+                    onClick={() => onDelete(project._id)}
+                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="edit-btn-delete-cancel"
+                    onClick={() => setConfirmingDelete(false)}
+                    className="rounded-lg px-2 py-2 text-sm font-medium text-gray-500 transition hover:text-gray-700"
+                  >
+                    Keep
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  data-testid="edit-btn-delete"
+                  onClick={() => setConfirmingDelete(true)}
+                  className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                >
+                  Delete Project
+                </button>
+              ))}
+          </div>
+
+          {/* Cancel / Save (right) */}
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              data-testid="edit-btn-cancel"
+              onClick={onClose}
+              className="rounded-lg border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-testid="edit-btn-save"
+              onClick={handleSubmit}
+              className="rounded-lg bg-indigo-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-800"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -293,6 +339,7 @@ EditProjectModal.propTypes = {
   project: PropTypes.object,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
 };
 
 export default EditProjectModal;
