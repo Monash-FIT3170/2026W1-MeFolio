@@ -5,14 +5,12 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { expect } from 'chai';
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it } from 'mocha';
 import { Meteor } from 'meteor/meteor';
 import { ResponsiveProvider, useResponsive } from '../contexts/ResponsiveContext';
 
-
-// Test component that uses responsive hook
 const TestComponent = () => {
   const { isMobile, isTablet, isDesktop, breakpoint } = useResponsive();
   return (
@@ -53,6 +51,7 @@ if (Meteor.isClient) {
         const minHeight = parseInt(styles.minHeight);
         const minWidth = parseInt(styles.minWidth);
         
+        // Verify at least one dimension meets 44px requirement
         expect(minHeight >= 44 || minWidth >= 44).to.be.true;
       });
 
