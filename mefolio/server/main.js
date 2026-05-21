@@ -294,14 +294,34 @@ Meteor.methods({
     return await Meteor.users.updateAsync(this.userId, { $set: safeUpdates });
   },
 
-  async "projects.insert"(projectData) {
-    const projectId = await ProjectCollection.insertAsync(projectData);
+  // Project methods
+  async "projects.insert"(projectData = {}) {
+    // Normalise field names (the Add Project modal historically sent
+    // stack/github/demo) and guarantee a createdAt so newest-first ordering works.
+    const normalized = {
+      title: projectData.title ?? "",
+      description: projectData.description ?? "",
+      technologies: projectData.technologies ?? projectData.stack ?? [],
+      githubLink: projectData.githubLink ?? projectData.github ?? "",
+      liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
+      media: typeof projectData.media === "string" ? projectData.media : "",
+      status: projectData.status ?? "live",
+      createdAt: projectData.createdAt
+        ? new Date(projectData.createdAt)
+        : new Date(),
+    };
 
-    // Link project to the first portfolio found (current workaround for lack of auth)
-    const portfolio = await PortfolioCollection.findOneAsync();
+    const projectId = await ProjectCollection.insertAsync(normalized);
+
+    // Link the new project to the most-recent portfolio at the FRONT of the
+    // list so the latest project is displayed first and survives a reload.
+    const portfolio = await PortfolioCollection.findOneAsync(
+      {},
+      { sort: { createdAt: -1 } },
+    );
     if (portfolio) {
       await PortfolioCollection.updateAsync(portfolio._id, {
-        $push: { projects: projectId },
+        $push: { projects: { $each: [projectId], $position: 0 } },
       });
     }
 
