@@ -355,3 +355,13 @@ html,
   color: var(--color-primary);
   /* background-color: white; */
 }
+
+@theme{
+  --color-background: #f9fafb; 
+  --color-surface:    #ffffff;  
+  --color-foreground: #111827;  
+  --color-muted:      #6b7280; 
+  --color-primary:    #0160d9;
+  --color-secondary:  #005dd7;
+  --color-accent:     #ff7e7e;
+}
