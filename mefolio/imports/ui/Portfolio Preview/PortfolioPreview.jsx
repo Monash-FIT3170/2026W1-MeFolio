@@ -4,27 +4,58 @@ import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
+import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
+
+const getUserEmail = (user) =>
+  user?.email ||
+  user?.emails?.[0]?.address ||
+  user?.services?.google?.email ||
+  user?.services?.github?.email ||
+  "";
 
 export const PortfolioPreview = () => {
   const { projects } = useTracker(() => {
     const portfolioSub = Meteor.subscribe("portfolios.all");
     const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
-    if (!portfolioSub.ready() || !projectsSub.ready()) {
+    if (
+      !portfolioSub.ready() ||
+      !projectsSub.ready() ||
+      !portfolioProjectsSub.ready() ||
+      !currentUserSub.ready()
+    ) {
       return { portfolio: null, projects: [] };
     }
 
-    const portfolio = PortfolioCollection.findOne();
-    if (!portfolio?.projects?.length) return { portfolio, projects: [] };
+    const currentUser = Meteor.user();
+    const portfolio =
+      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
+      (getUserEmail(currentUser) === "test@example.com"
+        ? PortfolioCollection.findOne()
+        : null);
+
+    if (!portfolio?._id) return { portfolio, projects: [] };
+
+    const projectOrderDocuments = PortfolioProjectsCollection.find(
+      { portfolioId: portfolio._id },
+      { sort: { orderIndex: 1 } },
+    ).fetch();
+    const orderedProjectIds = projectOrderDocuments.length
+      ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+      : portfolio.projects || [];
+
+    if (!orderedProjectIds.length) return { portfolio, projects: [] };
 
     const projectMap = new Map(
-      ProjectCollection.find({ _id: { $in: portfolio.projects } })
+      ProjectCollection.find({ _id: { $in: orderedProjectIds } })
         .fetch()
-        .map((p) => [p._id, p]),
+        .map((project) => [project._id, project]),
     );
-    const projects = portfolio.projects
-      .map((id) => projectMap.get(id))
+    const projects = orderedProjectIds
+      .map((projectId) => projectMap.get(projectId))
       .filter(Boolean);
 
     return { portfolio, projects };
@@ -81,11 +112,9 @@ export const PortfolioPreview = () => {
               <ProjectCard project={project} />
             </div>
           ))}
-          {/* Spacer using Tailwind */}
           <div className="flex-none w-8" />
         </div>
 
-        {/* Tailwind-powered Gradient Hint */}
         <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
     </div>
