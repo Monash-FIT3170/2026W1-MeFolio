@@ -7,11 +7,7 @@ import {
   sidebarItems,
   samplePortfolioProfileData,
   defaultPortfolioProfileData,
-<<<<<<< HEAD
-} from "../ui/portfolioBuilderMockData";
-=======
 } from "../ui/Portfolio Builder/portfolioBuilderMockData";
->>>>>>> FEAT-05-Merge-Dev
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
@@ -21,10 +17,7 @@ export const createLoadingViewModel = () => ({
   liveVisitors: [],
   profile: {},
   aboutMe: {},
-<<<<<<< HEAD
-=======
   projects: [],
->>>>>>> FEAT-05-Merge-Dev
 });
 
 // Maps raw portfolio analytics into the stat card format used by the overview tab.

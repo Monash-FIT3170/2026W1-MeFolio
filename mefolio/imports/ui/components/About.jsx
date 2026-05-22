@@ -4,7 +4,6 @@ import { Meteor } from "meteor/meteor";
 
 import { PortfolioCollection } from "/imports/api/portfolio";
 
-import AboutCard from "./AboutCard.jsx";
 import AboutDetails from "./AboutDetails.jsx";
 import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";
@@ -41,10 +40,10 @@ const About = () => {
           {/* PASS PORTFOLIO */}
           <ContactButtons portfolio={portfolio} />
           <SocialLinksRow
-            email={aboutMe.contact?.email}
-            github={aboutMe.socials?.github}
-            linkedin={aboutMe.socials?.linkedin}
-            otherLinks={aboutMe.socials?.other || []}
+            email={portfolio.contact?.email}
+            github={portfolio.socials?.github}
+            linkedin={portfolio.socials?.linkedin}
+            otherLinks={portfolio.socials?.other || []}
           />
         </div>
 
