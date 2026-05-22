@@ -1,18 +1,13 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 
-/**
- * Profile Settings component allows users to edit their profile information and portfolio details.
- *
- * @param {Object} profile - the user's profile details as output by the mapProfile function in the view model
- * @param {Object} aboutMe - the user's portfolio details as output by the mapAboutMe function in the view model
- * @param {string} userId - the current user's ID
- *
- * @returns Form element pre-populated with the user's current profile data, allowing them to make edits and save changes.
- */
-const ProfileSettings = ({ profile, aboutMe, userId }) => {
+const ProfileSettings = ({ profile, aboutMe }) => {
+  const currentUser = useTracker(() => Meteor.user());
+  const userId = currentUser?._id;
+
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
@@ -20,34 +15,46 @@ const ProfileSettings = ({ profile, aboutMe, userId }) => {
     bio: aboutMe.bio || "",
   });
 
+  useEffect(() => {
+    setForm({
+      name: profile.name || "",
+      email: profile.email || "",
+      title: aboutMe.title || "",
+      bio: aboutMe.bio || "",
+    });
+  }, [aboutMe.bio, aboutMe.title, profile.email, profile.name]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = (form) => {
+  const handleSave = (formValues) => {
     const updates = {};
 
-    if (form.email) updates.email = form.email;
+    if (formValues.email) updates.email = formValues.email;
 
     const profileUpdates = {};
-    if (form.name) profileUpdates.name = form.name;
-    if (Object.keys(profileUpdates).length > 0)
+    if (formValues.name) profileUpdates.name = formValues.name;
+    if (Object.keys(profileUpdates).length > 0) {
       updates.profile = profileUpdates;
+    }
 
     const aboutMeUpdates = {};
-    if (form.title) aboutMeUpdates.title = form.title;
-    if (form.bio) aboutMeUpdates.bio = form.bio;
-    if (Object.keys(aboutMeUpdates).length > 0)
-      updates.aboutMe = aboutMeUpdates;
+    if (formValues.title) aboutMeUpdates.title = formValues.title;
+    if (formValues.bio) aboutMeUpdates.bio = formValues.bio;
 
-    Meteor.call("users1.update", userId, updates, (error) => {
+    if (!userId) {
+      alert("You must be logged in to save changes.");
+      return;
+    }
+
+    Meteor.call("users.updateCurrentProfile", updates, (error) => {
       if (error) {
         console.error("Error updating profile:", error);
         alert("Failed to save changes. Please try again.");
       }
     });
 
-    // Get the user's portfolio. Assuming one portfolio per user for now.
     const userPortfolio = PortfolioCollection.find({ userId }).fetch();
     Meteor.call(
       "portfolios.update",
@@ -144,7 +151,6 @@ ProfileSettings.propTypes = {
     title: PropTypes.string,
     bio: PropTypes.string,
   }).isRequired,
-  userId: PropTypes.string,
 };
 
 export default ProfileSettings;

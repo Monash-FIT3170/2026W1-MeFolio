@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
+import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
-import { UsersCollection } from "../../api/users";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -17,54 +17,119 @@ import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
 
+const getProjectId = (project) => project?._id || project?.id;
+
+const getProjectOrderKey = (projects = []) =>
+  projects.map((project) => getProjectId(project)).join("|");
+
+const getProjectDataKey = (projects = []) =>
+  projects
+    .map((project) =>
+      [
+        getProjectId(project),
+        project?.title || "",
+        project?.isMissingProjectDocument ? "missing" : "loaded",
+      ].join(":"),
+    )
+    .join("|");
+
+const getUserEmail = (user) =>
+  user?.email ||
+  user?.emails?.[0]?.address ||
+  user?.services?.google?.email ||
+  user?.services?.github?.email ||
+  "";
+
+const getSelectedPortfolio = (portfolios = [], user) => {
+  const ownedPortfolio = portfolios.find(
+    (portfolio) => portfolio.userId === user?._id,
+  );
+
+  if (ownedPortfolio) return ownedPortfolio;
+  if (getUserEmail(user) === "test@example.com") return portfolios[0];
+  return portfolios[0] ?? null;
+};
+
+const createUnavailableProject = (projectId) => ({
+  _id: projectId,
+  id: projectId,
+  title: "Project unavailable",
+  description: "This project could not be loaded yet.",
+  technologies: [],
+  githubLink: "",
+  liveDemoLink: "",
+  isMissingProjectDocument: true,
+});
+
+const getPortfolioProjects = (
+  portfolio,
+  projectDocuments = [],
+  projectOrderDocuments = [],
+) => {
+  const projectsById = new Map(
+    projectDocuments.map((project) => [project._id, project]),
+  );
+
+  if (!portfolio?._id) return projectDocuments;
+
+  const savedProjectIds = projectOrderDocuments
+    .filter((projectOrder) => projectOrder.portfolioId === portfolio._id)
+    .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    .map((projectOrder) => projectOrder.projectId);
+
+  const projectIds = savedProjectIds.length
+    ? savedProjectIds
+    : portfolio.projects || [];
+
+  return projectIds.map(
+    (projectId) => projectsById.get(projectId) || createUnavailableProject(projectId),
+  );
+};
+
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
-    Meteor.subscribe("projects.all");
-    const portfolios = PortfolioCollection.find({}).fetch();
-
-    const portfolio = portfolios[0];
-    const projects = portfolio?.projects?.length
-      ? (() => {
-          const projectMap = new Map(
-            ProjectCollection.find({ _id: { $in: portfolio.projects } })
-              .fetch()
-              .map((p) => [p._id, p]),
-          );
-          return portfolio.projects
-            .map((id) => projectMap.get(id))
-            .filter(Boolean);
-        })()
-      : ProjectCollection.find({}).fetch();
-
-    /* HANDOVER
-    Currently fetching from the dummy users1 collection as there is no logged in user system set up yet.
-    Will switch to Meteor.user() once authentication is implemented.
-
-    const user = Meteor.user();
-    */
-    const usersHandler = Meteor.subscribe("users1.all");
-    const user = UsersCollection.find({}).fetch();
+    const projectsHandler = Meteor.subscribe("projects.all");
+    const portfolioProjectsHandler = Meteor.subscribe("portfolioProjects.all");
+    const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     return {
-      isLoading: !portfoliosHandler.ready() || !usersHandler.ready(),
-      portfolios,
-      projects,
-      user,
+      isLoading:
+        !portfoliosHandler.ready() ||
+        !projectsHandler.ready() ||
+        !portfolioProjectsHandler.ready() ||
+        !currentUserHandler.ready(),
+      portfolios: PortfolioCollection.find({}).fetch(),
+      projectDocuments: ProjectCollection.find({}).fetch(),
+      projectOrderDocuments: PortfolioProjectsCollection.find(
+        {},
+        { sort: { orderIndex: 1 } },
+      ).fetch(),
+      user: Meteor.user(),
     };
   });
 
 const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
-  const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
+  const [dataProjectKey, setDataProjectKey] = useState("");
+  const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
+  const [saveStatus, setSaveStatus] = useState("idle");
 
   const {
     isLoading,
     portfolios,
-    projects: dbProjects,
+    projectDocuments,
+    projectOrderDocuments,
     user,
   } = useDashboardData();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    projectDocuments,
+    projectOrderDocuments,
+  );
 
   const {
     isLoading: viewModelLoading,
@@ -73,39 +138,61 @@ const DashboardLayout = () => {
     liveVisitors,
     profile,
     aboutMe,
-    projects = [],
   } = createDashboardViewModel({
     isLoading,
-    portfolios,
-    projects: dbProjects,
+    portfolios: visiblePortfolios,
+    projects: databaseProjects,
     user,
   });
 
-  const projectsIdString = JSON.stringify(projects.map((p) => p?._id));
   useEffect(() => {
-    if (projects.length > 0 && orderedProjects.length === 0) {
-      setOrderedProjects(projects);
+    const nextProjects = databaseProjects;
+    const nextProjectDataKey = getProjectDataKey(nextProjects);
+    const nextProjectOrderKey = getProjectOrderKey(nextProjects);
+
+    if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
+      setOrderedProjects(nextProjects);
+      setDataProjectKey(nextProjectDataKey);
+      setSourceProjectOrderKey(nextProjectOrderKey);
+      setSaveStatus("idle");
     }
-  }, [projectsIdString]);
+  }, [databaseProjects, dataProjectKey, saveStatus]);
 
-  const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
-  const handleProjectDragOver = (event) => event.preventDefault();
+  const handleProjectsReorder = (nextProjects) => {
+    setOrderedProjects(nextProjects);
+    setSaveStatus(
+      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
+        ? "idle"
+        : "unsaved",
+    );
+  };
 
-  const handleProjectDrop = (dropIndex) => {
-    if (draggedProjectIndex === null || draggedProjectIndex === dropIndex) {
-      setDraggedProjectIndex(null);
+  const handleSaveProjectOrder = () => {
+    if (!selectedPortfolio?._id) {
+      setSaveStatus("error");
       return;
     }
 
-    const updatedProjects = [...orderedProjects];
-    const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
-    updatedProjects.splice(dropIndex, 0, draggedProject);
+    const projectIds = orderedProjects.map((project) => getProjectId(project));
 
-    setOrderedProjects(updatedProjects);
-    setDraggedProjectIndex(null);
+    setSaveStatus("saving");
+    Meteor.call(
+      "portfolioProjects.reorder",
+      {
+        portfolioId: selectedPortfolio._id,
+        projectIds,
+      },
+      (error) => {
+        if (error) {
+          setSaveStatus("error");
+          return;
+        }
+
+        setSourceProjectOrderKey(projectIds.join("|"));
+        setSaveStatus("saved");
+      },
+    );
   };
-
-  const handleProjectDragEnd = () => setDraggedProjectIndex(null);
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
@@ -141,19 +228,13 @@ const DashboardLayout = () => {
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "settings" ? (
-            <ProfileSettings
-              profile={profile}
-              aboutMe={aboutMe}
-              userId={user?.[0]?._id}
-            />
+            <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}
-              draggedProjectIndex={draggedProjectIndex}
-              onDragStart={handleProjectDragStart}
-              onDragOver={handleProjectDragOver}
-              onDrop={handleProjectDrop}
-              onDragEnd={handleProjectDragEnd}
+              onProjectsReorder={handleProjectsReorder}
+              onSaveOrder={handleSaveProjectOrder}
+              saveStatus={saveStatus}
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />

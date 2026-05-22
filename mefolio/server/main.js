@@ -1,8 +1,9 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
+import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { UsersCollection } from "/imports/api/users";
+import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "./oauth-login/oauth.js";
 
 Accounts.config({
@@ -10,26 +11,25 @@ Accounts.config({
 });
 
 Meteor.startup(async () => {
-  // Insert sample user data if collections are empty
   let sampleUserId;
-  if ((await UsersCollection.find().countAsync()) === 0) {
-    sampleUserId = await UsersCollection.insertAsync({
+  const existingSampleUser =
+    (await Meteor.users.findOneAsync({
+      "emails.address": "superuser@example.com",
+    })) || (await Meteor.users.findOneAsync({ "profile.name": "Superuser" }));
+
+  if (existingSampleUser) {
+    sampleUserId = existingSampleUser._id;
+  } else {
+    sampleUserId = await Meteor.users.insertAsync({
       createdAt: new Date(),
-      services: {
-        password: "",
-        resume: "",
-      },
-      email: "superuser@example.com",
+      emails: [{ address: "superuser@example.com", verified: false }],
       profile: {
         name: "Superuser",
       },
     });
-  } else {
-    const existingUser = await UsersCollection.findOneAsync();
-    sampleUserId = existingUser._id;
+    Accounts.setPassword(sampleUserId, "superuser");
   }
 
-  // Insert sample project data if collections are empty
   let projectIds = [];
   if ((await ProjectCollection.find().countAsync()) === 0) {
     const project1Id = await ProjectCollection.insertAsync({
@@ -117,12 +117,33 @@ Meteor.startup(async () => {
       {},
       { sort: { createdAt: 1 } },
     ).fetchAsync();
-    projectIds = existingProjects.map((p) => p._id);
+    projectIds = existingProjects.map((project) => project._id);
   }
 
-  // Insert sample portfolio data if collections are empty
-  if ((await PortfolioCollection.find().countAsync()) === 0) {
-    await PortfolioCollection.insertAsync({
+  let samplePortfolioId;
+  const existingSamplePortfolio =
+    await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" }) ||
+    await PortfolioCollection.findOneAsync({ userId: sampleUserId });
+
+  if (existingSamplePortfolio) {
+    samplePortfolioId = existingSamplePortfolio._id;
+    const samplePortfolioUpdates = {};
+
+    if (existingSamplePortfolio.userId !== sampleUserId) {
+      samplePortfolioUpdates.userId = sampleUserId;
+    }
+
+    if (!existingSamplePortfolio.projects?.length && projectIds.length) {
+      samplePortfolioUpdates.projects = projectIds;
+    }
+
+    if (Object.keys(samplePortfolioUpdates).length) {
+      await PortfolioCollection.updateAsync(samplePortfolioId, {
+        $set: samplePortfolioUpdates
+      });
+    }
+  } else {
+    samplePortfolioId = await PortfolioCollection.insertAsync({
       userId: sampleUserId,
       portfolioNumber: 1,
       title: "Sample Portfolio",
@@ -150,10 +171,31 @@ Meteor.startup(async () => {
       },
     });
   }
-});
 
-Meteor.publish("users1.all", function () {
-  return UsersCollection.find({}, { sort: { createdAt: -1 } });
+  const portfolios = await PortfolioCollection.find().fetchAsync();
+  for (const portfolio of portfolios) {
+    const existingOrderCount = await PortfolioProjectsCollection.find({
+      portfolioId: portfolio._id,
+    }).countAsync();
+    if (existingOrderCount > 0) continue;
+
+    const savedProjectIds = portfolio.projects?.length
+      ? portfolio.projects
+      : portfolio._id === samplePortfolioId
+        ? projectIds
+        : [];
+
+    await Promise.all(
+      savedProjectIds.map((projectId, index) =>
+        PortfolioProjectsCollection.insertAsync({
+          portfolioId: portfolio._id,
+          projectId,
+          orderIndex: index,
+          createdAt: new Date(),
+        }),
+      ),
+    );
+  }
 });
 
 Meteor.publish("projects.all", function () {
@@ -164,21 +206,97 @@ Meteor.publish("portfolios.all", function () {
   return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
 });
 
+Meteor.publish("users.current", function () {
+  if (!this.userId) return this.ready();
+  return Meteor.users.find(this.userId);
+});
+
+Meteor.publish("currentUser.profile", function () {
+  if (!this.userId) return this.ready();
+
+  return Meteor.users.find(
+    { _id: this.userId },
+    {
+      fields: {
+        emails: 1,
+        profile: 1,
+        "services.google.email": 1,
+        "services.google.name": 1,
+        "services.github.email": 1,
+        "services.github.username": 1,
+      },
+    },
+  );
+});
+
+Meteor.publish("portfolioProjects.all", function () {
+  return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
+});
+
 Meteor.methods({
-  // User methods
-  async "users1.insert"(userData) {
-    return await UsersCollection.insertAsync(userData);
+  async "users.update"(userId, updates) {
+    if (this.userId !== userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You may only update your own account.",
+      );
+    }
+
+    check(userId, String);
+    check(updates, Object);
+
+    const updateDoc = {};
+    if (updates.profile) {
+      updateDoc.profile = updates.profile;
+    }
+
+    if (Object.keys(updateDoc).length > 0) {
+      await Meteor.users.updateAsync(userId, { $set: updateDoc });
+    }
+
+    if (updates.email) {
+      const currentUser = await Meteor.users.findOneAsync(userId, {
+        fields: { emails: 1 },
+      });
+      const currentEmail = currentUser?.emails?.[0]?.address;
+      if (currentEmail && currentEmail !== updates.email) {
+        await Meteor.users.updateAsync(userId, {
+          $pull: { emails: { address: currentEmail } },
+        });
+        await Meteor.users.updateAsync(userId, {
+          $push: { emails: { address: updates.email, verified: false } },
+        });
+      } else if (!currentEmail) {
+        await Meteor.users.updateAsync(userId, {
+          $push: { emails: { address: updates.email, verified: false } },
+        });
+      }
+    }
   },
 
-  async "users1.update"(userId, updates) {
-    return await UsersCollection.updateAsync(userId, { $set: updates });
+  async "users.updateCurrentProfile"(updates) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "users.updateCurrentProfile.notLoggedIn",
+        "You must be logged in to update your profile.",
+      );
+    }
+
+    check(updates, Object);
+
+    const safeUpdates = {};
+    if (updates?.profile?.name) {
+      safeUpdates["profile.name"] = updates.profile.name;
+    }
+    if (updates?.email) {
+      safeUpdates["emails.0.address"] = updates.email;
+    }
+
+    if (!Object.keys(safeUpdates).length) return 0;
+
+    return await Meteor.users.updateAsync(this.userId, { $set: safeUpdates });
   },
 
-  async "users1.delete"(userId) {
-    return await UsersCollection.removeAsync(userId);
-  },
-
-  // Project methods
   async "projects.insert"(projectData) {
     return await ProjectCollection.insertAsync(projectData);
   },
@@ -191,7 +309,6 @@ Meteor.methods({
     return await ProjectCollection.removeAsync(projectId);
   },
 
-  // Portfolio methods
   async "portfolios.insert"(portfolioData) {
     portfolioData.userId = this.userId;
     return await PortfolioCollection.insertAsync(portfolioData);
@@ -205,5 +322,46 @@ Meteor.methods({
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
+  },
+
+  async "portfolioProjects.reorder"({ portfolioId, projectIds }) {
+    if (!portfolioId || !Array.isArray(projectIds)) {
+      throw new Meteor.Error(
+        "portfolioProjects.reorder.invalid",
+        "A portfolio ID and ordered project IDs are required.",
+      );
+    }
+
+    const uniqueProjectIds = [...new Set(projectIds.filter(Boolean))];
+
+    await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { projects: uniqueProjectIds },
+    });
+
+    await Promise.all(
+      uniqueProjectIds.map((projectId, index) =>
+        PortfolioProjectsCollection.upsertAsync(
+          { portfolioId, projectId },
+          {
+            $set: {
+              portfolioId,
+              projectId,
+              orderIndex: index,
+              updatedAt: new Date(),
+            },
+            $setOnInsert: {
+              createdAt: new Date(),
+            },
+          },
+        ),
+      ),
+    );
+
+    await PortfolioProjectsCollection.removeAsync({
+      portfolioId,
+      projectId: { $nin: uniqueProjectIds },
+    });
+
+    return uniqueProjectIds;
   },
 });
