@@ -1,5 +1,4 @@
 import {
-  mockAboutMe,
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
@@ -41,98 +40,10 @@ export const mapProfile = (user) => {
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
-export const mapAboutMe = (portfolio) => {
-  /*
-    Teammate handoff:
-    Replace this with a pure mapper that returns the agreed FEAT-05 shape:
-
-    {
-      profile: {
-        fullName,
-        headline,
-        avatarUrl,
-        location,
-        availability: {
-          isAvailable,
-          label,
-        },
-      },
-      about: {
-        summary,
-        highlights,
-        yearsOfExperience,
-      },
-      contact: {
-        email,
-        phone,
-        website,
-      },
-      socials: {
-        github,
-        linkedin,
-        twitter,
-        other: [{ label, url }],
-      },
-      cta: {
-        resumeUrl,
-        contactEnabled,
-      },
-    }
-
-    Example source fields may come from the signed-in user record plus the
-    portfolio document being edited.
-  */
-
-  if (!portfolio) {
-    return mockAboutMe;
-  }
-
+export const mapAboutMe = (portfolio = {}) => {
   return {
     ...defaultPortfolioProfileData,
-    ...samplePortfolioProfileData,
     ...portfolio,
-
-    profile: {
-      ...defaultPortfolioProfileData.profile,
-      ...samplePortfolioProfileData.profile,
-      ...(portfolio.profile || {}),
-      availability: {
-        ...defaultPortfolioProfileData.profile.availability,
-        ...samplePortfolioProfileData.profile.availability,
-        ...(portfolio.profile?.availability || {}),
-      },
-    },
-
-    about: {
-      ...defaultPortfolioProfileData.about,
-      ...samplePortfolioProfileData.about,
-      ...(portfolio.about || {}),
-      highlights: Array.isArray(portfolio.about?.highlights)
-        ? portfolio.about.highlights
-        : samplePortfolioProfileData.about.highlights,
-    },
-
-    contact: {
-      ...defaultPortfolioProfileData.contact,
-      ...samplePortfolioProfileData.contact,
-      ...(portfolio.contact || {}),
-    },
-
-    socials: {
-      ...defaultPortfolioProfileData.socials,
-      ...samplePortfolioProfileData.socials,
-      ...(portfolio.socials || {}),
-      other: Array.isArray(portfolio.socials?.other)
-        ? portfolio.socials.other
-        : samplePortfolioProfileData.socials.other,
-    },
-
-    cta: {
-      ...defaultPortfolioProfileData.cta,
-      ...samplePortfolioProfileData.cta,
-      ...(portfolio.cta || {}),
-    },
-
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo: {
