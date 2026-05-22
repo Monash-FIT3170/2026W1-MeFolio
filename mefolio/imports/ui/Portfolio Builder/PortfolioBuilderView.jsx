@@ -16,6 +16,7 @@ import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
+import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 
 const useDashboardData = () =>
   useTracker(() => {
@@ -140,7 +141,9 @@ const DashboardLayout = () => {
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
-          ) : activeTab === "settings" ? (
+          ) : activeTab === "about-me" ? (
+          <AboutMeLinksEditor aboutMe={aboutMe} profile={profile} /> 
+          ): activeTab === "settings" ? (
             <ProfileSettings
               profile={profile}
               aboutMe={aboutMe}
