@@ -30,7 +30,7 @@ export const ProfileCard = () => {
   const aboutMe = portfolio.aboutMe || portfolio || {}; 
   // fallback handles bad mapping / flattened data
 
-  const name = profile.name || "No name set";
+  const name = profile.fullName || profile.name || "No name set";
 
   const title =
     aboutMe.title ||
