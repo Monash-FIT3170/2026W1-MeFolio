@@ -295,7 +295,17 @@ Meteor.methods({
   },
 
   async "projects.insert"(projectData) {
-    return await ProjectCollection.insertAsync(projectData);
+    const projectId = await ProjectCollection.insertAsync(projectData);
+
+    // Link project to the first portfolio found (current workaround for lack of auth)
+    const portfolio = await PortfolioCollection.findOneAsync();
+    if (portfolio) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $push: { projects: projectId },
+      });
+    }
+
+    return projectId;
   },
 
   async "projects.update"(projectId, updates) {
