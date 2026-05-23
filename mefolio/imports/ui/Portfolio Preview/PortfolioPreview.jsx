@@ -65,7 +65,7 @@ export const PortfolioPreview = () => {
   return (
     <div className="p-12 bg-slate-50 min-h-screen">
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Project Preview</h1>
         <button
           onClick={() => navigate("/")}
           className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
@@ -85,15 +85,13 @@ export const PortfolioPreview = () => {
       
       {/* Right column- profile card */}
         <div className="flex justify-center items-center py-4 order-first lg:order-last">
-          <ProfileCard
-            name="John Doe"
-            title="Full-Stack Developer"
-            location="Sydney, NSW"
-            summary="A concise one-line summary or tagline goes here. Team can replace with real content."
-            imageUrl={null}
-          />
+          <ProfileCard/>
         </div>
       </section>
+
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+      </header>
 
       <div className="relative w-full">
         <div

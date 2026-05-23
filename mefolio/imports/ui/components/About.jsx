@@ -35,7 +35,6 @@ const About = () => {
 
         <div className="about-left">
           <AboutDetails portfolio={portfolio} />
-          <SkillsList />
 
           {/* PASS PORTFOLIO */}
           <ContactButtons portfolio={portfolio} />
