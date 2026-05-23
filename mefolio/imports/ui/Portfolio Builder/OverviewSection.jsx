@@ -34,9 +34,7 @@ const VisitorCard = ({ visitor }) => {
         <h3 className="m-0 text-sm font-semibold text-gray-900">
           {visitor.name}
         </h3>
-        <p className="mt-0.5 truncate text-sm text-gray-500">
-          {visitor.email}
-        </p>
+        <p className="mt-0.5 truncate text-sm text-gray-500">{visitor.email}</p>
         <p className="mt-1 text-sm font-medium text-gray-700">
           {visitor.activity}
         </p>

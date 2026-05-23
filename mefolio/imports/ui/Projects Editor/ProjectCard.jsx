@@ -1,10 +1,5 @@
 import PropTypes from "prop-types";
-import {
-  Github,
-  ExternalLink,
-  ImageOff,
-  Pencil,
-} from "lucide-react";
+import { Github, ExternalLink, ImageOff, Pencil } from "lucide-react";
 import {
   Card,
   CardHeader,

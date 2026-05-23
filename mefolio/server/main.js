@@ -119,8 +119,8 @@ Meteor.startup(async () => {
 
   let samplePortfolioId;
   const existingSamplePortfolio =
-    await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" }) ||
-    await PortfolioCollection.findOneAsync({ userId: sampleUserId });
+    (await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" })) ||
+    (await PortfolioCollection.findOneAsync({ userId: sampleUserId }));
 
   if (existingSamplePortfolio) {
     samplePortfolioId = existingSamplePortfolio._id;
@@ -136,7 +136,7 @@ Meteor.startup(async () => {
 
     if (Object.keys(samplePortfolioUpdates).length) {
       await PortfolioCollection.updateAsync(samplePortfolioId, {
-        $set: samplePortfolioUpdates
+        $set: samplePortfolioUpdates,
       });
     }
   } else {

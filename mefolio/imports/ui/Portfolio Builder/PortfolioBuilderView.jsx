@@ -84,7 +84,8 @@ const getPortfolioProjects = (
     : portfolio.projects || [];
 
   return projectIds.map(
-    (projectId) => projectsById.get(projectId) || createUnavailableProject(projectId),
+    (projectId) =>
+      projectsById.get(projectId) || createUnavailableProject(projectId),
   );
 };
 
