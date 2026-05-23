@@ -11,7 +11,6 @@ import {
 } from "../models/portfolioBuilderViewModel";
 
 import AboutMeLinksEditor from "./components/AboutMeLinksEditor.jsx";
-import { PortfolioView } from "./PortfolioView";
 import { PortfolioPreview } from "./Portfolio Preview/PortfolioPreview.jsx";
 import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";

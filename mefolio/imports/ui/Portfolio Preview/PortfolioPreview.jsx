@@ -89,8 +89,12 @@ export const PortfolioPreview = () => {
         </div>
       </section>
 
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+      <section className="mt-16 pt-0">
+
+       <header className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-slate-900">
+          Project Gallery
+        </h1>
       </header>
 
       <div className="relative w-full">
@@ -114,6 +118,7 @@ export const PortfolioPreview = () => {
         {/* Tailwind-powered Gradient Hint */}
         <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
+      </section>
     </div>
     </div>
   );
