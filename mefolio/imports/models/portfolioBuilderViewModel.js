@@ -1,4 +1,5 @@
 import {
+  mockAboutMe,
   mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
@@ -40,7 +41,12 @@ export const mapProfile = (user) => {
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
-export const mapAboutMe = (portfolio = {}) => {
+export const mapAboutMe = (portfolio) => {
+
+  if (!portfolio) {
+    return mockAboutMe;
+  }
+
   return {
     ...defaultPortfolioProfileData,
     ...portfolio,

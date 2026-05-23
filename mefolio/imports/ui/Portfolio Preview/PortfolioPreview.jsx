@@ -10,28 +10,32 @@ import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
 
 export const PortfolioPreview = () => {
-  const { projects } = useTracker(() => {
-    const portfolioSub = Meteor.subscribe("portfolios.all");
-    const projectsSub = Meteor.subscribe("projects.all");
+  const { portfolio, projects } = useTracker(() => {
+  const portfolioSub = Meteor.subscribe("portfolios.all");
+  const projectsSub = Meteor.subscribe("projects.all");
 
-    if (!portfolioSub.ready() || !projectsSub.ready()) {
-      return { portfolio: null, projects: [] };
-    }
+  if (!portfolioSub.ready() || !projectsSub.ready()) {
+    return { portfolio: null, projects: [] };
+  }
 
-    const portfolio = PortfolioCollection.findOne();
-    if (!portfolio?.projects?.length) return { portfolio, projects: [] };
+  const portfolio = PortfolioCollection.findOne();
 
-    const projectMap = new Map(
-      ProjectCollection.find({ _id: { $in: portfolio.projects } })
-        .fetch()
-        .map((p) => [p._id, p]),
-    );
-    const projects = portfolio.projects
-      .map((id) => projectMap.get(id))
-      .filter(Boolean);
+  if (!portfolio?.projects?.length) {
+    return { portfolio, projects: [] };
+  }
 
-    return { portfolio, projects };
-  });
+  const projectMap = new Map(
+    ProjectCollection.find({ _id: { $in: portfolio.projects } })
+      .fetch()
+      .map((p) => [p._id, p]),
+  );
+
+  const projects = portfolio.projects
+    .map((id) => projectMap.get(id))
+    .filter(Boolean);
+
+  return { portfolio, projects };
+});
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
