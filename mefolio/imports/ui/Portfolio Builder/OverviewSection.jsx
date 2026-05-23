@@ -3,17 +3,17 @@ import PropTypes from "prop-types";
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-primary bg-background p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
           {"\u2197"} {stat.change}
         </span>
       </div>
 
-      <h2 className="m-0 text-3xl font-extrabold text-gray-900">
+      <h2 className="m-0 text-3xl font-space-mono font-bold text-secondary">
         {stat.value}
       </h2>
-      <p className="mt-1 text-sm font-medium text-gray-500">{stat.label}</p>
+      <p className="mt-1 text-sm font-medium text-secondary">{stat.label}</p>
     </div>
   );
 };
@@ -21,7 +21,7 @@ const StatCard = ({ stat }) => {
 // Displays one visitor row inside the live visitors list.
 const VisitorCard = ({ visitor }) => {
   return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-gray-100 px-1 py-4 last:border-b-0">
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-primary bg-background px-1 py-4 last:border-b-0">
       <div
         className={
           visitor.active
@@ -31,21 +31,21 @@ const VisitorCard = ({ visitor }) => {
       />
 
       <div className="min-w-0">
-        <h3 className="m-0 text-sm font-semibold text-gray-900">
+        <h3 className="m-0 text-sm font-semibold text-primary">
           {visitor.name}
         </h3>
-        <p className="mt-0.5 truncate text-sm text-gray-500">
+        <p className="mt-0.5 truncate text-sm text-primary">
           {visitor.email}
         </p>
-        <p className="mt-1 text-sm font-medium text-gray-700">
+        <p className="mt-1 text-sm font-medium text-primary">
           {visitor.activity}
         </p>
-        <span className="mt-1 block text-xs text-gray-400">
+        <span className="mt-1 block text-xs text-primary">
           {visitor.location} - 2 min ago
         </span>
       </div>
 
-      <div className="text-sm font-semibold text-gray-700">
+      <div className="text-sm font-semibold text-primary">
         {visitor.duration}
       </div>
     </div>
@@ -62,10 +62,10 @@ const OverviewSection = ({ stats, visitors }) => {
         ))}
       </section>
 
-      <section className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <section className="mt-6 rounded-lg border border-primary bg-background p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="m-0 text-lg font-bold text-gray-900">Live Visitors</h2>
-          <button className="rounded-md px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50">
+          <h2 className="m-0 text-lg font-bold text-primary">Live Visitors</h2>
+          <button className="rounded-md px-3 py-1.5 text-sm font-semibold text-primary hover:bg-indigo-50">
             View all
           </button>
         </div>
