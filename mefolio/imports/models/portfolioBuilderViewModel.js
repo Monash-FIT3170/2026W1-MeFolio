@@ -33,13 +33,53 @@ export const mapLiveVisitors = (portfolios) => {
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
 };
 
-// Maps the current user or portfolio owner into the sidebar profile shape.
-export const mapProfile = (user) => {
-  if (!user) return mockProfile;
-  const selectedUser = Array.isArray(user) ? user[0] : user;
+const findOwnerUser = (users, portfolio) => {
+  if (!Array.isArray(users) || !portfolio?.userId) {
+    return null;
+  }
+
+  return users.find((user) => user?._id === portfolio.userId) || users[0] || null;
+};
+
+// Maps the current portfolio owner into the sidebar/profile settings shape.
+export const mapProfile = (portfolio, users = null) => {
+  if (!portfolio) return mockProfile;
+  const selectedPortfolio = Array.isArray(portfolio) ? portfolio[0] : portfolio;
+  if (!selectedPortfolio) return mockProfile;
+  const ownerUser = findOwnerUser(users, selectedPortfolio);
+
+  const bio =
+    typeof selectedPortfolio.bio === "object" ? selectedPortfolio.bio : {};
+  const name =
+    selectedPortfolio.profile?.fullName ||
+    selectedPortfolio.profile?.name ||
+    bio.fullName ||
+    ownerUser?.profile?.name ||
+    ownerUser?.profile?.fullName ||
+    ownerUser?.profile?.userName ||
+    selectedPortfolio.title ||
+    "Portfolio Owner";
+  const email =
+    selectedPortfolio.contact?.email ||
+    bio.email ||
+    selectedPortfolio.email ||
+    selectedPortfolio.emails?.[0]?.address ||
+    ownerUser?.email ||
+    ownerUser?.emails?.[0]?.address ||
+    selectedPortfolio.userId ||
+    "";
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0]?.toUpperCase())
+    .slice(0, 2)
+    .join("") || "PO";
+
   return {
-    name: selectedUser.profile?.name || "",
-    email: selectedUser.email || "",
+    initials,
+    name,
+    email,
+    username: selectedPortfolio.username || "me",
   };
 };
 
@@ -64,7 +104,7 @@ export const createMockDashboardViewModel = (user) => {
     sidebarItems,
     overviewStats: mockOverviewStats,
     liveVisitors: mockLiveVisitors,
-    profile: mapProfile(user),
+    profile: mapProfile(portfolio, user),
     aboutMe: portfolio,
     portfolio: portfolio,
     projects: mockProjects,
@@ -88,7 +128,7 @@ export const createDashboardViewModel = ({
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(portfolios[0]),
+    profile: mapProfile(portfolios[0], user),
     aboutMe: normalizedPortfolio,
     portfolio: normalizedPortfolio,
     projects: projects || mapProjects(portfolios),

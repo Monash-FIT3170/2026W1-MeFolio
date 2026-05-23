@@ -170,6 +170,7 @@ const DashboardLayout = () => {
             <ProfileSettings
               profile={profile}
               aboutMe={aboutMe}
+              portfolioId={portfolio?._id}
               userId={user?.[0]?._id}
             />
           ) : activeTab === "projects" ? (
