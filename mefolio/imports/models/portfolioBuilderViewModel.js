@@ -53,8 +53,8 @@ export const mapAboutMe = (portfolio = {}) => {
   };
 };
 
-export const mapProjects = (portfolios) => {
-  return portfolios?.length ? mockProjects : mockProjects;
+export const mapProjects = (projects) => {
+  return projects || [];
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.

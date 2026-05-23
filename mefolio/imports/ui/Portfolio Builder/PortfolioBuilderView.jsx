@@ -85,9 +85,7 @@ const DashboardLayout = () => {
 
   const projectsIdString = JSON.stringify(projects.map((p) => p?._id));
   useEffect(() => {
-    if (projects.length > 0 && orderedProjects.length === 0) {
-      setOrderedProjects(projects);
-    }
+    setOrderedProjects(projects);
   }, [projectsIdString]);
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
@@ -105,6 +103,14 @@ const DashboardLayout = () => {
 
     setOrderedProjects(updatedProjects);
     setDraggedProjectIndex(null);
+
+    // Persist the new order to the database
+    const portfolioId = portfolios[0]?._id;
+    if (portfolioId) {
+      Meteor.call("portfolios.update", portfolioId, {
+        projects: updatedProjects.map((p) => p._id),
+      });
+    }
   };
 
   const handleProjectDragEnd = () => setDraggedProjectIndex(null);
