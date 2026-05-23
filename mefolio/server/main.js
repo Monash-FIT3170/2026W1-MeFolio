@@ -20,14 +20,11 @@ Meteor.startup(async () => {
   if (existingSampleUser) {
     sampleUserId = existingSampleUser._id;
   } else {
-    sampleUserId = await Meteor.users.insertAsync({
-      createdAt: new Date(),
-      emails: [{ address: "superuser@example.com", verified: false }],
-      profile: {
-        name: "Superuser",
-      },
+    sampleUserId = await Accounts.createUser({
+      email: "superuser@example.com",
+      password: "superuser",
+      profile: { name: "Superuser" },
     });
-    Accounts.setPassword(sampleUserId, "superuser");
   }
 
   let projectIds = [];
