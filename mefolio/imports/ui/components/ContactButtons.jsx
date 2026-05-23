@@ -74,12 +74,15 @@ const ContactButtons = ({ portfolio }) => {
       </button>
 
       {Boolean(resumeLink) && (
-        <button
+        <a
+          href={resumeLink}
+          target="_blank"
+          rel="noreferrer"
           className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg transition-colors active:scale-[0.98]"
         >
           <ExternalLink size={18} />
           View Resume
-        </button>
+        </a>
       )}
     </div>
   );

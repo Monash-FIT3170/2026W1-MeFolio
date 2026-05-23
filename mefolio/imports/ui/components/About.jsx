@@ -4,7 +4,6 @@ import { Meteor } from "meteor/meteor";
 
 import { PortfolioCollection } from "/imports/api/portfolio";
 
-import AboutCard from "./AboutCard.jsx";
 import AboutDetails from "./AboutDetails.jsx";
 import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";

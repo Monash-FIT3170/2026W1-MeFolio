@@ -5,9 +5,12 @@ import {
   mockProfile,
   mockProjects,
   sidebarItems,
-  samplePortfolioProfileData,
-  defaultPortfolioProfileData,
 } from "../ui/Portfolio Builder/portfolioBuilderMockData";
+import {
+  normalisePortfolioProfileData,
+  defaultPortfolioProfileData,
+  samplePortfolioProfileData,
+} from "../api/profileModel";
 
 // Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
@@ -42,21 +45,11 @@ export const mapProfile = (user) => {
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
 export const mapAboutMe = (portfolio) => {
-
   if (!portfolio) {
     return mockAboutMe;
   }
 
-  return {
-    ...defaultPortfolioProfileData,
-    ...portfolio,
-    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
-    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-    recruiterInfo: {
-      ...defaultPortfolioProfileData.recruiterInfo,
-      ...(portfolio.recruiterInfo || {}),
-    },
-  };
+  return normalisePortfolioProfileData(portfolio);
 };
 
 export const mapProjects = (portfolios) => {
@@ -64,15 +57,19 @@ export const mapProjects = (portfolios) => {
 };
 
 // Returns the current mock-backed dashboard state while the API is not wired in.
-export const createMockDashboardViewModel = (user) => ({
-  isLoading: false,
-  sidebarItems,
-  overviewStats: mockOverviewStats,
-  liveVisitors: mockLiveVisitors,
-  profile: mapProfile(user),
-  aboutMe: mapAboutMe(samplePortfolioProfileData),
-  projects: mockProjects,
-});
+export const createMockDashboardViewModel = (user) => {
+  const portfolio = mapAboutMe(samplePortfolioProfileData);
+  return {
+    isLoading: false,
+    sidebarItems,
+    overviewStats: mockOverviewStats,
+    liveVisitors: mockLiveVisitors,
+    profile: mapProfile(user),
+    aboutMe: portfolio,
+    portfolio: portfolio,
+    projects: mockProjects,
+  };
+};
 
 // Builds the single data object the UI consumes, from either loading, mock, or real data.
 export const createDashboardViewModel = ({
@@ -84,16 +81,18 @@ export const createDashboardViewModel = ({
   if (isLoading) return createLoadingViewModel();
   if (!portfolios.length) return createMockDashboardViewModel(user);
 
+  const normalizedPortfolio = mapAboutMe(portfolios[0]);
+
   return {
     isLoading: false,
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(portfolios[0]),
-    aboutMe: mapAboutMe(portfolios[0]),
-    portfolio: portfolios[0],
+    aboutMe: normalizedPortfolio,
+    portfolio: normalizedPortfolio,
     projects: projects || mapProjects(portfolios),
-    // profile: mapProfile(user),
+    // profile: mownapProfile(user),
     // aboutMe: mapAboutMe(portfolios[0]),
     // projects: projects || mapProjects(portfolios),
   };

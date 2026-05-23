@@ -10,22 +10,15 @@ import {
 } from "../models/portfolioBuilderViewModel";
 
 import "./PortfolioBuilderView.css";
-import { useNavigate } from "react-router-dom";
-import { Routes, Route } from "react-router-dom";
 import { ModeSwitch } from "./ModeButton";
 import { PortfolioView } from "./PortfolioView";
 import RecruiterPortal from "./RecruiterPortal";
 
-
 import AboutMeLinksEditor from "./components/AboutMeLinksEditor.jsx";
-import { PortfolioPreview } from "./Portfolio Preview/PortfolioPreview.jsx";
 import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
-import RecruiterPortal from "./RecruiterPortal";
-
-import "./PortfolioBuilderView.css";
 
 // Temporary adapter from the current flat mock shape to the agreed links shape.
 // We will clean this up in a later commit when we update the mock/view-model layer.
@@ -116,12 +109,9 @@ const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
           <span>MeFolio</span>
         </div>
 
-        <button
-          className="view-portfolio-btn"
-          onClick={() => navigate("/preview")}
-        >
-          View Portfolio
-        </button>
+        <ModeSwitch onToggle={(isPreview) => {
+          if (isPreview) navigate("/preview");
+        }} />
       </div>
 
       <nav className="builder-nav">
@@ -268,7 +258,7 @@ export const PortfolioBuilderView = () => {
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<PortfolioPreview />} />
+      <Route path="/preview" element={<PortfolioView />} />
     </Routes>
   );
 };

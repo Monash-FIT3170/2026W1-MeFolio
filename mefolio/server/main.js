@@ -186,16 +186,10 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-<<<<<<< HEAD
         resumeLink: "",
         resumeLinks: [],
         allowAccess: true,
       }
-=======
-        resumeLink: "https://example.com/resume.pdf",
-        allowAccess: true,
-      },
->>>>>>> origin/FEAT-05-Merge-Dev
     });
   }
 });

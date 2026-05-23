@@ -106,13 +106,13 @@ const RecruiterPortal = ({ portfolio }) => {
   };
 
   return (
-    <section className="placeholder-card">
-      <h2 className="flex items-center gap-2">
+    <section className="bg-white border border-gray-200 rounded-2xl p-7">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-2">
         <Download size={22} />
         CV/Resume Management
       </h2>
 
-      <p className="mb-8">
+      <p className="text-gray-500 mb-8">
         Upload and manage your resumes. Recruiters will have access to download these files.
         The top file in the list is chosen for the "View Resume" button in the recruiter view.
       </p>

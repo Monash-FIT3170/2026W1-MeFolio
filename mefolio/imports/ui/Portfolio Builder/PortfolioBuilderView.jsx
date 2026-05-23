@@ -17,6 +17,7 @@ import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
+import RecruiterPortal from "../RecruiterPortal";
 
 const useDashboardData = () =>
   useTracker(() => {
@@ -74,6 +75,7 @@ const DashboardLayout = () => {
     liveVisitors,
     profile,
     aboutMe,
+    portfolio,
     projects = [],
   } = createDashboardViewModel({
     isLoading,
@@ -164,7 +166,7 @@ const DashboardLayout = () => {
                 );
               }}
             />
-          ): activeTab === "settings" ? (
+          ) : activeTab === "settings" ? (
             <ProfileSettings
               profile={profile}
               aboutMe={aboutMe}
@@ -179,6 +181,8 @@ const DashboardLayout = () => {
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "recruiter" ? (
+            <RecruiterPortal portfolio={portfolio} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
