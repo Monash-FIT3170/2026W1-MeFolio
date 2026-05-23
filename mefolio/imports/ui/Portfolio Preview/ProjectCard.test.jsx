@@ -17,9 +17,8 @@ if (Meteor.isClient) {
       const mockProject = {
         title: "AI Portfolio Dashboard",
         description: "An interactive portfolio with AI-powered analytics",
-        tech: ["React", "Meteor", "Tailwind"],
+        technologies: ["React", "Meteor", "Tailwind"],
         stars: 42,
-        challengeName: "Build a reactive component",
       };
 
       render(<ProjectCard project={mockProject} />);
@@ -37,16 +36,16 @@ if (Meteor.isClient) {
     it("shows and hides mock challenge when Try Challenge button is clicked", () => {
       const mockProject = {
         title: "Test Project",
-        tech: ["React"],
-        challengeName: "Fix the bug",
+        technologies: ["React"],
       };
 
       render(<ProjectCard project={mockProject} />);
 
+      expect(screen.getByTestId("challenge-placeholder").textContent).to.equal(
+        "Challenge feature coming soon",
+      );
+
       const tryButton = screen.getByRole("button", { name: /try challenge/i });
-
-      expect(screen.getByText("Fix the bug")).to.exist;
-
       fireEvent.click(tryButton);
 
       expect(screen.getByRole("button", { name: /try challenge/i })).to.exist;
@@ -55,7 +54,7 @@ if (Meteor.isClient) {
     it("displays Voice Summary, Code, and Demo buttons", () => {
       const mockProject = {
         title: "Test Project",
-        tech: ["React"],
+        technologies: ["React"],
       };
 
       render(<ProjectCard project={mockProject} />);
@@ -68,13 +67,28 @@ if (Meteor.isClient) {
     it("displays preview placeholder when image is not provided or fails to load", () => {
       const mockProject = {
         title: "Test Project",
-        tech: ["React"],
-        imageUrl: undefined,
+        technologies: ["React"],
+        media: "",
       };
 
       render(<ProjectCard project={mockProject} />);
 
       expect(screen.getByText("Preview Coming Soon")).to.exist;
+    });
+
+    it("ensures image asset elements utilize native lazy-loading for page speed efficiency", () => {
+      const mockProject = {
+        title: "Performance Test Project",
+        technologies: ["React"],
+        media: "https://example.com/project-preview.png",
+      };
+
+      render(<ProjectCard project={mockProject} />);
+
+      const imageElement = screen.getByRole("img");
+
+      expect(imageElement.getAttribute("loading")).to.equal("lazy");
+      expect(imageElement.getAttribute("decoding")).to.equal("async");
     });
   });
 }
