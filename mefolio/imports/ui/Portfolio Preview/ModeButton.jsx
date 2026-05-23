@@ -1,20 +1,12 @@
 import PropTypes from "prop-types";
 import { useState, useRef, useEffect } from "react";
 
-/**
- * Mode switch button component to toggle between builder and preview modes.
- *
- * @param {boolean} initialPreview - Whether in preview mode or not.
- * @param {function} onToggle - Callback function when the mode is toggled.
- * @returns Button element that toggles between builder and preview modes.
- */
 export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
-  const [preview, setPreview] = useState(initialPreview); // state to track if in preview mode or not
-  const [visible, setVisible] = useState(true); //track visibility
+  const [preview, setPreview] = useState(initialPreview);
+  const [visible, setVisible] = useState(true);
   const timerRef = useRef(null);
 
   useEffect(() => {
-    //show when scrolling
     if (!initialPreview) return;
 
     const reset = () => {
@@ -32,20 +24,16 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
   }, [initialPreview]);
 
   const handleClick = () => {
-    // when clicking mode switch
     const next = !preview;
     setPreview(next);
-    if (onToggle) {
-      onToggle(next);
-    }
+    if (onToggle) onToggle(next);
   };
 
   return (
     <button
       onClick={handleClick}
       className={`
-        border px-4 py-3 rounded-xl
-        font-bold cursor-pointer transition-all duration-200
+        border px-4 py-3 rounded-xl font-bold cursor-pointer transition-all duration-200
         ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
         ${
           preview

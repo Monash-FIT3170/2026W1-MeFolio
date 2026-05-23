@@ -8,6 +8,7 @@ import AboutCard from "./AboutCard.jsx";
 import AboutDetails from "./AboutDetails.jsx";
 import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";
+import SocialLinksRow from "./SocialLinksRow.jsx";
 
 const About = () => {
 
@@ -34,11 +35,16 @@ const About = () => {
       <div className="about-grid">
 
         <div className="about-left">
-          <AboutDetails />
-          <SkillsList />
+          <AboutDetails portfolio={portfolio} />
 
           {/* PASS PORTFOLIO */}
           <ContactButtons portfolio={portfolio} />
+          <SocialLinksRow
+          email={portfolio?.contact?.email}
+          github={portfolio?.socials?.github}
+          linkedin={portfolio?.socials?.linkedin}
+          otherLinks={portfolio?.socials?.other || []}
+        />
         </div>
 
         <div className="about-right">

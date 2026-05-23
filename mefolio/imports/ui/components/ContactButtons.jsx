@@ -67,30 +67,20 @@ const ContactButtons = ({ portfolio }) => {
     "text-white px-4 py-2 rounded flex items-center gap-2 transition-colors";
 
   return (
-    <div className="flex gap-3 flex-wrap">
-      <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#5b3df5] hover:bg-[#4a30d4] text-white text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer border-none">
+    <div className="flex flex-wrap gap-4">
+      <button className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-[0.98]">
         <Mail size={18} />
         Get in touch
       </button>
 
       {Boolean(resumeLink) && (
-        <>
-          <a href={resumeLink} target="_blank" rel="noreferrer">
-            <button className="inline-flex items-center gap-2 px-6 py-3 bg-[#F3F4F6] hover:bg-slate-50 text-slate-900 text-base font-semibold rounded-xl transition-colors duration-150 cursor-pointer outline-none focus:outline-none focus:ring-0 border-none">
-              <ExternalLink size={18} />
-              View Resume
-            </button>
-          </a>
-        </>
+        <button
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg transition-colors active:scale-[0.98]"
+        >
+          <ExternalLink size={18} />
+          View Resume
+        </button>
       )}
-      
-      {/* <input
-        type="file"
-        id="resume-upload"
-        style={{ display: "none" }}
-        accept="application/pdf"
-        onChange={handleFileChange}
-      /> */}
     </div>
   );
 };

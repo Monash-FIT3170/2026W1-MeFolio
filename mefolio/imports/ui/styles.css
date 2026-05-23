@@ -4,7 +4,9 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-body, html, #react-target {
+body,
+html,
+#react-target {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -157,6 +159,10 @@ a {
 }
 
 .about-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
   padding-right: var(--spacing-lg);
 }
 
@@ -168,11 +174,6 @@ a {
 .about-card {
   padding: var(--spacing-xl);
   text-align: center;
-}
-
-.about-details h2 {
-  font-size: 2rem;
-  margin-bottom: var(--spacing-md);
 }
 
 .skills-placeholder {
@@ -343,3 +344,4 @@ a {
   color: var(--color-primary);
   /* background-color: white; */
 }
+

@@ -5,7 +5,16 @@ export const defaultPortfolioProfileData = {
   userId: "",
   portfolioNumber: 1,
   title: "",
-  bio: "",
+  bio: {
+    fullName: "",
+    email: "",
+    headline: "",
+    professionalSummary: "",
+    location: "",
+    yearsOfExperience: 0,
+    phone: "",
+    highlights: [],
+  },
   createdAt: null,
   projects: [],
   theme: "minimal",
@@ -77,6 +86,10 @@ export function normalisePortfolioProfileData(portfolio = {}) {
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo,
+    // recruiterInfo: {
+    //   ...defaultPortfolioProfileData.recruiterInfo,
+    //   ...(portfolio.recruiterInfo || {}),
+    // },
   };
 }
 
