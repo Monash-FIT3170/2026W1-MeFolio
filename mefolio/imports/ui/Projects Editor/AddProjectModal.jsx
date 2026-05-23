@@ -260,10 +260,11 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
       {
         title: form.title,
         description: form.description,
-        stack: form.technologies,
-        github: form.githubLink,
-        demo: form.liveDemoLink,
+        technologies: form.technologies,
+        githubLink: form.githubLink,
+        liveDemoLink: form.liveDemoLink,
         status: form.status,
+        media: form.media,
       },
       (err, newId) => {
         if (err) {
@@ -479,13 +480,35 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
 
           {/* Media */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Project Media
+            <label
+              htmlFor="mf-media"
+              className="block text-sm font-semibold text-gray-700 mb-1.5"
+            >
+              Project Media URL
             </label>
-            <MediaUpload file={form.media} onChange={(f) => set("media", f)} />
+            <input
+              id="mf-media"
+              data-testid="field-media"
+              type="url"
+              placeholder="https://images.unsplash.com/photo-..."
+              value={form.media || ""}
+              onChange={(e) => set("media", e.target.value)}
+              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
+                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
+                ${errors.media ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+            />
             <p className="text-xs text-gray-400 mt-1">
-              Optional: screenshot, demo GIF, or video
+              Link to an image, GIF, or video (e.g., from Unsplash or
+              Cloudinary)
             </p>
+            {errors.media && (
+              <p
+                data-testid="error-media"
+                className="text-xs text-red-500 mt-1"
+              >
+                {errors.media}
+              </p>
+            )}
           </div>
         </div>
 
