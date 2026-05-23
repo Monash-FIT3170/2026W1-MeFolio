@@ -13,6 +13,7 @@ const Sidebar = ({
   onPreviewToggle,
 }) => {
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMobile } = useResponsive();
 
@@ -27,6 +28,12 @@ const Sidebar = ({
       <div className="p-6 border-b border-muted/20">
         <div className="text-2xl font-extrabold text-foreground mb-4">
 >>>>>>> a90f344 (Tailwindcss variables)
+=======
+  return (
+    <aside className="w-64 bg-background border-r border-primary primary flex flex-col shrink-0">
+      <div className="p-6 border-b border-primary">
+        <div className="text-2xl font-extrabold text-primary mb-4">
+>>>>>>> 1b4fe33 (FEAT-08 Update tailwind in portfolio builder view to use dynamic variables)
           MeFolio
         </div>
         <ModeSwitch onToggle={onPreviewToggle} />
@@ -42,8 +49,13 @@ const Sidebar = ({
             }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors min-h-[44px] ${
               activeTab === item.id
+<<<<<<< HEAD
                 ? "bg-primary/10 text-primary"
                 : "text-muted hover:bg-muted/10"
+=======
+                ? "bg-background text-secondary"
+                : "text-primary bg-background hover:bg-primary hover:text-background"
+>>>>>>> 1b4fe33 (FEAT-08 Update tailwind in portfolio builder view to use dynamic variables)
             }`}
           >
             <span>{item.label}</span>

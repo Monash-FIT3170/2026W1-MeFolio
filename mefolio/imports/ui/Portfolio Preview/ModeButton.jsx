@@ -37,8 +37,8 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
         ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
         ${
           preview
-            ? "w-auto bg-white-50 border-primary/50 text-primary hover:bg-primary/50"
-            : "w-full border-none bg-primary/10 text-primary hover:bg-primary/20"
+            ? "w-auto bg-background border-primary text-primary hover:bg-background hover:text-primary"
+            : "w-full border-primarybg-background text-primary hover:bg-primary hover:text-background"
         }
       `}
     >

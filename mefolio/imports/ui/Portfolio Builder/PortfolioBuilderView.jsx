@@ -295,9 +295,9 @@ const DashboardLayout = () => {
         }}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="bg-surface border-b border-muted/20 px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-foreground">
+      <main className="flex-1 overflow-y-auto b">
+        <header className= "bg-background border-b border-primary px-8 py-6"> 
+          <h1 className="text-2xl font-extrabold text-secondary"> 
             {currentTab.label}
           </h1>
           <div className="flex items-center gap-3">
