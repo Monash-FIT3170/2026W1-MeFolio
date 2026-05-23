@@ -94,11 +94,6 @@ export const mapAboutMe = (portfolio = {}) => {
   };
 };
 
-export const mapProjects = (projects) => {
-  return projects || [];
-};
-
-
 export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,

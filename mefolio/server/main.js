@@ -323,6 +323,21 @@ Meteor.methods({
       await PortfolioCollection.updateAsync(portfolio._id, {
         $push: { projects: { $each: [projectId], $position: 0 } },
       });
+
+      // Shift existing entries down to make room at the front
+      await PortfolioProjectsCollection.updateAsync(
+        { portfolioId: portfolio._id },
+        { $inc: { orderIndex: 1 } },
+        { multi: true },
+      );
+
+      // Insert new project at the front (orderIndex 0)
+      await PortfolioProjectsCollection.insertAsync({
+        portfolioId: portfolio._id,
+        projectId,
+        orderIndex: 0,
+        createdAt: new Date(),
+      });
     }
 
     return projectId;
@@ -333,13 +348,12 @@ Meteor.methods({
   },
 
   async "projects.delete"(projectId) {
-    // Unlink the project from any portfolio that references it so it doesn't
-    // reappear on reload, then remove the project document itself.
     await PortfolioCollection.updateAsync(
       { projects: projectId },
       { $pull: { projects: projectId } },
       { multi: true },
     );
+    await PortfolioProjectsCollection.removeAsync({ projectId });
     return await ProjectCollection.removeAsync(projectId);
   },
 

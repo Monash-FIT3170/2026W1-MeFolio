@@ -203,6 +203,30 @@ const DashboardLayout = () => {
     );
   };
 
+  const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
+  const handleProjectDragOver = (event) => event.preventDefault();
+
+  const handleProjectDrop = (dropIndex) => {
+    if (draggedProjectIndex === null || draggedProjectIndex === dropIndex) {
+      setDraggedProjectIndex(null);
+      return;
+    }
+
+    const updatedProjects = [...orderedProjects];
+    const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
+    updatedProjects.splice(dropIndex, 0, draggedProject);
+
+    setOrderedProjects(updatedProjects);
+    setDraggedProjectIndex(null);
+
+    if (selectedPortfolio?._id) {
+      Meteor.call("portfolioProjects.reorder", {
+        portfolioId: selectedPortfolio._id,
+        projectIds: updatedProjects.map((p) => p._id || p.id),
+      });
+    }
+  };
+
   const handleProjectDragEnd = () => setDraggedProjectIndex(null);
 
   // New project becomes the first card in the display.
