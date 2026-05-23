@@ -4,7 +4,6 @@ import {
   ExternalLink,
   ImageOff,
   Pencil,
-  GripVertical,
 } from "lucide-react";
 import {
   Card,
@@ -27,6 +26,7 @@ const isVideoMedia = (media) =>
 // can reorder cards into any sequence; an Edit button shows when onEdit is set.
 export function ProjectCard({
   project,
+  index,
   onEdit,
   draggable = false,
   isDragging = false,
@@ -86,14 +86,14 @@ export function ProjectCard({
           </div>
         )}
 
-        {/* Drag handle hint */}
+        {/* Project Order Number / Drag Handle */}
         {draggable && (
           <span
-            data-testid="project-card-drag-handle"
+            data-testid="project-card-order-number"
             aria-hidden="true"
-            className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm"
+            className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white shadow-md ring-2 ring-white"
           >
-            <GripVertical className="h-4 w-4" />
+            {index + 1}
           </span>
         )}
 

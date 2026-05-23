@@ -40,6 +40,7 @@ const ProjectsSection = ({
           <ProjectCard
             key={project._id || project.id}
             project={project}
+            index={index}
             onEdit={onEdit}
             draggable={isDraggable}
             isDragging={draggedProjectIndex === index}

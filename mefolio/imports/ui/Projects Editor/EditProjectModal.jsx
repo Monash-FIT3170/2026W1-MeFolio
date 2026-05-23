@@ -1,113 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import TechStackInput from "./TechStackInput";
+
+const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
 const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i;
 const isVideoMedia = (media) =>
   typeof media === "string" &&
   (media.startsWith("data:video/") || VIDEO_EXTENSIONS.test(media));
-
-// Upload project media from the device (image / gif / video). The selected file
-// is read into a data-URL string so it can be stored and previewed directly.
-const MediaUpload = ({ value, onChange }) => {
-  const inputRef = useRef(null);
-  const [dragging, setDragging] = useState(false);
-
-  const handleFile = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/") && !file.type.startsWith("video/"))
-      return;
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result);
-    reader.readAsDataURL(file);
-  };
-
-  if (value) {
-    return (
-      <div
-        data-testid="edit-media-preview"
-        className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
-      >
-        {isVideoMedia(value) ? (
-          <video src={value} controls className="h-40 w-full object-cover" />
-        ) : (
-          <img
-            src={value}
-            alt="Project media preview"
-            className="h-40 w-full object-cover"
-          />
-        )}
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-white px-3 py-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100"
-          >
-            Replace
-          </button>
-          <button
-            type="button"
-            data-testid="edit-media-remove"
-            onClick={() => onChange("")}
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-          >
-            Remove
-          </button>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={(e) => handleFile(e.target.files[0])}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      data-testid="edit-media-upload"
-      onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDragging(false);
-        handleFile(e.dataTransfer.files[0]);
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-      aria-label="Upload project media"
-      className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition ${
-        dragging
-          ? "border-indigo-500 bg-indigo-50"
-          : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50"
-      }`}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*,video/*"
-        className="hidden"
-        onChange={(e) => handleFile(e.target.files[0])}
-      />
-      <p className="text-sm text-gray-500">
-        <span className="font-semibold text-indigo-600">Click to upload</span>{" "}
-        or drag &amp; drop
-      </p>
-      <p className="mt-1 text-xs text-gray-400">PNG · JPG · GIF · WEBP · MP4</p>
-    </div>
-  );
-};
-
-MediaUpload.propTypes = {
-  value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
-};
 
 // Modal form for editing an existing project's details. Pre-fills from the
 // given project and reports the updated fields back through onSave.
@@ -115,7 +15,8 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    techText: "",
+    technologies: [],
+    status: "live",
     githubLink: "",
     liveDemoLink: "",
     media: "",
@@ -130,7 +31,8 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     setForm({
       title: project.title || "",
       description: project.description || "",
-      techText: (project.technologies || []).join(", "),
+      technologies: project.technologies || [],
+      status: project.status || "live",
       githubLink: project.githubLink || "",
       liveDemoLink: project.liveDemoLink || "",
       media: project.media || "",
@@ -176,15 +78,12 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       setErrors(e);
       return;
     }
-    const technologies = form.techText
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
 
     onSave(project._id, {
       title: form.title.trim(),
       description: form.description.trim(),
-      technologies,
+      technologies: form.technologies,
+      status: form.status,
       githubLink: form.githubLink.trim(),
       liveDemoLink: form.liveDemoLink.trim(),
       media: form.media.trim(),
@@ -284,24 +183,40 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           </div>
 
           <div>
-            <label
-              htmlFor="edit-tech"
-              className="mb-1.5 block text-sm font-semibold text-gray-700"
-            >
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
               Tech Stack
             </label>
-            <input
-              id="edit-tech"
-              data-testid="edit-field-tech"
-              type="text"
-              placeholder="React, Node.js, MongoDB"
-              value={form.techText}
-              onChange={(e) => set("techText", e.target.value)}
-              className={fieldClass("techText")}
+            <TechStackInput
+              value={form.technologies}
+              onChange={(v) => set("technologies", v)}
             />
             <p className="mt-1 text-xs text-gray-400">
-              Separate technologies with commas.
+              Press Enter or comma to add · Backspace to remove last
             </p>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+              Project Status
+            </label>
+            <div className="flex gap-2">
+              {STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => set("status", s)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium border capitalize transition
+                    ${
+                      form.status === s
+                        ? "border-indigo-600 bg-indigo-100 text-indigo-700"
+                        : "border-gray-200 text-gray-500 hover:border-indigo-400"
+                    }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -358,12 +273,23 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-              Project Media
+            <label
+              htmlFor="edit-media-url"
+              className="mb-1.5 block text-sm font-semibold text-gray-700"
+            >
+              Project Media URL
             </label>
-            <MediaUpload value={form.media} onChange={(v) => set("media", v)} />
+            <input
+              id="edit-media-url"
+              data-testid="edit-field-media-url"
+              type="url"
+              placeholder="https://images.unsplash.com/photo-..."
+              value={form.media}
+              onChange={(e) => set("media", e.target.value)}
+              className={fieldClass("media")}
+            />
             <p className="mt-1 text-xs text-gray-400">
-              Optional: upload an image, GIF, or video from your device.
+              Paste a link to an image/video (e.g. from Unsplash or Cloudinary).
             </p>
           </div>
         </div>
