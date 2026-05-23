@@ -40,11 +40,11 @@ const About = () => {
           {/* PASS PORTFOLIO */}
           <ContactButtons portfolio={portfolio} />
           <SocialLinksRow
-            email={portfolio.contact?.email}
-            github={portfolio.socials?.github}
-            linkedin={portfolio.socials?.linkedin}
-            otherLinks={portfolio.socials?.other || []}
-          />
+          email={portfolio?.contact?.email}
+          github={portfolio?.socials?.github}
+          linkedin={portfolio?.socials?.linkedin}
+          otherLinks={portfolio?.socials?.other || []}
+        />
         </div>
 
         <div className="about-right">

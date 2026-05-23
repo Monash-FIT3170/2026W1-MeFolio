@@ -142,7 +142,28 @@ const DashboardLayout = () => {
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
           ) : activeTab === "about-me" ? (
-          <AboutMeLinksEditor aboutMe={aboutMe} profile={profile} /> 
+          <AboutMeLinksEditor
+              value={aboutMe}
+              onChange={(updatedValue) => {
+                const portfolioId = portfolios?.[0]?._id;
+
+                if (!portfolioId) return;
+
+                Meteor.call(
+                  "portfolios.update",
+                  portfolioId,
+                  {
+                    contact: updatedValue.contact,
+                    socials: updatedValue.socials,
+                  },
+                  (error) => {
+                    if (error) {
+                      console.error("Failed to save portfolio:", error);
+                    }
+                  }
+                );
+              }}
+            />
           ): activeTab === "settings" ? (
             <ProfileSettings
               profile={profile}
