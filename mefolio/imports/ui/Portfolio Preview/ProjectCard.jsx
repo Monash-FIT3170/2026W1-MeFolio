@@ -18,9 +18,15 @@ export function ProjectCard({ project }) {
 
   useEffect(() => {
     if (!data.githubLink) return;
+    if (data.githubLink.includes("github.com/example/")) {
+      setGithubStars(0);
+      return;
+    }
+
     const match = data.githubLink.match(/github\.com\/([^/]+)\/([^/]+)/);
     if (!match) return;
     const [, owner, repo] = match;
+
     fetch(`https://api.github.com/repos/${owner}/${repo}`)
       .then((res) => res.json())
       .then((json) => {
@@ -38,6 +44,10 @@ export function ProjectCard({ project }) {
           <img
             src={data.media}
             alt={data.title}
+            width={400}
+            height={192}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
@@ -67,7 +77,7 @@ export function ProjectCard({ project }) {
       <CardContent className="project-card-content">
         {/* Tech Stack Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {data.technologies.map((t) => (
+          {(data.technologies || []).map((t) => (
             <span
               key={t}
               className="px-2.5 py-1 text-[11px] font-bold text-indigo-500 bg-indigo-50 rounded-lg"
@@ -92,7 +102,10 @@ export function ProjectCard({ project }) {
               Mini Challenge
             </span>
           </div>
-          <p className="ml-6 mb-3 text-[11px] font-semibold text-slate-500">
+          <p
+            data-testid="challenge-placeholder"
+            className="ml-6 mb-3 text-[11px] font-semibold text-slate-500"
+          >
             {"Challenge feature coming soon"}
           </p>
           <button

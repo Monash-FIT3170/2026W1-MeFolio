@@ -128,6 +128,30 @@ body {
   font-family: sans-serif;
 }
 
+.page,
+.main {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+select,
+textarea {
+  min-height: 44px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 80px;
+  }
+}
+
 /* About section */
 .about-right > div {
   width: 100%;

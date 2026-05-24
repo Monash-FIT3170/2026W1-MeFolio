@@ -1,31 +1,18 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "../../api/portfolio";
 
-/**
- * Profile Settings component allows users to edit their profile information and portfolio details.
- *
- * @param {Object} profile - the user's profile details as output by the mapProfile function in the view model
- * @param {Object} aboutMe - the user's portfolio details as output by the mapAboutMe function in the view model
- * @param {string} portfolioId - the current portfolio's ID
- * @param {string} userId - the current user's ID
- *
- * @returns Form element pre-populated with the user's current profile data, allowing them to make edits and save changes.
- */
-const getBioText = (aboutMe) => {
-  if (typeof aboutMe?.bio === "string") {
-    return aboutMe.bio;
-  }
+const ProfileSettings = ({ profile, aboutMe }) => {
+  const currentUser = useTracker(() => Meteor.user());
+  const userId = currentUser?._id;
 
-  return aboutMe?.about?.summary || aboutMe?.bio?.professionalSummary || "";
-};
-
-const ProfileSettings = ({ profile, aboutMe, portfolioId, userId }) => {
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
     title: aboutMe.title || "",
-    bio: getBioText(aboutMe),
+    bio: aboutMe.bio || "",
   });
 
   useEffect(() => {
@@ -33,57 +20,53 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId, userId }) => {
       name: profile.name || "",
       email: profile.email || "",
       title: aboutMe.title || "",
-      bio: getBioText(aboutMe),
+      bio: aboutMe.bio || "",
     });
-  }, [profile, aboutMe]);
+  }, [aboutMe.bio, aboutMe.title, profile.email, profile.name]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSave = (form) => {
+  const handleSave = (formValues) => {
     const updates = {};
 
-    if (form.email) updates.email = form.email;
+    if (formValues.email) updates.email = formValues.email;
 
     const profileUpdates = {};
-    if (form.name) profileUpdates.name = form.name;
-    if (Object.keys(profileUpdates).length > 0)
+    if (formValues.name) profileUpdates.name = formValues.name;
+    if (Object.keys(profileUpdates).length > 0) {
       updates.profile = profileUpdates;
-
-    const aboutMeUpdates = {};
-    if (form.title) aboutMeUpdates.title = form.title;
-    if (form.bio) aboutMeUpdates.bio = form.bio;
-    if (Object.keys(aboutMeUpdates).length > 0)
-      updates.aboutMe = aboutMeUpdates;
-
-    if (userId) {
-      Meteor.call("users1.update", userId, updates, (error) => {
-        if (error) {
-          console.error("Error updating profile:", error);
-          alert("Failed to save changes. Please try again.");
-        }
-      });
     }
 
-    if (portfolioId) {
-      Meteor.call(
-        "portfolios.update",
-        portfolioId,
-        {
-          title: form.title,
-          bio: form.bio,
-          "profile.fullName": form.name,
-          "contact.email": form.email,
-        },
-        (error) => {
+    const aboutMeUpdates = {};
+    if (formValues.title) aboutMeUpdates.title = formValues.title;
+    if (formValues.bio) aboutMeUpdates.bio = formValues.bio;
+
+    if (!userId) {
+      alert("You must be logged in to save changes.");
+      return;
+    }
+
+    Meteor.call("users.updateCurrentProfile", updates, (error) => {
+      if (error) {
+        console.error("Error updating profile:", error);
+        alert("Failed to save changes. Please try again.");
+      }
+    });
+
+    const userPortfolio = PortfolioCollection.find({ userId }).fetch();
+    Meteor.call(
+      "portfolios.update",
+      userPortfolio[0]?._id,
+      aboutMeUpdates,
+      (error) => {
         if (error) {
           console.error("Error updating portfolio:", error);
           alert("Failed to save changes. Please try again.");
         }
-        },
-      );
-    }
+      },
+    );
   };
 
   return (
@@ -166,18 +149,8 @@ ProfileSettings.propTypes = {
   }).isRequired,
   aboutMe: PropTypes.shape({
     title: PropTypes.string,
-    bio: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        professionalSummary: PropTypes.string,
-      }),
-    ]),
-    about: PropTypes.shape({
-      summary: PropTypes.string,
-    }),
+    bio: PropTypes.string,
   }).isRequired,
-  portfolioId: PropTypes.string,
-  userId: PropTypes.string,
 };
 
 export default ProfileSettings;

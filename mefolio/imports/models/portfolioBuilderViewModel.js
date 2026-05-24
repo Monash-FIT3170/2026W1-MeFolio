@@ -5,14 +5,10 @@ import {
   mockProfile,
   mockProjects,
   sidebarItems,
-} from "../ui/Portfolio Builder/portfolioBuilderMockData";
-import {
-  normalisePortfolioProfileData,
-  defaultPortfolioProfileData,
   samplePortfolioProfileData,
-} from "../api/profileModel";
+  defaultPortfolioProfileData,
+} from "../ui/Portfolio Builder/portfolioBuilderMockData";
 
-// Returns the empty/loading-safe shape expected by the dashboard UI.
 export const createLoadingViewModel = () => ({
   isLoading: true,
   sidebarItems: [],
@@ -23,63 +19,68 @@ export const createLoadingViewModel = () => ({
   projects: [],
 });
 
-// Maps raw portfolio analytics into the stat card format used by the overview tab.
 export const mapOverviewStats = (portfolios) => {
   return portfolios?.length ? mockOverviewStats : mockOverviewStats;
 };
 
-// Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
   return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
 };
 
-const findOwnerUser = (users, portfolio) => {
-  if (!Array.isArray(users) || !portfolio?.userId) {
-    return null;
-  }
+export const mapProjects = (projects) => {
+  if (!Array.isArray(projects) || !projects.length) return mockProjects;
 
-  return users.find((user) => user?._id === portfolio.userId) || users[0] || null;
+  return projects.map((project, index) => ({
+    ...project,
+    id: project.id || project._id || `project-${index + 1}`,
+    title: project.title || project.name || "Untitled project",
+    description: project.description || "",
+    technologies: Array.isArray(project.technologies)
+      ? project.technologies
+      : [],
+    githubLink: project.githubLink || project.githubUrl || "",
+    liveDemoLink: project.liveDemoLink || project.demoUrl || "",
+  }));
 };
 
-// Maps the current portfolio owner into the sidebar/profile settings shape.
-export const mapProfile = (portfolio, users = null) => {
-  if (!portfolio) return mockProfile;
-  const selectedPortfolio = Array.isArray(portfolio) ? portfolio[0] : portfolio;
-  if (!selectedPortfolio) return mockProfile;
-  const ownerUser = findOwnerUser(users, selectedPortfolio);
+const getProfileInitials = (name = "", email = "") => {
+  const nameParts = name.trim().split(/\s+/).filter(Boolean);
 
-  const bio =
-    typeof selectedPortfolio.bio === "object" ? selectedPortfolio.bio : {};
-  const name =
-    selectedPortfolio.profile?.fullName ||
-    selectedPortfolio.profile?.name ||
-    bio.fullName ||
-    ownerUser?.profile?.name ||
-    ownerUser?.profile?.fullName ||
-    ownerUser?.profile?.userName ||
-    selectedPortfolio.title ||
-    "Portfolio Owner";
+  if (nameParts.length >= 2) {
+    return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+  }
+
+  if (nameParts.length === 1) {
+    return nameParts[0].slice(0, 2).toUpperCase();
+  }
+
+  return email.slice(0, 2).toUpperCase() || mockProfile.initials;
+};
+
+export const mapProfile = (user) => {
+  if (!user) return mockProfile;
+
+  const selectedUser = Array.isArray(user) ? user[0] : user;
+  const googleProfile = selectedUser.services?.google;
+  const githubProfile = selectedUser.services?.github;
   const email =
-    selectedPortfolio.contact?.email ||
-    bio.email ||
-    selectedPortfolio.email ||
-    selectedPortfolio.emails?.[0]?.address ||
-    ownerUser?.email ||
-    ownerUser?.emails?.[0]?.address ||
-    selectedPortfolio.userId ||
+    selectedUser.email ||
+    selectedUser.emails?.[0]?.address ||
+    googleProfile?.email ||
+    githubProfile?.email ||
     "";
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("") || "PO";
+  const name =
+    selectedUser.profile?.name ||
+    googleProfile?.name ||
+    githubProfile?.name ||
+    githubProfile?.username ||
+    email.split("@")[0] ||
+    "";
 
   return {
-    initials,
+    initials: getProfileInitials(name, email),
     name,
     email,
-    username: selectedPortfolio.username || "me",
   };
 };
 
@@ -89,29 +90,28 @@ export const mapAboutMe = (portfolio) => {
     return mockAboutMe;
   }
 
-  return normalisePortfolioProfileData(portfolio);
-};
-
-export const mapProjects = (portfolios) => {
-  return portfolios?.length ? mockProjects : mockProjects;
-};
-
-// Returns the current mock-backed dashboard state while the API is not wired in.
-export const createMockDashboardViewModel = (user) => {
-  const portfolio = mapAboutMe(samplePortfolioProfileData);
   return {
-    isLoading: false,
-    sidebarItems,
-    overviewStats: mockOverviewStats,
-    liveVisitors: mockLiveVisitors,
-    profile: mapProfile(portfolio, user),
-    aboutMe: portfolio,
-    portfolio: portfolio,
-    projects: mockProjects,
+    ...defaultPortfolioProfileData,
+    ...portfolio,
+    projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+    badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    recruiterInfo: {
+      ...defaultPortfolioProfileData.recruiterInfo,
+      ...(portfolio.recruiterInfo || {}),
+    },
   };
 };
 
-// Builds the single data object the UI consumes, from either loading, mock, or real data.
+export const createMockDashboardViewModel = (user) => ({
+  isLoading: false,
+  sidebarItems,
+  overviewStats: mockOverviewStats,
+  liveVisitors: mockLiveVisitors,
+  profile: mapProfile(user),
+  aboutMe: mapAboutMe(samplePortfolioProfileData),
+  projects: mockProjects,
+});
+
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
@@ -121,23 +121,16 @@ export const createDashboardViewModel = ({
   if (isLoading) return createLoadingViewModel();
   if (!portfolios.length) return createMockDashboardViewModel(user);
 
-  const normalizedPortfolio = mapAboutMe(portfolios[0]);
-
   return {
     isLoading: false,
     sidebarItems,
     overviewStats: mapOverviewStats(portfolios),
     liveVisitors: mapLiveVisitors(portfolios),
-    profile: mapProfile(portfolios[0], user),
-    aboutMe: normalizedPortfolio,
-    portfolio: normalizedPortfolio,
-    projects: projects || mapProjects(portfolios),
-    // profile: mownapProfile(user),
-    // aboutMe: mapAboutMe(portfolios[0]),
-    // projects: projects || mapProjects(portfolios),
+    profile: mapProfile(user),
+    aboutMe: mapAboutMe(portfolios[0]),
+    projects: mapProjects(projects),
   };
 };
 
-// Safely returns the currently selected tab, or a fallback if the list is empty.
 export const getCurrentTab = (items, activeTab) =>
   items.find((item) => item.id === activeTab) ?? items[0] ?? null;
