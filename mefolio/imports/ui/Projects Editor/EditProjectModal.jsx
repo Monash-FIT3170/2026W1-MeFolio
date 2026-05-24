@@ -294,9 +294,9 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           </div>
         </div>
 
-        <div className="sticky bottom-0 flex items-center justify-between gap-2.5 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <div className="sticky bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-4">
           {/* Delete (left). First click asks for confirmation. */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             {onDelete &&
               (confirmingDelete ? (
                 <>
@@ -333,7 +333,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           </div>
 
           {/* Cancel / Save (right) */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center gap-2.5">
             <button
               type="button"
               data-testid="edit-btn-cancel"
