@@ -112,9 +112,11 @@ const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
           <span>MeFolio</span>
         </div>
 
-        <ModeSwitch onToggle={(isPreview) => {
-          if (isPreview) navigate("/preview");
-        }} />
+        <ModeSwitch
+          onToggle={(isPreview) => {
+            if (isPreview) navigate("/preview");
+          }}
+        />
       </div>
 
       <nav className="builder-nav">

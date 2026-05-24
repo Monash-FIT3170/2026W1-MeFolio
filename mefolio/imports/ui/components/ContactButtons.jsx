@@ -8,7 +8,11 @@ const ContactButtons = ({ portfolio }) => {
     : portfolio?.recruiterInfo?.resumeLink || "";
 
   const [resumeLink, setResumeLink] = useState(resumeLinkValue);
-  const email = portfolio?.bio?.email || portfolio?.contact?.email || portfolio?.socials?.email || "";
+  const email =
+    portfolio?.bio?.email ||
+    portfolio?.contact?.email ||
+    portfolio?.socials?.email ||
+    "";
 
   useEffect(() => {
     setResumeLink(

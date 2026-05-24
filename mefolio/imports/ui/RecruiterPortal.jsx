@@ -12,19 +12,21 @@ const RecruiterPortal = ({ portfolio }) => {
     const resumeLinks = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
       ? portfolio.recruiterInfo.resumeLinks
       : portfolio?.recruiterInfo?.resumeLink
-      ? [
-          {
-            name:
-              portfolio.recruiterInfo.resumeLink
-                .split("/")
-                .pop() || "Resume.pdf",
-            url: portfolio.recruiterInfo.resumeLink,
-          },
-        ]
-      : [];
+        ? [
+            {
+              name:
+                portfolio.recruiterInfo.resumeLink.split("/").pop() ||
+                "Resume.pdf",
+              url: portfolio.recruiterInfo.resumeLink,
+            },
+          ]
+        : [];
 
     setResumes(resumeLinks);
-  }, [portfolio?.recruiterInfo?.resumeLink, portfolio?.recruiterInfo?.resumeLinks]);
+  }, [
+    portfolio?.recruiterInfo?.resumeLink,
+    portfolio?.recruiterInfo?.resumeLinks,
+  ]);
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -48,7 +50,7 @@ const RecruiterPortal = ({ portfolio }) => {
           console.error(err);
           alert("Could not save uploaded resume list.");
         }
-      }
+      },
     );
   };
 
@@ -63,7 +65,7 @@ const RecruiterPortal = ({ portfolio }) => {
         file,
         chunkSize: "dynamic",
       },
-      false
+      false,
     );
 
     upload.on("end", (error, fileObj) => {
@@ -73,8 +75,7 @@ const RecruiterPortal = ({ portfolio }) => {
         return;
       }
 
-      const fileUrl =
-        `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
+      const fileUrl = `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
 
       const newResume = {
         name: file.name,
@@ -113,8 +114,9 @@ const RecruiterPortal = ({ portfolio }) => {
       </h2>
 
       <p className="text-gray-500 mb-8">
-        Upload and manage your resumes. Recruiters will have access to download these files.
-        The top file in the list is chosen for the "View Resume" button in the recruiter view.
+        Upload and manage your resumes. Recruiters will have access to download
+        these files. The top file in the list is chosen for the "View Resume"
+        button in the recruiter view.
       </p>
 
       <div className="mt-6 space-y-3">
@@ -123,9 +125,7 @@ const RecruiterPortal = ({ portfolio }) => {
             key={index}
             className="flex justify-between items-center px-5 py-3.5 border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] shadow-sm"
           >
-            <span className="text-sm font-medium">
-              {resume.name}
-            </span>
+            <span className="text-sm font-medium">{resume.name}</span>
 
             <div className="flex items-center gap-2">
               <a
