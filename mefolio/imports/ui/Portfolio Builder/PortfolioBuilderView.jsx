@@ -14,7 +14,9 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
-import ProjectReorderingSection from "./ProjectReorderingSection";
+import ProjectsSection from "../Projects Editor/ProjectsSection";
+import AddProjectModal from "../Projects Editor/AddProjectModal";
+import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 
 const getProjectId = (project) => project?._id || project?.id;
@@ -82,9 +84,14 @@ const getPortfolioProjects = (
     : portfolio.projects || [];
 
   return projectIds.map(
-    (projectId) => projectsById.get(projectId) || createUnavailableProject(projectId),
+    (projectId) =>
+      projectsById.get(projectId) || createUnavailableProject(projectId),
   );
 };
+
+// Newest project first (falls back to insertion order when createdAt is absent).
+const byNewestFirst = (a, b) =>
+  new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
 
 const useDashboardData = () =>
   useTracker(() => {
@@ -115,6 +122,9 @@ const DashboardLayout = () => {
   const [dataProjectKey, setDataProjectKey] = useState("");
   const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
 
   const {
     isLoading,
@@ -194,6 +204,71 @@ const DashboardLayout = () => {
     );
   };
 
+  const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
+  const handleProjectDragOver = (event) => event.preventDefault();
+
+  const handleProjectDrop = (dropIndex) => {
+    if (draggedProjectIndex === null || draggedProjectIndex === dropIndex) {
+      setDraggedProjectIndex(null);
+      return;
+    }
+
+    const updatedProjects = [...orderedProjects];
+    const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
+    updatedProjects.splice(dropIndex, 0, draggedProject);
+
+    setOrderedProjects(updatedProjects);
+    setDraggedProjectIndex(null);
+
+    if (selectedPortfolio?._id) {
+      Meteor.call("portfolioProjects.reorder", {
+        portfolioId: selectedPortfolio._id,
+        projectIds: updatedProjects.map((p) => p._id || p.id),
+      });
+    }
+  };
+
+  const handleProjectDragEnd = () => setDraggedProjectIndex(null);
+
+  // New project becomes the first card in the display.
+  const handleAddProject = (newProject) => {
+    setOrderedProjects((prev) => [newProject, ...prev]);
+  };
+
+  const handleEditProject = (project) => setEditingProject(project);
+
+  const handleSaveProject = (projectId, updates) => {
+    Meteor.call("projects.update", projectId, updates, (error) => {
+      if (error) {
+        console.error("Failed to update project:", error);
+        return;
+      }
+      // Reflect the change immediately in the locally ordered list.
+      setOrderedProjects((prev) =>
+        prev.map((project) =>
+          (project._id || project.id) === projectId
+            ? { ...project, ...updates }
+            : project,
+        ),
+      );
+      setEditingProject(null);
+    });
+  };
+
+  const handleDeleteProject = (projectId) => {
+    Meteor.call("projects.delete", projectId, (error) => {
+      if (error) {
+        console.error("Failed to delete project:", error);
+        return;
+      }
+      // Remove the card from the display and close the modal.
+      setOrderedProjects((prev) =>
+        prev.filter((project) => (project._id || project.id) !== projectId),
+      );
+      setEditingProject(null);
+    });
+  };
+
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
 
@@ -218,10 +293,18 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="bg-white border-b border-gray-200 px-8 py-6">
+        <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-gray-900">
             {currentTab.label}
           </h1>
+          {activeTab === "projects" && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+            >
+              Add Project
+            </button>
+          )}
         </header>
 
         <div className="p-8">
@@ -230,17 +313,32 @@ const DashboardLayout = () => {
           ) : activeTab === "settings" ? (
             <ProfileSettings profile={profile} aboutMe={aboutMe} />
           ) : activeTab === "projects" ? (
-            <ProjectReorderingSection
+            <ProjectsSection
               projects={orderedProjects}
-              onProjectsReorder={handleProjectsReorder}
-              onSaveOrder={handleSaveProjectOrder}
-              saveStatus={saveStatus}
+              onEdit={handleEditProject}
+              draggedProjectIndex={draggedProjectIndex}
+              onDragStart={handleProjectDragStart}
+              onDragOver={handleProjectDragOver}
+              onDrop={handleProjectDrop}
+              onDragEnd={handleProjectDragEnd}
             />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
         </div>
       </main>
+      <AddProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddProject}
+      />
+      <EditProjectModal
+        isOpen={Boolean(editingProject)}
+        project={editingProject}
+        onClose={() => setEditingProject(null)}
+        onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
+      />
     </div>
   );
 };

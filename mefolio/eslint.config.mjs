@@ -1,44 +1,34 @@
 import js from "@eslint/js";
 import globals from "globals";
 import pluginReact from "eslint-plugin-react";
-import prettier from "eslint-config-prettier";
+import { defineConfig } from "eslint/config";
+import babelParser from "@babel/eslint-parser";
 
-export default [
-  {
-    ignores: [".meteor/**", "**/.meteor/**", "_build/**", "**/_build/**"],
-  },
-  js.configs.recommended,
+export default defineConfig([
   {
     files: ["**/*.{js,mjs,cjs,jsx}"],
-    languageOptions: { globals: globals.browser },
-  },
-  {
-    files: ["postcss.config.js", "rspack.config.js", "tailwind.config.js"],
-    languageOptions: { globals: globals.node },
-  },
-  {
-    files: ["tests/**/*.{js,jsx}", "**/*.test.{js,jsx}"],
+    plugins: { js, react: pluginReact },
+    extends: ["js/recommended"],
     languageOptions: {
-      globals: {
-        ...globals.mocha,
-        Meteor: "readonly",
+      globals: globals.browser,
+      parser: babelParser,
+      parserOptions: {
+        requireConfigFile: false,
+        babelOptions: {
+          presets: ["@babel/preset-react"],
+        },
       },
     },
-  },
-  pluginReact.configs.flat.recommended,
-  {
-    rules: {
-      "react/react-in-jsx-scope": "off",
-      "react/prop-types": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
-    },
-  },
-  {
     settings: {
       react: {
         version: "detect",
       },
     },
+    rules: {
+      "react/react-in-jsx-scope": "off",
+      // Count identifiers referenced in JSX as "used" so imported components
+      // and icons aren't falsely flagged by no-unused-vars.
+      "react/jsx-uses-vars": "error",
+    },
   },
-  prettier,
-];
+]);

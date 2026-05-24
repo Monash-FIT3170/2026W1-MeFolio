@@ -1,3 +1,3 @@
-import { Meteor } from 'meteor/meteor';
+import { Meteor } from "meteor/meteor";
 
 export const UsersCollection = Meteor.users;
