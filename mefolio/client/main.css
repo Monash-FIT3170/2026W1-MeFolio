@@ -1,3 +1,12 @@
+html {
+  scroll-behavior: smooth;
+}
+
+/* Offset anchor targets so sticky navbar doesn't overlap */
+[id] {
+  scroll-margin-top: 64px;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 

@@ -33,12 +33,13 @@ export const mapProfile = (portfolio) => {
   const bio = typeof portfolio.bio === "object" ? portfolio.bio : {};
   const name = bio.fullName || portfolio.title || "Portfolio Owner";
   const email = bio.email || portfolio.userId || "";
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("") || "PO";
+  const initials =
+    name
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word[0]?.toUpperCase())
+      .slice(0, 2)
+      .join("") || "PO";
 
   return {
     initials,
