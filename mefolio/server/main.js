@@ -3,6 +3,7 @@ import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import '/imports/api/files/resumeFiles';
 import { UsersCollection } from "/imports/api/users";
 import "./oauth-login/oauth.js";
 
@@ -185,9 +186,10 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-        resumeLink: "https://example.com/resume.pdf",
+        resumeLink: "",
+        resumeLinks: [],
         allowAccess: true,
-      },
+      }
     });
   }
 });

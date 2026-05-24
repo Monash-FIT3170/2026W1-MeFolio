@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
-
 import { PortfolioCollection } from "../api/portfolio";
 import { UsersCollection } from "../api/users";
 import {
@@ -10,14 +9,16 @@ import {
   getCurrentTab,
 } from "../models/portfolioBuilderViewModel";
 
+import "./PortfolioBuilderView.css";
+import { ModeSwitch } from "./ModeButton";
+import { PortfolioView } from "./PortfolioView";
+import RecruiterPortal from "./RecruiterPortal";
+
 import AboutMeLinksEditor from "./components/AboutMeLinksEditor.jsx";
-import { PortfolioPreview } from "./Portfolio Preview/PortfolioPreview.jsx";
 import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
-
-import "./PortfolioBuilderView.css";
 
 // Temporary adapter from the current flat mock shape to the agreed links shape.
 // We will clean this up in a later commit when we update the mock/view-model layer.
@@ -108,12 +109,9 @@ const Sidebar = ({ items, activeTab, onTabChange, profile }) => {
           <span>MeFolio</span>
         </div>
 
-        <button
-          className="view-portfolio-btn"
-          onClick={() => navigate("/preview")}
-        >
-          View Portfolio
-        </button>
+        <ModeSwitch onToggle={(isPreview) => {
+          if (isPreview) navigate("/preview");
+        }} />
       </div>
 
       <nav className="builder-nav">
@@ -149,9 +147,11 @@ const DashboardLayout = () => {
     liveVisitors,
     profile,
     aboutMe,
+    portfolio,
   } = createDashboardViewModel({
     isLoading,
     portfolios,
+    user,
   });
 
   const currentPortfolio = portfolios[0] || null;
@@ -243,6 +243,8 @@ const DashboardLayout = () => {
               aboutMe={aboutMe}
               userId={user[0]?._id}
             />
+          ) : activeTab === "recruiter" ? (
+            <RecruiterPortal portfolio={portfolio} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -256,7 +258,7 @@ export const PortfolioBuilderView = () => {
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<PortfolioPreview />} />
+      <Route path="/preview" element={<PortfolioView />} />
     </Routes>
   );
 };
