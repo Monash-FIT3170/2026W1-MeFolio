@@ -25,7 +25,7 @@ const About = () => {
       <AboutDetails portfolio={portfolio} />
       <ContactButtons portfolio={portfolio} />
       <SocialLinksRow
-        email={portfolio?.contact?.email}
+        email={portfolio?.bio?.email || portfolio?.contact?.email}
         github={portfolio?.socials?.github}
         linkedin={portfolio?.socials?.linkedin}
         otherLinks={portfolio?.socials?.other || []}
