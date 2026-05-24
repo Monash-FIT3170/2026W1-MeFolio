@@ -142,3 +142,9 @@ textarea {
     padding-bottom: 80px;
   }
 }
+
+/* About section */
+.about-right > div {
+  width: 100%;
+  max-width: 100%;
+}

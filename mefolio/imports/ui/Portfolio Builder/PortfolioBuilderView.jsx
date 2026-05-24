@@ -16,6 +16,7 @@ import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
+import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -227,8 +228,33 @@ const DashboardLayout = () => {
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "about-me" ? (
+            <AboutMeLinksEditor
+              value={aboutMe}
+              onChange={(updatedValue) => {
+                const portfolioId = portfolios?.[0]?._id;
+                if (!portfolioId) return;
+                Meteor.call(
+                  "portfolios.update",
+                  portfolioId,
+                  {
+                    contact: updatedValue.contact,
+                    socials: updatedValue.socials,
+                  },
+                  (error) => {
+                    if (error) {
+                      console.error("Failed to save portfolio:", error);
+                    }
+                  }
+                );
+              }}
+            />
           ) : activeTab === "settings" ? (
-            <ProfileSettings profile={profile} aboutMe={aboutMe} />
+            <ProfileSettings
+              profile={profile}
+              aboutMe={aboutMe}
+              userId={user?.[0]?._id}
+            />
           ) : activeTab === "projects" ? (
             <ProjectReorderingSection
               projects={orderedProjects}

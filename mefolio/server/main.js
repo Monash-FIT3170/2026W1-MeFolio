@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
-import { Accounts } from "meteor/accounts-base";
 import { check } from "meteor/check";
+import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
@@ -145,9 +145,48 @@ Meteor.startup(async () => {
       portfolioNumber: 1,
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.",
+
+      // Agreed FEAT-05 structure
+      profile: {
+        fullName: "John Doe",
+        headline: "Product Designer and Frontend Developer",
+        avatarUrl: "",
+        location: "Sydney, NSW",
+        availability: {
+          isAvailable: true,
+          label: "Available for hire",
+        },
+      },
+
+      about: {
+        summary:
+          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+        highlights: ["React", "UI Design", "Frontend Development"],
+        yearsOfExperience: 3,
+      },
+
+      contact: {
+        email: "john@example.com",
+        phone: "",
+        website: "",
+      },
+
+      socials: {
+        github: "https://github.com/johndoe",
+        linkedin: "https://www.linkedin.com/in/johndoe",
+        twitter: "",
+        other: [],
+      },
+
+      cta: {
+        resumeUrl: "https://example.com/resume.pdf",
+        contactEnabled: true,
+      },
+
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimal",
+      username: "me",
       badges: [
         {
           title: "Sample Badge",
@@ -228,6 +267,11 @@ Meteor.publish("currentUser.profile", function () {
 
 Meteor.publish("portfolioProjects.all", function () {
   return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
+});
+
+Meteor.publish("portfolios.byUsername", function (username) {
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({

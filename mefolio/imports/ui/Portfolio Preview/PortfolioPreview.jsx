@@ -6,6 +6,9 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
+import About from "../components/About.jsx";
+import Navbar from "../components/Navbar.jsx";
+import { ProfileCard } from "../components/ProfileCard.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -27,7 +30,7 @@ export const PortfolioPreview = () => {
       !portfolioProjectsSub.ready() ||
       !currentUserSub.ready()
     ) {
-      return { portfolio: null, projects: [] };
+      return { projects: [] };
     }
 
     const currentUser = Meteor.user();
@@ -37,7 +40,7 @@ export const PortfolioPreview = () => {
         ? PortfolioCollection.findOne()
         : null);
 
-    if (!portfolio?._id) return { portfolio, projects: [] };
+    if (!portfolio?._id) return { projects: [] };
 
     const projectOrderDocuments = PortfolioProjectsCollection.find(
       { portfolioId: portfolio._id },
@@ -47,7 +50,7 @@ export const PortfolioPreview = () => {
       ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
       : portfolio.projects || [];
 
-    if (!orderedProjectIds.length) return { portfolio, projects: [] };
+    if (!orderedProjectIds.length) return { projects: [] };
 
     const projectMap = new Map(
       ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -58,7 +61,7 @@ export const PortfolioPreview = () => {
       .map((projectId) => projectMap.get(projectId))
       .filter(Boolean);
 
-    return { portfolio, projects };
+    return { projects };
   });
 
   const navigate = useNavigate();
@@ -89,13 +92,36 @@ export const PortfolioPreview = () => {
   return (
     <div className="p-12 bg-slate-50 min-h-screen">
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Project Preview</h1>
         <button
           onClick={() => navigate("/")}
           className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
         >
           Back to Dashboard
         </button>
+      </header>
+    <div>
+      <Navbar />
+      {/* Hero - two-column grid */}
+      <section className="grid grid-cols-1 lg:grid-cols-[1fr_500px] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-12 lg:py-0">
+
+      {/* Left column */}
+        <div className="flex flex-col gap-6">
+          <About />
+        </div>
+      
+      {/* Right column- profile card */}
+        <div className="flex justify-center items-center py-4 order-first lg:order-last">
+          <ProfileCard/>
+        </div>
+      </section>
+
+      <section className="mt-16 pt-0">
+
+       <header className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-slate-900">
+          Project Gallery
+        </h1>
       </header>
 
       <div className="relative w-full">
@@ -117,6 +143,8 @@ export const PortfolioPreview = () => {
 
         <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
+      </section>
+    </div>
     </div>
   );
 };
