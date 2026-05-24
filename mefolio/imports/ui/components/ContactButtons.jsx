@@ -2,10 +2,14 @@ import React from "react";
 
 const ContactButtons = ({ portfolio }) => {
   const resumeUrl = portfolio?.cta?.resumeUrl || "#";
+  const email = portfolio?.contact?.email || portfolio?.socials?.email || "";
 
   return (
     <div className="flex flex-wrap gap-4">
-      <button className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-[0.98]">
+      <a
+        href={email ? `mailto:${email}` : undefined}
+        className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-[0.98]"
+      >
         <svg
           width="16"
           height="16"
@@ -21,7 +25,7 @@ const ContactButtons = ({ portfolio }) => {
           <polyline points="3 7 12 13 21 7" />
         </svg>
         Get in touch
-      </button>
+      </a>
       <a
         href={resumeUrl}
         target="_blank"

@@ -71,15 +71,6 @@ const buildLinks = ({ email, github, linkedin, otherLinks = [] }) => {
       external: true,
     });
   }
-  if (email) {
-    links.push({
-      key: "email",
-      href: `mailto:${email}`,
-      label: "Email",
-      icon: <EmailIcon />,
-      external: false,
-    });
-  }
   otherLinks.forEach((link, index) => {
     if (!link?.url) return;
     links.push({
