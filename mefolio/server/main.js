@@ -4,6 +4,7 @@ import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 
 Accounts.config({
@@ -355,14 +356,27 @@ Meteor.methods({
         : new Date(),
     };
 
+    if (!this.userId) throw new Meteor.Error("not-authorized");
+
     const projectId = await ProjectCollection.insertAsync(normalized);
 
-    // Link the new project to the most-recent portfolio at the FRONT of the
-    // list so the latest project is displayed first and survives a reload.
-    const portfolio = await PortfolioCollection.findOneAsync(
-      {},
-      { sort: { createdAt: -1 } },
-    );
+    // Use the portfolioId passed from the client if provided (e.g. test user
+    // viewing the superuser portfolio), otherwise find or create the current
+    // user's own portfolio.
+    let portfolio = projectData.portfolioId
+      ? await PortfolioCollection.findOneAsync(projectData.portfolioId)
+      : await PortfolioCollection.findOneAsync({ userId: this.userId });
+
+    if (!portfolio) {
+      const newPortfolioId = await PortfolioCollection.insertAsync({
+        userId: this.userId,
+        title: "My Portfolio",
+        projects: [],
+        createdAt: new Date(),
+      });
+      portfolio = await PortfolioCollection.findOneAsync(newPortfolioId);
+    }
+
     if (portfolio) {
       await PortfolioCollection.updateAsync(portfolio._id, {
         $push: { projects: { $each: [projectId], $position: 0 } },

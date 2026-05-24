@@ -19,6 +19,7 @@ import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
+import RecruiterPortal from "../RecruiterPortal";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -50,7 +51,7 @@ const getSelectedPortfolio = (portfolios = [], user) => {
 
   if (ownedPortfolio) return ownedPortfolio;
   if (getUserEmail(user) === "test@example.com") return portfolios[0];
-  return portfolios[0] ?? null;
+  return null;
 };
 
 const createUnavailableProject = (projectId) => ({
@@ -348,6 +349,8 @@ const DashboardLayout = () => {
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "recruiter" ? (
+            <RecruiterPortal portfolio={selectedPortfolio} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -357,6 +360,7 @@ const DashboardLayout = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
+        portfolioId={selectedPortfolio?._id}
       />
       <EditProjectModal
         isOpen={Boolean(editingProject)}

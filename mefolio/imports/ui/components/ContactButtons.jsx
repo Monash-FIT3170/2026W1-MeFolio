@@ -1,60 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Meteor } from "meteor/meteor";
-import { ResumeFiles } from "/imports/api/files/resumeFiles";
+import React from "react";
 
 const ContactButtons = ({ portfolio }) => {
-  const resumeLinkValue = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
+  const resumeLink = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
     ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""
     : portfolio?.recruiterInfo?.resumeLink || "";
 
-  const [resumeLink, setResumeLink] = useState(resumeLinkValue);
   const email =
     portfolio?.bio?.email ||
     portfolio?.contact?.email ||
     portfolio?.socials?.email ||
     "";
-
-  useEffect(() => {
-    setResumeLink(
-      Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
-        ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""
-        : portfolio?.recruiterInfo?.resumeLink || "",
-    );
-  }, [
-    portfolio?.recruiterInfo?.resumeLink,
-    portfolio?.recruiterInfo?.resumeLinks,
-  ]);
-
-  const handleUploadClick = () => {
-    document.getElementById("resume-upload").click();
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const upload = ResumeFiles.insert({ file, chunkSize: "dynamic" }, false);
-
-    upload.on("end", (error, fileObj) => {
-      if (!portfolio?._id) return;
-
-      Meteor.call(
-        "portfolios.update",
-        portfolio?._id,
-        { "recruiterInfo.resumeLink": fileObj?.link?.() },
-        (err) => {
-          if (err) {
-            console.error(err);
-            alert("Database update failed");
-            return;
-          }
-          setResumeLink(fileObj?.link?.());
-        },
-      );
-    });
-
-    upload.start();
-  };
 
   return (
     <div className="flex flex-wrap gap-4">
