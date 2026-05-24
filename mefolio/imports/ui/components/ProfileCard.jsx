@@ -6,7 +6,9 @@ import { PortfolioCollection } from "../../api/portfolio";
 export const ProfileCard = () => {
   const { portfolio, isLoading } = useTracker(() => {
     const handle = Meteor.subscribe("portfolios.all");
-    const portfolio = PortfolioCollection.findOne();
+    const userId = Meteor.userId();
+    const portfolio =
+      PortfolioCollection.findOne({ userId }) || PortfolioCollection.findOne();
 
     return {
       portfolio,

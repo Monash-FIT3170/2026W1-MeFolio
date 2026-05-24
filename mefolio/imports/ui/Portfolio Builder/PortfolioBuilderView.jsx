@@ -316,7 +316,7 @@ const DashboardLayout = () => {
             <AboutMeLinksEditor
               value={aboutMe}
               onChange={(updatedValue) => {
-                const portfolioId = portfolios?.[0]?._id;
+                const portfolioId = selectedPortfolio?._id;
                 if (!portfolioId) return;
                 Meteor.call(
                   "portfolios.update",
@@ -337,7 +337,7 @@ const DashboardLayout = () => {
             <ProfileSettings
               profile={profile}
               aboutMe={aboutMe}
-              userId={user?.[0]?._id}
+              portfolioId={selectedPortfolio?._id}
             />
           ) : activeTab === "projects" ? (
             <ProjectsSection

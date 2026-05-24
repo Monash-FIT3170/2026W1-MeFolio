@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const sectionStyle = {
   backgroundColor: "white",
@@ -73,42 +73,47 @@ const getSafeValue = (value = {}) => ({
 });
 
 const AboutMeLinksEditor = ({ value, onChange }) => {
-  const safeValue = getSafeValue(value);
-  const otherLink = safeValue.socials.other[0];
+  const [localValue, setLocalValue] = useState(() => getSafeValue(value));
+
+  useEffect(() => {
+    setLocalValue(getSafeValue(value));
+  }, [
+    value?.contact?.email,
+    value?.socials?.github,
+    value?.socials?.linkedin,
+    JSON.stringify(value?.socials?.other),
+  ]);
+
+  const otherLink = localValue.socials.other[0];
 
   const updateContact = (field, fieldValue) => {
-    onChange({
-      ...safeValue,
-      contact: {
-        ...safeValue.contact,
-        [field]: fieldValue,
-      },
-    });
+    const updated = {
+      ...localValue,
+      contact: { ...localValue.contact, [field]: fieldValue },
+    };
+    setLocalValue(updated);
+    onChange(updated);
   };
 
   const updateSocial = (field, fieldValue) => {
-    onChange({
-      ...safeValue,
-      socials: {
-        ...safeValue.socials,
-        [field]: fieldValue,
-      },
-    });
+    const updated = {
+      ...localValue,
+      socials: { ...localValue.socials, [field]: fieldValue },
+    };
+    setLocalValue(updated);
+    onChange(updated);
   };
 
   const updateOtherLink = (field, fieldValue) => {
-    onChange({
-      ...safeValue,
+    const updated = {
+      ...localValue,
       socials: {
-        ...safeValue.socials,
-        other: [
-          {
-            ...otherLink,
-            [field]: fieldValue,
-          },
-        ],
+        ...localValue.socials,
+        other: [{ ...otherLink, [field]: fieldValue }],
       },
-    });
+    };
+    setLocalValue(updated);
+    onChange(updated);
   };
 
   return (
@@ -127,7 +132,7 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             id="about-email"
             type="email"
             placeholder="john@example.com"
-            value={safeValue.contact.email}
+            value={localValue.contact.email}
             onChange={(event) => updateContact("email", event.target.value)}
             style={inputStyle}
           />
@@ -141,7 +146,7 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             id="about-github"
             type="url"
             placeholder="https://github.com/username"
-            value={safeValue.socials.github}
+            value={localValue.socials.github}
             onChange={(event) => updateSocial("github", event.target.value)}
             style={inputStyle}
           />
@@ -155,7 +160,7 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             id="about-linkedin"
             type="url"
             placeholder="https://linkedin.com/in/username"
-            value={safeValue.socials.linkedin}
+            value={localValue.socials.linkedin}
             onChange={(event) => updateSocial("linkedin", event.target.value)}
             style={inputStyle}
           />
