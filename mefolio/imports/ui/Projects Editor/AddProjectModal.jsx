@@ -154,7 +154,6 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
           console.error(err);
           return;
         }
-        onAdd({ ...payload, _id: newId });
         handleCancel();
       });
     };
