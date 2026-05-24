@@ -145,9 +145,7 @@ const ProjectReorderingSection = ({
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-6 py-5">
         <div>
-          <h2 className="m-0 text-xl font-bold text-gray-900">
-            Project Order
-          </h2>
+          <h2 className="m-0 text-xl font-bold text-gray-900">Project Order</h2>
           <p className="mt-1 text-sm text-gray-500">
             Drag the handle on each project card, then save to update its
             display order.
@@ -156,7 +154,9 @@ const ProjectReorderingSection = ({
 
         <div className="flex shrink-0 items-center gap-3">
           {saveStatus === "saved" ? (
-            <span className="text-sm font-semibold text-emerald-600">Saved</span>
+            <span className="text-sm font-semibold text-emerald-600">
+              Saved
+            </span>
           ) : null}
           {saveStatus === "unsaved" ? (
             <span className="text-sm font-semibold text-amber-600">

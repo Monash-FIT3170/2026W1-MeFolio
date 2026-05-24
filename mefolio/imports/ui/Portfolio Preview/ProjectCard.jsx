@@ -77,7 +77,7 @@ export function ProjectCard({ project }) {
       <CardContent className="project-card-content">
         {/* Tech Stack Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {data.technologies.map((t) => (
+          {(data.technologies || []).map((t) => (
             <span
               key={t}
               className="px-2.5 py-1 text-[11px] font-bold text-indigo-500 bg-indigo-50 rounded-lg"
