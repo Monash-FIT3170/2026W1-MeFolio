@@ -162,7 +162,7 @@ const DashboardLayout = () => {
                     if (error) {
                       console.error("Failed to save portfolio:", error);
                     }
-                  }
+                  },
                 );
               }}
             />

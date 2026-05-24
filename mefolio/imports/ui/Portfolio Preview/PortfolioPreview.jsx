@@ -63,63 +63,69 @@ export const PortfolioPreview = () => {
   };
 
   return (
-    <div className="p-12 bg-slate-50 min-h-screen">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Project Preview</h1>
-        <button
-          onClick={() => navigate("/")}
-          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
-        >
-          Back to Dashboard
-        </button>
-      </header>
-    <div>
-      <Navbar />
-      {/* Hero - two-column grid */}
-      <section className="grid grid-cols-1 lg:grid-cols-[1fr_500px] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-12 lg:py-0">
-
-      {/* Left column */}
-        <div className="flex flex-col gap-6">
-          <About />
+    <div className="bg-slate-50 min-h-screen">
+      {/* Dashboard chrome — full-width border, padded content */}
+      <div className="border-b border-slate-200">
+        <div className="px-12 py-3 flex justify-between items-center">
+          <p className="text-2xl font-bold text-slate-900 m-0">
+            Project Preview
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+          >
+            Back to Dashboard
+          </button>
         </div>
-      
-      {/* Right column- profile card */}
-        <div className="flex justify-center items-center py-4 order-first lg:order-last">
-          <ProfileCard/>
-        </div>
-      </section>
-
-      <section className="mt-16 pt-0">
-
-       <header className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Project Gallery
-        </h1>
-      </header>
-
-      <div className="relative w-full">
-        <div
-          className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? "cursor-grabbing" : ""}`}
-          ref={scrollRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-        >
-          {projects.map((project) => (
-            <div className="shrink-0 w-[380px]" key={project._id}>
-              <ProjectCard project={project} />
-            </div>
-          ))}
-          {/* Spacer using Tailwind */}
-          <div className="flex-none w-8" />
-        </div>
-
-        {/* Tailwind-powered Gradient Hint */}
-        <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
       </div>
+
+      {/* Full-width navbar */}
+      <Navbar />
+
+      {/* Hero section — about + profile card */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_40%] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-20 lg:py-32 max-w-7xl mx-auto w-full">
+          {/* Left column */}
+          <div className="flex flex-col gap-6">
+            <About />
+          </div>
+
+          {/* Right column - profile card */}
+          <div className="flex justify-center items-center order-first lg:order-last w-full">
+            <ProfileCard />
+          </div>
+        </div>
       </section>
-    </div>
+
+      {/* Project gallery section */}
+      <section
+        id="projects"
+        className="bg-slate-50 border-b border-slate-200 px-10 lg:px-20 pt-10 pb-16 w-full"
+      >
+        <header className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+        </header>
+
+        <div className="relative w-full">
+          <div
+            className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? "cursor-grabbing" : ""}`}
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
+            {projects.map((project) => (
+              <div className="shrink-0 w-[380px]" key={project._id}>
+                <ProjectCard project={project} />
+              </div>
+            ))}
+            <div className="flex-none w-8" />
+          </div>
+
+          <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
+        </div>
+      </section>
     </div>
   );
 };

@@ -14,19 +14,26 @@ html,
   min-height: 100vh;
 }
 
-body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  body {
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 /* ============ Layout ============ */
@@ -260,7 +267,8 @@ a {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color var(--transition-normal),
+  transition:
+    background-color var(--transition-normal),
     transform var(--transition-fast);
 }
 
@@ -306,7 +314,8 @@ a {
 
 .resource-card {
   padding: 1.25rem;
-  transition: box-shadow var(--transition-slow),
+  transition:
+    box-shadow var(--transition-slow),
     transform var(--transition-slow);
 }
 
@@ -336,7 +345,9 @@ a {
   height: 1rem;
   color: var(--color-muted);
   opacity: 0;
-  transition: opacity var(--transition-fast), color var(--transition-fast);
+  transition:
+    opacity var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .resource-link:hover .resource-icon {
@@ -344,4 +355,3 @@ a {
   color: var(--color-primary);
   /* background-color: white; */
 }
-

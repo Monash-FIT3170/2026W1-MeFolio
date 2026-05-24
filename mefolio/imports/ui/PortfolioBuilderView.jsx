@@ -40,7 +40,10 @@ const createAboutMeLinksValue = (aboutMe = {}) => ({
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
-    const portfolios = PortfolioCollection.find({}, { sort: { createdAt: -1 } }).fetch();
+    const portfolios = PortfolioCollection.find(
+      {},
+      { sort: { createdAt: -1 } },
+    ).fetch();
 
     /* HANDOVER
     Currently fetching from the dummy users1 collection as there is no logged in user system set up yet. 
@@ -157,7 +160,7 @@ const DashboardLayout = () => {
   const currentPortfolio = portfolios[0] || null;
 
   const [aboutMeLinks, setAboutMeLinks] = useState(() =>
-    createAboutMeLinksValue(aboutMe)
+    createAboutMeLinksValue(aboutMe),
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -200,7 +203,7 @@ const DashboardLayout = () => {
         }
 
         setSaveMessage("About Me links saved successfully.");
-      }
+      },
     );
   };
 
