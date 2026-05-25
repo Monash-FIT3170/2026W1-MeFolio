@@ -20,7 +20,7 @@ export const App = () => {
 
   return (
     //TODO: pass in theme from portfolio settings - hardcoded for now
-    <div data-theme={"modern-saas"} className="min-h-screen bg-background text-text font-mono">
+    <div data-theme={"default"} className="min-h-screen bg-background text-text font-mono">
     <Routes>
       <Route
         path="/login"

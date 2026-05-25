@@ -10,8 +10,8 @@ const Sidebar = ({
   onPreviewToggle,
 }) => {
   return (
-    <aside className="w-64 bg-background border-r border-primary primary flex flex-col shrink-0">
-      <div className="p-6 border-b border-primary">
+    <aside className="w-64 bg-surface-fill border-r border-line primary flex flex-col shrink-0">
+      <div className="p-6 border-b border-line">
         <div className="text-2xl font-extrabold text-primary mb-4">
           MeFolio
         </div>
@@ -25,8 +25,8 @@ const Sidebar = ({
             onClick={() => onTabChange(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors ${
               activeTab === item.id
-                ? "bg-primary text-secondary"
-                : "text-primary bg-background hover:bg-primary hover:text-background"
+                ? "bg-selected text-alt"
+                : "text-primary bg-surface-fill hover:bg-selected/50 hover:text-alt/50"
             }`}
           >
             <span>{item.label}</span>
