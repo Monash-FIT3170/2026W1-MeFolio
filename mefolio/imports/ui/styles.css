@@ -22,6 +22,7 @@
   --color-alt: var(--theme-alt); /* Alt text color */
   --color-line: var(--theme-line); /* Line color */
   --color-surface-fill: var(--theme-surface-fill); /* Surface fill color for cards, modals, etc. */
+  --color-button: var(--theme-button); /* Color for solid buttons (bordered for dark) */
   --color-accent1: var(--theme-accent1); /* Accent color 1 */
   --color-accent2: var(--theme-accent2); /* Accent color 2 */
   --color-muted: var(--theme-muted); /* Muted color for greyed out stuff */
@@ -50,6 +51,7 @@ html,
   --theme-accent2: #4844cb;
   --theme-muted: #888888;
   --theme-line: #c9c9c9;
+  --theme-button: #4844cb;
 }
 
 [data-theme="terminal-retro"] {
@@ -63,6 +65,7 @@ html,
   --theme-accent2: #ffb000;
   --theme-muted: #888888;
   --theme-line: #00FF00;
+  --theme-button: #000000;
 }
 
 [data-theme="modern-saas"] {
@@ -76,6 +79,7 @@ html,
   --theme-accent2: #68C0FF;
   --theme-muted: #888888;
   --theme-line: #888888;
+  --theme-button: #4844cb;
 }
 
 /* Add more data-themes here as needed - see example format*/
