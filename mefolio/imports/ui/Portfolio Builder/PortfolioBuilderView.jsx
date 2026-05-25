@@ -20,6 +20,7 @@ import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
+import LogoutButton from "../Login/LogoutButton";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -299,14 +300,17 @@ const DashboardLayout = () => {
           <h1 className="text-2xl font-extrabold text-gray-900">
             {currentTab.label}
           </h1>
-          {activeTab === "projects" && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
-            >
-              Add Project
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {activeTab === "settings" && <LogoutButton />}
+            {activeTab === "projects" && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+              >
+                Add Project
+              </button>
+            )}
+          </div>
         </header>
 
         <div className="p-8">
