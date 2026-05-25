@@ -70,7 +70,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
   };
 
   return (
-    <div className="bg-background rounded-xl border border-primary p-6">
+    <div className="bg-background rounded-xl border border-line p-6">
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-primary mb-6">
           Profile Settings
@@ -83,7 +83,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
             <input
               type="text"
               name="name"
-              className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
+              className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
               placeholder="Name"
               value={form.name}
               onChange={handleChange}
@@ -96,7 +96,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
             <input
               type="email"
               name="email"
-              className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
+              className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
@@ -111,7 +111,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
           <input
             type="text"
             name="title"
-            className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
+            className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
             placeholder="Portfolio Title"
             value={form.title}
             onChange={handleChange}
@@ -124,7 +124,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
           </label>
           <textarea
             name="bio"
-            className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none resize-none text-primary"
+            className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none resize-none text-primary"
             placeholder="Bio"
             value={form.bio}
             onChange={handleChange}
@@ -132,7 +132,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
         </div>
 
         <button
-          className="px-6 py-2 bg-background border border-primary text-primary rounded-lg hover:bg-primary hover:text-background transition"
+          className="px-6 py-2 bg-button border border-line text-secondary rounded-lg hover:bg-alt/50 hover:text-secondary transition"
           onClick={() => handleSave(form)}
         >
           Save Changes
