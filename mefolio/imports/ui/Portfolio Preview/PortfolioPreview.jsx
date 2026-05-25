@@ -87,12 +87,12 @@ export const PortfolioPreview = () => {
   };
 
   return (
-    <div className="p-12 bg-slate-50 min-h-screen">
+    <div className="p-12 bg-background min-h-screen">
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+        <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
         <button
           onClick={() => navigate("/")}
-          className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+          className="px-6 py-2 bg-background border border-primary rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
         >
           Back to Dashboard
         </button>
@@ -115,7 +115,7 @@ export const PortfolioPreview = () => {
           <div className="flex-none w-8" />
         </div>
 
-        <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
       </div>
     </div>
   );

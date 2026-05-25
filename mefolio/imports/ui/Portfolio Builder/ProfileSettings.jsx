@@ -70,33 +70,33 @@ const ProfileSettings = ({ profile, aboutMe }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-muted/20 p-6">
+    <div className="bg-background rounded-xl border border-primary p-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-6">
           Profile Settings
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-muted mb-2">
+            <label className="block text-sm font-medium text-primary mb-2">
               Name
             </label>
             <input
               type="text"
               name="name"
-              className="w-full px-4 py-2 bg-background border border-muted/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-foreground placeholder:text-muted/50"
+              className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
               placeholder="Name"
               value={form.name}
               onChange={handleChange}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted mb-2">
+            <label className="block text-sm font-medium text-primary mb-2">
               Email
             </label>
             <input
               type="email"
               name="email"
-              className="w-full px-4 py-2 bg-background border border-muted/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-foreground placeholder:text-muted/50"
+              className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
@@ -105,13 +105,13 @@ const ProfileSettings = ({ profile, aboutMe }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-muted mb-2">
+          <label className="block text-sm font-medium text-primary mb-2">
             Portfolio Title
           </label>
           <input
             type="text"
             name="title"
-            className="w-full px-4 py-2 bg-background border border-muted/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-foreground placeholder:text-muted/50"
+            className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none text-primary"
             placeholder="Portfolio Title"
             value={form.title}
             onChange={handleChange}
@@ -119,12 +119,12 @@ const ProfileSettings = ({ profile, aboutMe }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-muted mb-2">
+          <label className="block text-sm font-medium text-primary mb-2">
             Bio
           </label>
           <textarea
             name="bio"
-            className="w-full px-4 py-2 bg-background border border-muted/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none text-foreground placeholder:text-muted/50"
+            className="w-full px-4 py-2 border border-primary rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none resize-none text-primary"
             placeholder="Bio"
             value={form.bio}
             onChange={handleChange}
@@ -132,7 +132,7 @@ const ProfileSettings = ({ profile, aboutMe }) => {
         </div>
 
         <button
-          className="px-6 py-2 bg-primary text-background rounded-lg hover:opacity-90 transition"
+          className="px-6 py-2 bg-background border border-primary text-primary rounded-lg hover:bg-primary hover:text-background transition"
           onClick={() => handleSave(form)}
         >
           Save Changes

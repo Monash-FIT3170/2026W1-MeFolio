@@ -38,26 +38,26 @@ const SortableProjectCard = ({ project, index }) => {
     <article
       className={
         isDragging
-          ? "z-10 flex gap-[18px] border-b border-muted/20 bg-surface px-6 py-5 opacity-70 shadow-lg last:border-b-0"
-          : "flex gap-[18px] border-b border-muted/20 bg-surface px-6 py-5 last:border-b-0"
+          ? "z-10 flex gap-[18px] border-b border-primary bg-background px-6 py-5 opacity-70 shadow-lg last:border-b-0"
+          : "flex gap-[18px] border-b border-primary bg-background px-6 py-5 last:border-b-0"
       }
       ref={setNodeRef}
       style={style}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-extrabold text-primary">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-sm font-extrabold text-secondary">
         {index + 1}
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="m-0 text-[17px] font-bold text-foreground">
+        <h3 className="m-0 text-[17px] font-bold text-secondary">
           {project.title || "Project unavailable"}
         </h3>
-        <p className="mt-1 text-sm text-foreground">{project.description}</p>
+        <p className="mt-1 text-sm text-primary">{project.description}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {(project.technologies || []).map((technology) => (
             <span
-              className="rounded-full bg-muted/10 px-2.5 py-1 text-xs font-bold text-foreground/70"
+              className="rounded-full bg-background px-2.5 py-1 text-xs font-bold text-accent1"
               key={technology}
             >
               {technology}
@@ -90,7 +90,7 @@ const SortableProjectCard = ({ project, index }) => {
       <div className="flex shrink-0 items-center">
         <button
           aria-label={`Drag ${project.title || "project"}`}
-          className="flex h-10 w-10 cursor-grab items-center justify-center rounded-lg border-0 bg-primary/10 text-primary hover:bg-primary/20 active:cursor-grabbing"
+          className="flex h-10 w-10 cursor-grab items-center justify-center rounded-lg border-0 bg-background text-primary hover:bg-primary hover:text-background active:cursor-grabbing"
           type="button"
           {...attributes}
           {...listeners}
@@ -132,9 +132,9 @@ const ProjectReorderingSection = ({
 
   if (!projects.length) {
     return (
-      <section className="rounded-lg border border-muted/20 bg-surface p-6 shadow-sm">
-        <h2 className="m-0 text-lg font-bold text-foreground">Project Order</h2>
-        <p className="mt-2 text-sm text-muted">
+      <section className="rounded-lg border border-primary bg-background p-6 shadow-sm">
+        <h2 className="m-0 text-lg font-bold text-primary">Project Order</h2>
+        <p className="mt-2 text-sm text-primary">
           No projects have been added yet.
         </p>
       </section>
@@ -142,13 +142,13 @@ const ProjectReorderingSection = ({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-muted/20 bg-surface shadow-sm">
-      <div className="flex items-start justify-between gap-4 border-b border-muted/20 px-6 py-5">
+    <section className="overflow-hidden rounded-lg border border-primary bg-background shadow-sm">
+      <div className="flex items-start justify-between gap-4 border-b border-primary px-6 py-5">
         <div>
-          <h2 className="m-0 text-xl font-bold text-foreground">
+          <h2 className="m-0 text-xl font-bold text-primary">
             Project Order
           </h2>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-primary">
             Drag the handle on each project card, then save to update its
             display order.
           </p>
@@ -169,7 +169,7 @@ const ProjectReorderingSection = ({
             </span>
           ) : null}
           <button
-            className="rounded-lg border-0 bg-primary px-4 py-2 text-sm font-bold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg border-0 bg-background px-4 py-2 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:bg-muted hover:bg-primary hover:text-background"
             disabled={saveStatus === "saving"}
             onClick={onSaveOrder}
             type="button"

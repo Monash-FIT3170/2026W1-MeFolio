@@ -1,3 +1,5 @@
+import "./styles.css";
+
 import React from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
@@ -17,6 +19,8 @@ export const App = () => {
   if (isLoggingIn) return null;
 
   return (
+    //TODO: pass in theme from portfolio settings - hardcoded for now
+    <div data-theme={"terminal-retro"} className="min-h-screen bg-background text-text font-mono">
     <Routes>
       <Route
         path="/login"
@@ -77,5 +81,6 @@ export const App = () => {
         }
       />
     </Routes>
+    </div>
   );
 };
