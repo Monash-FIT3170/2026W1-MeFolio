@@ -1,16 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
 @import "tailwindcss";
 
-:root {
-  --theme-background: #000000;
-  --theme-selected: #00FF00;
-  --theme-primary: #00FF00;
-  --theme-secondary: #ff00ff;
-  --theme-surface-fill: #ffffff;
-  --theme-accent1: #00aaff;
-  --theme-accent2: #ffb000;
-  --theme-muted: #888888;
 
+:root {
+  --theme-background: white;
+  --theme-selected: #0160D9;
+  --theme-primary: #000000;
+  --theme-secondary: #FFFFFF;
+  --theme-surface-fill: #60A6FF;
+  --theme-accent1: #1600DB;
+  --theme-accent2: #68C0FF;
+  --theme-muted: #888888;
 }
 
 @theme inline {
@@ -33,7 +34,8 @@ html,
   width: 100%;
   height: 100%;
   min-height: 100vh;
-  font-family: 'IBM Plex Mono', monospace;
+  /* font-family: 'IBM Plex Mono', monospace; */
+  font-family: 'Manrope', sans-serif;
 }
 
 [data-theme="terminal-retro"] {
@@ -41,9 +43,20 @@ html,
   --theme-selected: #00FF00;
   --theme-primary: #00FF00;
   --theme-secondary: #ff00ff;
-  --theme-surface-fill: #ffffff;
+  --theme-surface-fill: #000000;
   --theme-accent1: #00aaff;
   --theme-accent2: #ffb000;;
+  --theme-muted: #888888;
+}
+
+[data-theme="modern-saas"] {
+  --theme-background: white;
+  --theme-selected: #0160D9;
+  --theme-primary: #0160D9;
+  --theme-secondary: #111111;
+  --theme-surface-fill: #60A6FF;
+  --theme-accent1: #1600DB;
+  --theme-accent2: #68C0FF;
   --theme-muted: #888888;
 }
 

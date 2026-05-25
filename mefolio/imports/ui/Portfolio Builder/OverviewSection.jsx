@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
-    <div className="rounded-lg border border-primary bg-background p-6 shadow-sm">
+    <div className="rounded-lg border border-primary bg-surface-fill p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
           {"\u2197"} {stat.change}
