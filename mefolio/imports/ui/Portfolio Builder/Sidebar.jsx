@@ -25,14 +25,11 @@ const Sidebar = ({
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => {
-              onTabChange(item.id);
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors min-h-[44px] ${
+            onClick={() => onTabChange(item.id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors ${
               activeTab === item.id
-                ? "bg-background text-secondary"
-                : "text-primary bg-background hover:bg-primary hover:text-background"
+                ? "bg-selected text-alt"
+                : "text-primary bg-surface-fill hover:bg-selected/50 hover:text-alt/50"
             }`}
           >
             <span>{item.label}</span>

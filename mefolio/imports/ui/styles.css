@@ -19,11 +19,12 @@
   --color-selected: var(--theme-selected); /* Background color for selected buttons */
   --color-primary: var(--theme-primary); /* Primary text color */
   --color-secondary: var(--theme-secondary); /* Secondary text color */
+  --color-alt: var(--theme-alt); /* Alt text color */
+  --color-line: var(--theme-line); /* Line color */
   --color-surface-fill: var(--theme-surface-fill); /* Surface fill color for cards, modals, etc. */
   --color-accent1: var(--theme-accent1); /* Accent color 1 */
   --color-accent2: var(--theme-accent2); /* Accent color 2 */
   --color-muted: var(--theme-muted); /* Muted color for greyed out stuff */
-
 }
 
 body,
@@ -38,26 +39,43 @@ html,
   font-family: 'Manrope', sans-serif;
 }
 
+[data-theme="default"] {
+  --theme-background: #f6f8fa;
+  --theme-selected: #e0e7ff;
+  --theme-primary: #000000;
+  --theme-secondary: #ffffff;
+  --theme-alt: #4844cb;
+  --theme-surface-fill: #ffffff;
+  --theme-accent1: #009c00;
+  --theme-accent2: #4844cb;
+  --theme-muted: #888888;
+  --theme-line: #c9c9c9;
+}
+
 [data-theme="terminal-retro"] {
   --theme-background: #000000;
-  --theme-selected: #00FF00;
+  --theme-selected: #000000;
   --theme-primary: #00FF00;
   --theme-secondary: #ff00ff;
+  --theme-alt: #ff00ff;
   --theme-surface-fill: #000000;
   --theme-accent1: #00aaff;
-  --theme-accent2: #ffb000;;
+  --theme-accent2: #ffb000;
   --theme-muted: #888888;
+  --theme-line: #00FF00;
 }
 
 [data-theme="modern-saas"] {
-  --theme-background: white;
+  --theme-background: #f6f8fa;
   --theme-selected: #0160D9;
   --theme-primary: #0160D9;
-  --theme-secondary: #111111;
-  --theme-surface-fill: #60A6FF;
+  --theme-secondary: #ffffff;
+  --theme-alt: #ff00ff;
+  --theme-surface-fill: #ffffff;
   --theme-accent1: #1600DB;
   --theme-accent2: #68C0FF;
   --theme-muted: #888888;
+  --theme-line: #888888;
 }
 
 /* Add more data-themes here as needed - see example format*/
