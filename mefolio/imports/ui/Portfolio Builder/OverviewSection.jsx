@@ -3,17 +3,17 @@ import PropTypes from "prop-types";
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
-    <div className="rounded-lg border border-primary bg-background p-6 shadow-sm">
+    <div className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        <span className="rounded-full bg-accent1/20 px-2.5 py-1 text-xs font-semibold text-accent1">
           {"\u2197"} {stat.change}
         </span>
       </div>
 
-      <h2 className="m-0 text-3xl font-space-mono font-bold text-secondary">
+      <h2 className="m-0 text-3xl font-space-mono font-bold text-primary">
         {stat.value}
       </h2>
-      <p className="mt-1 text-sm font-medium text-secondary">{stat.label}</p>
+      <p className="mt-1 text-sm font-medium text-primary">{stat.label}</p>
     </div>
   );
 };
@@ -21,12 +21,12 @@ const StatCard = ({ stat }) => {
 // Displays one visitor row inside the live visitors list.
 const VisitorCard = ({ visitor }) => {
   return (
-    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-primary bg-background px-1 py-4 last:border-b-0">
+    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-line bg-surface-fill px-1 py-4 last:border-b-0">
       <div
         className={
           visitor.active
-            ? "h-2.5 w-2.5 rounded-full bg-emerald-500"
-            : "h-2.5 w-2.5 rounded-full bg-gray-300"
+            ? "h-2.5 w-2.5 rounded-full bg-accent1"
+            : "h-2.5 w-2.5 rounded-full bg-muted/40"
         }
       />
 
@@ -62,7 +62,7 @@ const OverviewSection = ({ stats, visitors }) => {
         ))}
       </section>
 
-      <section className="mt-6 rounded-lg border border-primary bg-background p-6 shadow-sm">
+      <section className="mt-6 rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="m-0 text-lg font-bold text-primary">Live Visitors</h2>
           <button className="rounded-md px-3 py-1.5 text-sm font-semibold text-primary hover:bg-indigo-50">

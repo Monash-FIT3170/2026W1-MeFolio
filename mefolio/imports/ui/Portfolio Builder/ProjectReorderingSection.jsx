@@ -156,15 +156,15 @@ const ProjectReorderingSection = ({
 
         <div className="flex shrink-0 items-center gap-3">
           {saveStatus === "saved" ? (
-            <span className="text-sm font-semibold text-emerald-600">Saved</span>
+            <span className="text-sm font-semibold text-primary">Saved</span>
           ) : null}
           {saveStatus === "unsaved" ? (
-            <span className="text-sm font-semibold text-amber-600">
+            <span className="text-sm font-semibold text-secondary">
               Unsaved changes
             </span>
           ) : null}
           {saveStatus === "error" ? (
-            <span className="text-sm font-semibold text-red-600">
+            <span className="text-sm font-semibold text-accent">
               Could not save
             </span>
           ) : null}

@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 // Small profile summary shown at the bottom of the sidebar.
 const ProfileSummary = ({ profile }) => {
   return (
-    <div className="border-t border-primary p-4">
+    <div className="border-t border-line p-4">
       <div className="flex items-center gap-3 rounded-lg bg-background p-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background border border-primary text-sm font-bold text-primary">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-button border border-secondary text-sm font-bold text-secondary">
           {profile.initials}
         </div>
 
