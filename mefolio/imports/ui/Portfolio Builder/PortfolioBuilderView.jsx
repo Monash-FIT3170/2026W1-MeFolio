@@ -16,6 +16,7 @@ import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
 import ProjectReorderingSection from "./ProjectReorderingSection";
 import Sidebar from "./Sidebar";
+import ThemeSection from "./ThemeSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -236,7 +237,10 @@ const DashboardLayout = () => {
               onSaveOrder={handleSaveProjectOrder}
               saveStatus={saveStatus}
             />
-          ) : (
+          ) : activeTab === "themes" ? (
+            <ThemeSection />
+          ) :
+          (
             <PlaceholderSection title={currentTab.label} />
           )}
         </div>
