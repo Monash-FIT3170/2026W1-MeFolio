@@ -90,7 +90,7 @@ const MediaUpload = ({ file, onChange }) => {
   );
 };
 
-const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
+const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const overlayRef = useRef(null);
@@ -148,6 +148,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd }) => {
         media: mediaValue,
         status: form.status,
         createdAt: new Date(),
+        portfolioId,
       };
       Meteor.call("projects.insert", payload, (err, newId) => {
         if (err) {

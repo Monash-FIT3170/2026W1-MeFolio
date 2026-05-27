@@ -18,6 +18,9 @@ import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
+import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
+import RecruiterPortal from "../RecruiterPortal";
+import LogoutButton from "../Login/LogoutButton";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -49,7 +52,7 @@ const getSelectedPortfolio = (portfolios = [], user) => {
 
   if (ownedPortfolio) return ownedPortfolio;
   if (getUserEmail(user) === "test@example.com") return portfolios[0];
-  return portfolios[0] ?? null;
+  return null;
 };
 
 const createUnavailableProject = (projectId) => ({
@@ -297,21 +300,49 @@ const DashboardLayout = () => {
           <h1 className="text-2xl font-extrabold text-gray-900">
             {currentTab.label}
           </h1>
-          {activeTab === "projects" && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
-            >
-              Add Project
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {activeTab === "settings" && <LogoutButton />}
+            {activeTab === "projects" && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+              >
+                Add Project
+              </button>
+            )}
+          </div>
         </header>
 
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+          ) : activeTab === "about-me" ? (
+            <AboutMeLinksEditor
+              value={aboutMe}
+              onChange={(updatedValue) => {
+                const portfolioId = selectedPortfolio?._id;
+                if (!portfolioId) return;
+                Meteor.call(
+                  "portfolios.update",
+                  portfolioId,
+                  {
+                    contact: updatedValue.contact,
+                    socials: updatedValue.socials,
+                  },
+                  (error) => {
+                    if (error) {
+                      console.error("Failed to save portfolio:", error);
+                    }
+                  },
+                );
+              }}
+            />
           ) : activeTab === "settings" ? (
-            <ProfileSettings profile={profile} aboutMe={aboutMe} />
+            <ProfileSettings
+              profile={profile}
+              aboutMe={aboutMe}
+              portfolioId={selectedPortfolio?._id}
+            />
           ) : activeTab === "projects" ? (
             <ProjectsSection
               projects={orderedProjects}
@@ -322,6 +353,8 @@ const DashboardLayout = () => {
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "recruiter" ? (
+            <RecruiterPortal portfolio={selectedPortfolio} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -331,6 +364,7 @@ const DashboardLayout = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
+        portfolioId={selectedPortfolio?._id}
       />
       <EditProjectModal
         isOpen={Boolean(editingProject)}

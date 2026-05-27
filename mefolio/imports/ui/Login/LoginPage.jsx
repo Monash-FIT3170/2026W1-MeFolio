@@ -37,6 +37,7 @@ export function LoginPage({ onSignIn, onSwitchToSignUp, onForgotPassword }) {
         setError(error.reason);
       } else {
         console.log("Authentication Success: Session established.");
+        onSignIn();
       }
     });
   };

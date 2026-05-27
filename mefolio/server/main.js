@@ -1,9 +1,10 @@
 import { Meteor } from "meteor/meteor";
-import { Accounts } from "meteor/accounts-base";
 import { check } from "meteor/check";
+import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 
 Accounts.config({
@@ -145,9 +146,48 @@ Meteor.startup(async () => {
       portfolioNumber: 1,
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.",
+
+      // Agreed FEAT-05 structure
+      profile: {
+        fullName: "John Doe",
+        headline: "Product Designer and Frontend Developer",
+        avatarUrl: "",
+        location: "Sydney, NSW",
+        availability: {
+          isAvailable: true,
+          label: "Available for hire",
+        },
+      },
+
+      about: {
+        summary:
+          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
+        highlights: ["React", "UI Design", "Frontend Development"],
+        yearsOfExperience: 3,
+      },
+
+      contact: {
+        email: "john@example.com",
+        phone: "",
+        website: "",
+      },
+
+      socials: {
+        github: "https://github.com/johndoe",
+        linkedin: "https://www.linkedin.com/in/johndoe",
+        twitter: "",
+        other: [],
+      },
+
+      cta: {
+        resumeUrl: "https://example.com/resume.pdf",
+        contactEnabled: true,
+      },
+
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimal",
+      username: "me",
       badges: [
         {
           title: "Sample Badge",
@@ -228,6 +268,11 @@ Meteor.publish("currentUser.profile", function () {
 
 Meteor.publish("portfolioProjects.all", function () {
   return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
+});
+
+Meteor.publish("portfolios.byUsername", function (username) {
+  check(username, String);
+  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
@@ -311,14 +356,27 @@ Meteor.methods({
         : new Date(),
     };
 
+    if (!this.userId) throw new Meteor.Error("not-authorized");
+
     const projectId = await ProjectCollection.insertAsync(normalized);
 
-    // Link the new project to the most-recent portfolio at the FRONT of the
-    // list so the latest project is displayed first and survives a reload.
-    const portfolio = await PortfolioCollection.findOneAsync(
-      {},
-      { sort: { createdAt: -1 } },
-    );
+    // Use the portfolioId passed from the client if provided (e.g. test user
+    // viewing the superuser portfolio), otherwise find or create the current
+    // user's own portfolio.
+    let portfolio = projectData.portfolioId
+      ? await PortfolioCollection.findOneAsync(projectData.portfolioId)
+      : await PortfolioCollection.findOneAsync({ userId: this.userId });
+
+    if (!portfolio) {
+      const newPortfolioId = await PortfolioCollection.insertAsync({
+        userId: this.userId,
+        title: "My Portfolio",
+        projects: [],
+        createdAt: new Date(),
+      });
+      portfolio = await PortfolioCollection.findOneAsync(newPortfolioId);
+    }
+
     if (portfolio) {
       await PortfolioCollection.updateAsync(portfolio._id, {
         $push: { projects: { $each: [projectId], $position: 0 } },

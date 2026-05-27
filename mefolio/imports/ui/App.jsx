@@ -39,7 +39,7 @@ export const App = () => {
             <Navigate to="/" />
           ) : (
             <SignUpPage
-              onSignUp={() => navigate("/")}
+              onSignUp={() => Meteor.logout(() => navigate("/login"))}
               onSwitchToSignIn={() => navigate("/login")}
               onShowTerms={() => navigate("/terms")}
               onShowPrivacy={() => navigate("/privacy")}

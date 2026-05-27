@@ -1,18 +1,15 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { useTracker } from "meteor/react-meteor-data";
-import { PortfolioCollection } from "../../api/portfolio";
 
-const ProfileSettings = ({ profile, aboutMe }) => {
-  const currentUser = useTracker(() => Meteor.user());
-  const userId = currentUser?._id;
+const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
 
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
     title: aboutMe.title || "",
     bio: aboutMe.bio || "",
+    location: aboutMe.profile?.location || "",
   });
 
   useEffect(() => {
@@ -21,52 +18,66 @@ const ProfileSettings = ({ profile, aboutMe }) => {
       email: profile.email || "",
       title: aboutMe.title || "",
       bio: aboutMe.bio || "",
+      location: aboutMe.profile?.location || "",
     });
-  }, [aboutMe.bio, aboutMe.title, profile.email, profile.name]);
+  }, [aboutMe.bio, aboutMe.title, aboutMe.profile?.location, profile.email, profile.name]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSave = (formValues) => {
-    const updates = {};
-
-    if (formValues.email) updates.email = formValues.email;
-
+    const userUpdates = {};
+    if (formValues.email) userUpdates.email = formValues.email;
     const profileUpdates = {};
     if (formValues.name) profileUpdates.name = formValues.name;
     if (Object.keys(profileUpdates).length > 0) {
-      updates.profile = profileUpdates;
+      userUpdates.profile = profileUpdates;
     }
 
-    const aboutMeUpdates = {};
-    if (formValues.title) aboutMeUpdates.title = formValues.title;
-    if (formValues.bio) aboutMeUpdates.bio = formValues.bio;
-
-    if (!userId) {
-      alert("You must be logged in to save changes.");
-      return;
-    }
-
-    Meteor.call("users.updateCurrentProfile", updates, (error) => {
+    Meteor.call("users.updateCurrentProfile", userUpdates, (error) => {
       if (error) {
         console.error("Error updating profile:", error);
         alert("Failed to save changes. Please try again.");
       }
     });
 
-    const userPortfolio = PortfolioCollection.find({ userId }).fetch();
-    Meteor.call(
-      "portfolios.update",
-      userPortfolio[0]?._id,
-      aboutMeUpdates,
-      (error) => {
+    const portfolioUpdates = {
+      title: formValues.title,
+      bio: formValues.bio,
+      "profile.fullName": formValues.name,
+      "profile.location": formValues.location,
+    };
+
+    if (portfolioId) {
+      Meteor.call("portfolios.update", portfolioId, portfolioUpdates, (error) => {
         if (error) {
           console.error("Error updating portfolio:", error);
           alert("Failed to save changes. Please try again.");
         }
-      },
-    );
+      });
+    } else {
+      // No portfolio yet — create one and include all profile fields.
+      Meteor.call(
+        "portfolios.insert",
+        {
+          title: formValues.title,
+          bio: formValues.bio,
+          profile: {
+            fullName: formValues.name,
+            location: formValues.location,
+          },
+          projects: [],
+          createdAt: new Date(),
+        },
+        (error) => {
+          if (error) {
+            console.error("Error creating portfolio:", error);
+            alert("Failed to save changes. Please try again.");
+          }
+        },
+      );
+    }
   };
 
   return (
@@ -120,6 +131,20 @@ const ProfileSettings = ({ profile, aboutMe }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
+            Location
+          </label>
+          <input
+            type="text"
+            name="location"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+            placeholder="e.g. Sydney, NSW"
+            value={form.location}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Bio
           </label>
           <textarea
@@ -151,6 +176,7 @@ ProfileSettings.propTypes = {
     title: PropTypes.string,
     bio: PropTypes.string,
   }).isRequired,
+  portfolioId: PropTypes.string,
 };
 
 export default ProfileSettings;
