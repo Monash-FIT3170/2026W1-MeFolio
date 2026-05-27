@@ -37,7 +37,7 @@ export function ProjectCard({ project }) {
   }, [data.githubLink]);
 
   return (
-    <Card className="overflow-hidden bg-background border-2 border-primary rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
+    <Card className="overflow-hidden bg-surface-fill border-2 border-primary rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
       {/* Top Image & Star Section */}
       <div className="relative h-48 flex items-center justify-center bg-background overflow-hidden pointer-events-none select-none">
         {data.media ? (
@@ -89,7 +89,7 @@ export function ProjectCard({ project }) {
 
         <button
           disabled
-          className="w-full mb-4 py-2.5 flex items-center justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
+          className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
         >
           <Mic className="w-4 h-4" />
           Voice Summary
@@ -126,7 +126,7 @@ export function ProjectCard({ project }) {
             <Github className="icon-small" />
             <span className="w-4 h-4">Code</span>
           </button>
-          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-secondary text-secondary rounded-xl font-bold text-sm hover:bg-secondary hover:text-background transition-all">
+          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-alt text-alt rounded-xl font-bold text-sm hover:bg-alt/50 hover:text-background transition-all">
             <ExternalLink className="w-4 h-4" /> Demo
           </button>
         </div>

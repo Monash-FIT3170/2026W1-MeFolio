@@ -107,7 +107,7 @@ export const PortfolioPreview = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-surface-fill min-h-screen">
       {/* Dashboard chrome — full-width border, padded content */}
       <div className="border-b border-slate-200">
         <div className="px-12 py-3 flex justify-between items-center">
@@ -116,7 +116,7 @@ export const PortfolioPreview = () => {
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-2 bg-background border border-primary rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
+            className="px-6 py-2 bg-surface-fill border border-primary rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
           >
             Back to Dashboard
           </button>

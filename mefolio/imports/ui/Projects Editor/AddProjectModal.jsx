@@ -190,7 +190,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
       onClick={(e) => {
         if (e.target === overlayRef.current) handleCancel();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black/50 backdrop-blur-sm"
     >
       {/* Panel */}
       <div

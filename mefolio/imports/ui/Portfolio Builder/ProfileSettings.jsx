@@ -81,7 +81,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   };
 
   return (
-    <div className="bg-background rounded-xl border border-line p-6">
+    <div className="bg-surface-fill rounded-xl border border-line p-6">
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-primary mb-6">
           Profile Settings
