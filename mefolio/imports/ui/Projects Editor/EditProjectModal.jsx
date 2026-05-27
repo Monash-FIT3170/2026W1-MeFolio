@@ -91,8 +91,8 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
   };
 
   const fieldClass = (key) =>
-    `w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
-      errors[key] ? "border-red-400 bg-red-50" : "border-gray-300"
+    `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition focus:border-accent2 focus:ring-2 focus:ring-selected ${
+      errors[key] ? "border-red-400 bg-red-50" : "border-line"
     }`;
 
   return (
@@ -105,18 +105,18 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-5 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5 backdrop-blur-sm"
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-start justify-between rounded-t-2xl border-b border-gray-100 bg-white px-6 py-5">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-fill shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-start justify-between rounded-t-2xl border-b border-line bg-surface-fill px-6 py-5">
           <div>
             <h2
               id="edit-modal-title"
-              className="text-lg font-bold text-gray-900"
+              className="text-lg font-bold text-primary"
             >
               Edit Project
             </h2>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-0.5 text-sm text-muted">
               Update the details below and save your changes.
             </p>
           </div>
@@ -125,7 +125,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
             data-testid="edit-modal-close-btn"
             onClick={onClose}
             aria-label="Close edit modal"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-xl text-muted transition hover:bg-selected hover:text-primary"
           >
             x
           </button>
@@ -135,7 +135,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           <div>
             <label
               htmlFor="edit-title"
-              className="mb-1.5 block text-sm font-semibold text-gray-700"
+              className="mb-1.5 block text-sm font-semibold text-primary"
             >
               Project Title <span className="text-red-500">*</span>
             </label>
@@ -160,7 +160,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           <div>
             <label
               htmlFor="edit-description"
-              className="mb-1.5 block text-sm font-semibold text-gray-700"
+              className="mb-1.5 block text-sm font-semibold text-primary"
             >
               Description <span className="text-red-500">*</span>
             </label>
@@ -183,21 +183,21 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label className="mb-1.5 block text-sm font-semibold text-primary">
               Tech Stack
             </label>
             <TechStackInput
               value={form.technologies}
               onChange={(v) => set("technologies", v)}
             />
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Press Enter or comma to add · Backspace to remove last
             </p>
           </div>
 
           {/* Status */}
           <div>
-            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+            <label className="mb-1.5 block text-sm font-semibold text-primary">
               Project Status
             </label>
             <div className="flex gap-2">
@@ -209,8 +209,8 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
                   className={`px-4 py-1.5 rounded-full text-xs font-medium border capitalize transition
                     ${
                       form.status === s
-                        ? "border-indigo-600 bg-indigo-100 text-indigo-700"
-                        : "border-gray-200 text-gray-500 hover:border-indigo-400"
+                        ? "border-alt bg-selected text-alt"
+                        : "border-line text-muted hover:border-alt"
                     }`}
                 >
                   {s}
@@ -223,7 +223,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
             <div>
               <label
                 htmlFor="edit-github"
-                className="mb-1.5 block text-sm font-semibold text-gray-700"
+                className="mb-1.5 block text-sm font-semibold text-primary"
               >
                 GitHub Repo
               </label>
@@ -248,7 +248,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
             <div>
               <label
                 htmlFor="edit-demo"
-                className="mb-1.5 block text-sm font-semibold text-gray-700"
+                className="mb-1.5 block text-sm font-semibold text-primary"
               >
                 Live Demo URL
               </label>
@@ -275,7 +275,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           <div>
             <label
               htmlFor="edit-media-url"
-              className="mb-1.5 block text-sm font-semibold text-gray-700"
+              className="mb-1.5 block text-sm font-semibold text-primary"
             >
               Project Media URL
             </label>
@@ -288,19 +288,19 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               onChange={(e) => set("media", e.target.value)}
               className={fieldClass("media")}
             />
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-muted">
               Paste a link to an image/video (e.g. from Unsplash or Cloudinary).
             </p>
           </div>
         </div>
 
-        <div className="sticky bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <div className="sticky bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl border-t border-line bg-background px-6 py-4">
           {/* Delete (left). First click asks for confirmation. */}
           <div className="flex items-center justify-center gap-2 flex-wrap">
             {onDelete &&
               (confirmingDelete ? (
                 <>
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-muted">
                     Delete this project?
                   </span>
                   <button
@@ -315,7 +315,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
                     type="button"
                     data-testid="edit-btn-delete-cancel"
                     onClick={() => setConfirmingDelete(false)}
-                    className="rounded-lg px-2 py-2 text-sm font-medium text-gray-500 transition hover:text-gray-700"
+                    className="rounded-lg px-2 py-2 text-sm font-medium text-muted transition hover:text-primary"
                   >
                     Keep
                   </button>
@@ -325,7 +325,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
                   type="button"
                   data-testid="edit-btn-delete"
                   onClick={() => setConfirmingDelete(true)}
-                  className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                  className="rounded-lg border border-red-200 bg-surface-fill px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
                 >
                   Delete Project
                 </button>
@@ -338,7 +338,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               type="button"
               data-testid="edit-btn-cancel"
               onClick={onClose}
-              className="rounded-lg border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+              className="rounded-lg border border-line bg-surface-fill px-5 py-2 text-sm font-medium text-muted transition hover:bg-selected"
             >
               Cancel
             </button>
@@ -346,7 +346,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               type="button"
               data-testid="edit-btn-save"
               onClick={handleSubmit}
-              className="rounded-lg bg-indigo-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-800"
+              className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
             >
               Save Changes
             </button>

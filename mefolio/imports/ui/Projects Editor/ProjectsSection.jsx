@@ -16,12 +16,12 @@ const ProjectsSection = ({
 }) => {
   if (!projects.length) {
     return (
-      <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-        <h2 className="mb-2 text-xl font-semibold text-gray-900">
+      <section className="rounded-2xl border border-dashed border-line bg-surface-fill p-10 text-center">
+        <h2 className="mb-2 text-xl font-semibold text-primary">
           No projects yet
         </h2>
-        <p className="text-gray-500">
-          Click “Add Project” to create your first project — it will appear here
+        <p className="text-muted">
+          Click "Add Project" to create your first project — it will appear here
           as a card.
         </p>
       </section>
