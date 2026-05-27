@@ -305,7 +305,7 @@ const DashboardLayout = () => {
             {activeTab === "projects" && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+                className="px-5 py-2 rounded-lg bg-button text-secondary text-sm font-semibold hover:bg-alt/50 hover:text-secondary transition"
               >
                 Add Project
               </button>
