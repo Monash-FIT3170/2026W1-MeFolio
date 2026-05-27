@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
@@ -67,6 +67,23 @@ export const PortfolioPreview = () => {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
+  // Skill filter state
+  const [selectedSkill, setSelectedSkill] = useState("All");
+
+  // Compute unique skills from the loaded projects
+  const availableSkills = useMemo(() => {
+    const set = new Set();
+    projects.forEach((p) => {
+      (p.technologies || []).forEach((t) => set.add(t));
+    });
+    return Array.from(set).sort();
+  }, [projects]);
+
+  const displayedProjects =
+    selectedSkill && selectedSkill !== "All"
+      ? projects.filter((p) => (p.technologies || []).includes(selectedSkill))
+      : projects;
+
   const [isDown, setIsDown] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -129,8 +146,32 @@ export const PortfolioPreview = () => {
         id="projects"
         className="bg-slate-50 border-b border-slate-200 px-10 lg:px-20 pt-10 pb-16 w-full"
       >
-        <header className="flex justify-between items-center mb-4">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-slate-600">Filter by skill:</label>
+            <select
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"
+            >
+              <option value="All">All Skills</option>
+              {availableSkills.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            {selectedSkill !== "All" && (
+              <button
+                onClick={() => setSelectedSkill("All")}
+                className="text-sm font-semibold text-indigo-600 hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </header>
 
         <div className="relative w-full">
@@ -142,7 +183,7 @@ export const PortfolioPreview = () => {
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
           >
-            {projects.map((project) => (
+            {displayedProjects.map((project) => (
               <div className="shrink-0 w-[380px]" key={project._id}>
                 <ProjectCard project={project} />
               </div>
