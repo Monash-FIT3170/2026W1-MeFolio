@@ -34,7 +34,9 @@ export const mapProjects = (projects) => {
     id: project.id || project._id || `project-${index + 1}`,
     title: project.title || project.name || "Untitled project",
     description: project.description || "",
-    technologies: Array.isArray(project.technologies) ? project.technologies : [],
+    technologies: Array.isArray(project.technologies)
+      ? project.technologies
+      : [],
     githubLink: project.githubLink || project.githubUrl || "",
     liveDemoLink: project.liveDemoLink || project.demoUrl || "",
   }));
