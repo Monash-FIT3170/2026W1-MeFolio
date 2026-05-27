@@ -145,9 +145,7 @@ const ProjectReorderingSection = ({
     <section className="overflow-hidden rounded-lg border border-primary bg-background shadow-sm">
       <div className="flex items-start justify-between gap-4 border-b border-primary px-6 py-5">
         <div>
-          <h2 className="m-0 text-xl font-bold text-primary">
-            Project Order
-          </h2>
+          <h2 className="m-0 text-xl font-bold text-primary">Project Order</h2>
           <p className="mt-1 text-sm text-primary">
             Drag the handle on each project card, then save to update its
             display order.

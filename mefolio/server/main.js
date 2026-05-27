@@ -20,14 +20,11 @@ Meteor.startup(async () => {
   if (existingSampleUser) {
     sampleUserId = existingSampleUser._id;
   } else {
-    sampleUserId = await Meteor.users.insertAsync({
-      createdAt: new Date(),
-      emails: [{ address: "superuser@example.com", verified: false }],
-      profile: {
-        name: "Superuser",
-      },
+    sampleUserId = await Accounts.createUser({
+      email: "superuser@example.com",
+      password: "superuser",
+      profile: { name: "Superuser" },
     });
-    Accounts.setPassword(sampleUserId, "superuser");
   }
 
   let projectIds = [];
@@ -122,8 +119,8 @@ Meteor.startup(async () => {
 
   let samplePortfolioId;
   const existingSamplePortfolio =
-    await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" }) ||
-    await PortfolioCollection.findOneAsync({ userId: sampleUserId });
+    (await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" })) ||
+    (await PortfolioCollection.findOneAsync({ userId: sampleUserId }));
 
   if (existingSamplePortfolio) {
     samplePortfolioId = existingSamplePortfolio._id;
@@ -139,7 +136,7 @@ Meteor.startup(async () => {
 
     if (Object.keys(samplePortfolioUpdates).length) {
       await PortfolioCollection.updateAsync(samplePortfolioId, {
-        $set: samplePortfolioUpdates
+        $set: samplePortfolioUpdates,
       });
     }
   } else {
@@ -297,8 +294,53 @@ Meteor.methods({
     return await Meteor.users.updateAsync(this.userId, { $set: safeUpdates });
   },
 
-  async "projects.insert"(projectData) {
-    return await ProjectCollection.insertAsync(projectData);
+  // Project methods
+  async "projects.insert"(projectData = {}) {
+    // Normalise field names (the Add Project modal historically sent
+    // stack/github/demo) and guarantee a createdAt so newest-first ordering works.
+    const normalized = {
+      title: projectData.title ?? "",
+      description: projectData.description ?? "",
+      technologies: projectData.technologies ?? projectData.stack ?? [],
+      githubLink: projectData.githubLink ?? projectData.github ?? "",
+      liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
+      media: typeof projectData.media === "string" ? projectData.media : "",
+      status: projectData.status ?? "live",
+      createdAt: projectData.createdAt
+        ? new Date(projectData.createdAt)
+        : new Date(),
+    };
+
+    const projectId = await ProjectCollection.insertAsync(normalized);
+
+    // Link the new project to the most-recent portfolio at the FRONT of the
+    // list so the latest project is displayed first and survives a reload.
+    const portfolio = await PortfolioCollection.findOneAsync(
+      {},
+      { sort: { createdAt: -1 } },
+    );
+    if (portfolio) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $push: { projects: { $each: [projectId], $position: 0 } },
+      });
+
+      // Shift existing entries down to make room at the front
+      await PortfolioProjectsCollection.updateAsync(
+        { portfolioId: portfolio._id },
+        { $inc: { orderIndex: 1 } },
+        { multi: true },
+      );
+
+      // Insert new project at the front (orderIndex 0)
+      await PortfolioProjectsCollection.insertAsync({
+        portfolioId: portfolio._id,
+        projectId,
+        orderIndex: 0,
+        createdAt: new Date(),
+      });
+    }
+
+    return projectId;
   },
 
   async "projects.update"(projectId, updates) {
@@ -306,6 +348,12 @@ Meteor.methods({
   },
 
   async "projects.delete"(projectId) {
+    await PortfolioCollection.updateAsync(
+      { projects: projectId },
+      { $pull: { projects: projectId } },
+      { multi: true },
+    );
+    await PortfolioProjectsCollection.removeAsync({ projectId });
     return await ProjectCollection.removeAsync(projectId);
   },
 

@@ -37,7 +37,8 @@ html,
   height: 100%;
   min-height: 100vh;
   /* font-family: 'IBM Plex Mono', monospace; */
-  font-family: 'Manrope', sans-serif;
+  /* font-family: 'Manrope', sans-serif; */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 [data-theme="default"] {
@@ -69,17 +70,17 @@ html,
 }
 
 [data-theme="modern-saas"] {
-  --theme-background: #f6f8fa;
+  --theme-background: #111111;
   --theme-selected: #0160D9;
-  --theme-primary: #0160D9;
+  --theme-primary: #ffffff;
   --theme-secondary: #ffffff;
-  --theme-alt: #ff00ff;
-  --theme-surface-fill: #ffffff;
-  --theme-accent1: #1600DB;
+  --theme-alt: #ffffff;
+  --theme-surface-fill: #1F1F1F;
+  --theme-accent1: #009c00;
   --theme-accent2: #68C0FF;
   --theme-muted: #888888;
-  --theme-line: #888888;
-  --theme-button: #4844cb;
+  --theme-line: #434343;
+  --theme-button: #0160D9;
 }
 
 /* Add more data-themes here as needed - see example format*/

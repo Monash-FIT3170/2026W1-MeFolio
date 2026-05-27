@@ -87,12 +87,12 @@ export const PortfolioPreview = () => {
   };
 
   return (
-    <div className="p-12 bg-background min-h-screen">
+    <div className="p-12 bg-surface-fill min-h-screen">
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
         <button
           onClick={() => navigate("/")}
-          className="px-6 py-2 bg-background border border-primary rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
+          className="px-6 py-2 bg-surface-fill border border-line rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
         >
           Back to Dashboard
         </button>

@@ -3,11 +3,12 @@ import assert from "assert";
 import "meteor/accounts-base";
 import "meteor/accounts-password";
 
-import "/imports/ui/LoginPage.test.jsx";
-import "/imports/ui/ForgotPasswordPage.test.jsx";
+import "/imports/ui/Login/LoginPage.test.jsx";
+import "/imports/ui/Login/ForgotPasswordPage.test.jsx";
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
-import "/imports/ui/ProjectCard.test.jsx";
+import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
+import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {

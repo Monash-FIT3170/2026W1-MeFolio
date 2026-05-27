@@ -18,9 +18,15 @@ export function ProjectCard({ project }) {
 
   useEffect(() => {
     if (!data.githubLink) return;
+    if (data.githubLink.includes("github.com/example/")) {
+      setGithubStars(0);
+      return;
+    }
+
     const match = data.githubLink.match(/github\.com\/([^/]+)\/([^/]+)/);
     if (!match) return;
     const [, owner, repo] = match;
+
     fetch(`https://api.github.com/repos/${owner}/${repo}`)
       .then((res) => res.json())
       .then((json) => {
@@ -31,13 +37,17 @@ export function ProjectCard({ project }) {
   }, [data.githubLink]);
 
   return (
-    <Card className="overflow-hidden bg-background border-2 border-primary rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
+    <Card className="overflow-hidden bg-surface-fill border-2 border-line rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
       {/* Top Image & Star Section */}
       <div className="relative h-48 flex items-center justify-center bg-background overflow-hidden pointer-events-none select-none">
         {data.media ? (
           <img
             src={data.media}
             alt={data.title}
+            width={400}
+            height={192}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setImageError(true)}
           />
@@ -67,7 +77,7 @@ export function ProjectCard({ project }) {
       <CardContent className="project-card-content">
         {/* Tech Stack Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {data.technologies.map((t) => (
+          {(data.technologies || []).map((t) => (
             <span
               key={t}
               className="px-2.5 py-1 text-[11px] font-bold text-accent1 bg-background rounded-lg"
@@ -79,7 +89,7 @@ export function ProjectCard({ project }) {
 
         <button
           disabled
-          className="w-full mb-4 py-2.5 flex items-center justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
+          className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
         >
           <Mic className="w-4 h-4" />
           Voice Summary
@@ -92,7 +102,10 @@ export function ProjectCard({ project }) {
               Mini Challenge
             </span>
           </div>
-          <p className="ml-6 mb-3 text-[11px] font-semibold text-accent2">
+          <p
+            data-testid="challenge-placeholder"
+            className="ml-6 mb-3 text-[11px] font-semibold text-accent2"
+          >
             {"Challenge feature coming soon"}
           </p>
           <button
@@ -108,12 +121,12 @@ export function ProjectCard({ project }) {
         <div className="flex gap-3">
           <button
             onClick={() => window.open(data.githubLink)}
-            className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-primary text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
+            className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-line text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
           >
             <Github className="icon-small" />
             <span className="w-4 h-4">Code</span>
           </button>
-          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-secondary text-secondary rounded-xl font-bold text-sm hover:bg-secondary hover:text-background transition-all">
+          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-alt text-alt rounded-xl font-bold text-sm hover:bg-alt/50 hover:text-background transition-all">
             <ExternalLink className="w-4 h-4" /> Demo
           </button>
         </div>

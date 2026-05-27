@@ -6,7 +6,7 @@ const PlaceholderSection = ({
   description = "This section is a placeholder for now.",
 }) => {
   return (
-    <section className="rounded-lg border border-primary bg-background p-6 shadow-sm">
+    <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
       <h2 className="m-0 text-lg font-bold text-primary">{title}</h2>
       <p className="mt-2 text-sm text-primary">{description}</p>
     </section>
