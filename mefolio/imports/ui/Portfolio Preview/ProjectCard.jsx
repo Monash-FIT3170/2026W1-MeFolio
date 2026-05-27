@@ -37,7 +37,7 @@ export function ProjectCard({ project }) {
   }, [data.githubLink]);
 
   return (
-    <Card className="overflow-hidden bg-surface-fill border-2 border-primary rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
+    <Card className="overflow-hidden bg-surface-fill border-2 border-line rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
       {/* Top Image & Star Section */}
       <div className="relative h-48 flex items-center justify-center bg-background overflow-hidden pointer-events-none select-none">
         {data.media ? (
@@ -121,7 +121,7 @@ export function ProjectCard({ project }) {
         <div className="flex gap-3">
           <button
             onClick={() => window.open(data.githubLink)}
-            className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-primary text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
+            className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-line text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
           >
             <Github className="icon-small" />
             <span className="w-4 h-4">Code</span>

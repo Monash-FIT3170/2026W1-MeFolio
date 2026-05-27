@@ -116,7 +116,7 @@ export const PortfolioPreview = () => {
           </p>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-2 bg-surface-fill border border-primary rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
+            className="px-6 py-2 bg-surface-fill border border-line rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
           >
             Back to Dashboard
           </button>
