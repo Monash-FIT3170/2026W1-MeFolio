@@ -5,7 +5,16 @@ export const defaultPortfolioProfileData = {
   userId: "",
   portfolioNumber: 1,
   title: "",
-  bio: "",
+  bio: {
+    fullName: "",
+    email: "",
+    headline: "",
+    professionalSummary: "",
+    location: "",
+    yearsOfExperience: 0,
+    phone: "",
+    highlights: [],
+  },
   createdAt: null,
   projects: [],
   theme: "minimal",
@@ -17,6 +26,7 @@ export const defaultPortfolioProfileData = {
     availability: "",
     personalNote: "",
     resumeLink: "",
+    resumeLinks: [],
     allowAccess: false,
   },
 };
@@ -45,7 +55,8 @@ export const samplePortfolioProfileData = {
     currentLocation: "Sydney NSW",
     availability: "Immediate",
     personalNote: "Looking for opportunities in full-stack development.",
-    resumeLink: "https://example.com/resume.pdf",
+    resumeLink: "",
+    resumeLinks: [],
     allowAccess: true,
   },
 };
@@ -53,15 +64,32 @@ export const samplePortfolioProfileData = {
 // Merges loaded portfolio data with default values.
 // This prevents the UI from breaking if database data is incomplete.
 export function normalisePortfolioProfileData(portfolio = {}) {
+  const recruiterInfo = {
+    ...defaultPortfolioProfileData.recruiterInfo,
+    ...(portfolio.recruiterInfo || {}),
+  };
+
+  if (!Array.isArray(recruiterInfo.resumeLinks)) {
+    recruiterInfo.resumeLinks = recruiterInfo.resumeLink
+      ? [
+          {
+            name: recruiterInfo.resumeLink.split("/").pop() || "Resume.pdf",
+            url: recruiterInfo.resumeLink,
+          },
+        ]
+      : [];
+  }
+
   return {
     ...defaultPortfolioProfileData,
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-    recruiterInfo: {
-      ...defaultPortfolioProfileData.recruiterInfo,
-      ...(portfolio.recruiterInfo || {}),
-    },
+    recruiterInfo,
+    // recruiterInfo: {
+    //   ...defaultPortfolioProfileData.recruiterInfo,
+    //   ...(portfolio.recruiterInfo || {}),
+    // },
   };
 }
 

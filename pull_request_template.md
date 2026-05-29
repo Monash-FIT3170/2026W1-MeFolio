@@ -3,17 +3,19 @@
 
 ## Description
 <!-- A brief description of the changes in this PR. 
-
 - List the key updates
 - Include any refactors, fixes, or new features -->
+
+Describe your changes here...
 
 ---
 
 ## Checklist
 <!-- X in the box to tick off -->
-- [ ] I have rebased onto main and resolved any conflicts
+- [ ] I have rebased onto main/dev and resolved any conflicts
 - [ ] I have added tests for this feature (if applicable)
-- [ ] I have ensured that my code is properly linted and formatted
+- [ ] I have run ```npm run format``` to auto-format my files
+- [ ] I have run ```npm run lint``` and fixed any linting issues raised
 
 ---
 
@@ -24,4 +26,3 @@
 
 ## Additional Notes
 <!--Anything else reviewers should know. -->
-
