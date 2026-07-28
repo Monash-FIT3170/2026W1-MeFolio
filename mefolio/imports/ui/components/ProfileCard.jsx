@@ -43,7 +43,7 @@ export const ProfileCard = () => {
 
   return (
     <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-[2px]">
-      <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center">
+      <div className="w-full h-full rounded-2xl bg-background flex items-center justify-center">
         <div className="text-left px-8 py-12">
           {imageUrl ? (
             <img
@@ -52,18 +52,18 @@ export const ProfileCard = () => {
               className="w-48 h-48 mx-auto rounded-full object-cover mb-4"
             />
           ) : (
-            <div className="w-48 h-48 mx-auto rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white text-6xl font-bold mb-4">
+            <div className="w-48 h-48 mx-auto rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-secondary text-6xl font-bold mb-4">
               {initials}
             </div>
           )}
 
-          <p className="text-xl font-semibold text-gray-900">
+          <p className="text-xl font-semibold text-primary">
             {portfolio.title || "Portfolio"}
           </p>
 
-          {name && <p className="text-base text-gray-700 mt-1">{name}</p>}
+          {name && <p className="text-base text-muted mt-1">{name}</p>}
 
-          {location && <p className="text-sm text-gray-500 mt-1">{location}</p>}
+          {location && <p className="text-sm text-muted mt-1">{location}</p>}
         </div>
       </div>
     </div>

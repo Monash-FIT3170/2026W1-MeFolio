@@ -144,8 +144,8 @@ export const PortfolioPreview = () => {
       {/* Project gallery section */}
       <section
         id="projects"
-        className="bg-background border-b border-muted px-10 lg:px-20 pt-10 pb-16 w-full"
-      >
+        className="bg-background border-b border-line px-10 lg:px-20 pt-10 pb-16 w-full"
+        >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
 
@@ -154,7 +154,7 @@ export const PortfolioPreview = () => {
             <select
               value={selectedSkill}
               onChange={(e) => setSelectedSkill(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-surface-fill px-3 py-2 text-sm font-bold text-primary"
+              className="rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary"
             >
               <option value="All">All Skills</option>
               {availableSkills.map((s) => (
@@ -193,6 +193,7 @@ export const PortfolioPreview = () => {
 
         <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
       </div>
+      </section>
     </div>
   );
 };

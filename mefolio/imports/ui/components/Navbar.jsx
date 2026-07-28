@@ -16,11 +16,11 @@ const Navbar = () => {
     portfolio?.profile?.fullName || portfolio?.title || "Portfolio";
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
+    <header className="sticky top-0 z-50 bg-background border-b border-muted">
       <div className="px-10 lg:px-20 h-16 flex items-center justify-between">
         <a
           href="#"
-          className="text-base font-bold text-slate-900 hover:text-indigo-600 transition-colors leading-none"
+          className="text-base font-bold text-primary hover:text-alt transition-colors leading-none"
           style={{ minHeight: "unset" }}
         >
           {displayName}
@@ -28,35 +28,35 @@ const Navbar = () => {
         <div className="flex items-center gap-8">
           <a
             href="#about"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors leading-none"
+            className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
             style={{ minHeight: "unset" }}
           >
             About
           </a>
           <a
             href="#projects"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors leading-none"
+            className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
             style={{ minHeight: "unset" }}
           >
             Projects
           </a>
           <a
             href="#skills"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors leading-none"
+            className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
             style={{ minHeight: "unset" }}
           >
             Skills
           </a>
           <a
             href="#contact"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors leading-none"
+            className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
             style={{ minHeight: "unset" }}
           >
             Contact
           </a>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-lg text-primary hover:text-alt hover:bg-background transition-colors"
             aria-label="Toggle dark mode"
           >
             {darkMode ? <Sun size={18} /> : <Moon size={18} />}
