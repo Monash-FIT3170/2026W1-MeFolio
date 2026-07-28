@@ -12,8 +12,12 @@ const Sidebar = ({
   profile,
   onPreviewToggle,
 }) => {
-  return (
-    <aside className="w-64 bg-background border-r border-primary primary flex flex-col shrink-0">
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isMobile } = useResponsive();
+
+  // Sidebar content component (reused for both desktop and mobile)
+  const SidebarContent = () => (
+    <>
       <div className="p-6 border-b border-primary">
         <div className="text-2xl font-extrabold text-primary mb-4">
           MeFolio

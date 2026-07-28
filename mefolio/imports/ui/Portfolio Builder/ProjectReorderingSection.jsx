@@ -69,7 +69,6 @@ const SortableProjectCard = ({ project, index }) => {
           {project.githubLink ? (
             <a
               className="text-sm font-bold text-primary no-underline hover:underline"
-              className="text-sm font-bold text-primary no-underline hover:underline"
               href={project.githubLink}
               onClick={(event) => event.stopPropagation()}
             >
@@ -78,7 +77,6 @@ const SortableProjectCard = ({ project, index }) => {
           ) : null}
           {project.liveDemoLink ? (
             <a
-              className="text-sm font-bold text-primary no-underline hover:underline"
               className="text-sm font-bold text-primary no-underline hover:underline"
               href={project.liveDemoLink}
               onClick={(event) => event.stopPropagation()}

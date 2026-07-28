@@ -127,7 +127,7 @@ export const PortfolioPreview = () => {
       <Navbar />
 
       {/* Hero section — about + profile card */}
-      <section className="bg-white border-b border-slate-200">
+      <section className="bg-background border-b border-muted">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_40%] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-20 lg:py-32 max-w-7xl mx-auto w-full">
           {/* Left column */}
           <div className="flex flex-col gap-6">
@@ -144,17 +144,17 @@ export const PortfolioPreview = () => {
       {/* Project gallery section */}
       <section
         id="projects"
-        className="bg-slate-50 border-b border-slate-200 px-10 lg:px-20 pt-10 pb-16 w-full"
+        className="bg-background border-b border-muted px-10 lg:px-20 pt-10 pb-16 w-full"
       >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-          <h1 className="text-3xl font-bold text-slate-900">Project Gallery</h1>
+          <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm text-slate-600">Filter by skill:</label>
+            <label className="text-sm text-muted">Filter by skill:</label>
             <select
               value={selectedSkill}
               onChange={(e) => setSelectedSkill(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"
+              className="rounded-xl border border-slate-200 bg-surface-fill px-3 py-2 text-sm font-bold text-primary"
             >
               <option value="All">All Skills</option>
               {availableSkills.map((s) => (
@@ -166,7 +166,7 @@ export const PortfolioPreview = () => {
             {selectedSkill !== "All" && (
               <button
                 onClick={() => setSelectedSkill("All")}
-                className="text-sm font-semibold text-indigo-600 hover:underline"
+                className="text-sm font-semibold text-alt hover:underline"
               >
                 Clear
               </button>

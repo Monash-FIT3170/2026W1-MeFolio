@@ -1,10 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 
+
 :root {
+  --theme-background: white;
+  --theme-selected: #0160D9;
+  --theme-primary: #000000;
+  --theme-secondary: #FFFFFF;
+  --theme-surface-fill: #60A6FF;
+  --theme-accent1: #1600DB;
+  --theme-accent2: #68C0FF;
+  --theme-muted: #888888;
+}
+
+@theme inline {
+  --color-background: var(--theme-background); /* Main background color */
+  --color-selected: var(--theme-selected); /* Background color for selected buttons */
+  --color-primary: var(--theme-primary); /* Primary text color */
+  --color-secondary: var(--theme-secondary); /* Secondary text color */
+  --color-alt: var(--theme-alt); /* Alt text color */
+  --color-line: var(--theme-line); /* Line color */
+  --color-surface-fill: var(--theme-surface-fill); /* Surface fill color for cards, modals, etc. */
+  --color-button: var(--theme-button); /* Color for solid buttons (bordered for dark) */
+  --color-accent1: var(--theme-accent1); /* Accent color 1 */
+  --color-accent2: var(--theme-accent2); /* Accent color 2 */
+  --color-muted: var(--theme-muted); /* Muted color for greyed out stuff */
+  --font-main: var(--font-main); /* Main font family */
   --theme-background: white;
   --theme-selected: #0160D9;
   --theme-primary: #000000;
