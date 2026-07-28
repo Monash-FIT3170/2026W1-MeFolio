@@ -23,10 +23,10 @@ const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
 
 // Themes
 const Themes = [
-  { id: "default", title: "Default", description: "Sleek, standard and modern.", image: "default-preview.png" },
-  { id: "minimalist", title: "Minimalist", description: "Clean, minimalist design with subtle typography and ample whitespace", image: "minimalist-preview.png" },
-  { id: "terminal-retro", title: "Retro Terminal", description: "Nostalgic terminal aesthetic with monospace fonts and green CRT glow", image: "retro-terminal-preview.png" },
-  { id: "modern-saas", title: "Modern SaaS", description: "Contemporary rich design with bold colors and smooth interactions", image: "modern-saas-preview.png" },
+  { id: "default", title: "Default", description: "Sleek, standard and modern.", image: "/default-preview.png" },
+  { id: "minimalist", title: "Minimalist", description: "Clean, minimalist design with subtle typography and ample whitespace", image: "/minimalist-preview.png" },
+  { id: "terminal-retro", title: "Retro Terminal", description: "Nostalgic terminal aesthetic with monospace fonts and green CRT glow", image: "/terminal-retro-preview.png" },
+  { id: "modern-saas", title: "Modern SaaS", description: "Contemporary rich design with bold colors and smooth interactions", image: "/modern-saas-preview.png" },
 ];
   return (
     <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">

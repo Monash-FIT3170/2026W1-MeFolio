@@ -10,17 +10,27 @@ import { ForgotPasswordPage } from "./Login/ForgotPasswordPage.jsx";
 import { TermsOfServicePage } from "./Terms & Conditions/TermsOfServicePage.jsx";
 import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
+import { PortfolioCollection } from "../api/portfolio.js";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
+  const {portfolio, isPortfolioLoading} = useTracker(() => {
+    const handle = Meteor.subscribe("portfolios.all");
+    // Meteor.subscribe("portfolios.all");
+    return {
+      isPortfolioLoading: !handle.ready(),
+      portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() })
+    };
+  }); 
+  console.log("Is loading: ", isPortfolioLoading, "Portfolio: ", portfolio);
   const navigate = useNavigate();
-
   if (isLoggingIn) return null;
+  const activeTheme = portfolio?.theme || "default";
 
   return (
     //TODO: pass in theme from portfolio settings - hardcoded for now
-    <div data-theme={"default"} className="min-h-screen bg-background text-text font-main">
+    <div data-theme={activeTheme} className="min-h-screen bg-background text-text font-main">
     <Routes>
       <Route
         path="/login"
