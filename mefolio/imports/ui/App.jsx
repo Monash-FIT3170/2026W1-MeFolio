@@ -18,7 +18,7 @@ export const App = () => {
   const { portfolio } = useTracker(() => {
     const handle = Meteor.subscribe("portfolios.all");
     return {
-      portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() })
+      portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };
   });
   const navigate = useNavigate();
@@ -26,7 +26,10 @@ export const App = () => {
   const activeTheme = portfolio?.theme || "default";
 
   return (
-    <div data-theme={activeTheme} className="min-h-screen bg-background text-text font-main">
+    <div
+      data-theme={activeTheme}
+      className="min-h-screen bg-background text-text font-main"
+    >
       <Routes>
         <Route
           path="/login"

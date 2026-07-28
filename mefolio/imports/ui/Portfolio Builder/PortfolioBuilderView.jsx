@@ -357,7 +357,10 @@ const DashboardLayout = () => {
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} />
           ) : activeTab === "themes" ? (
-            <ThemeSection portfolioId={selectedPortfolio?._id} currentActiveTheme={selectedPortfolio?.theme} />
+            <ThemeSection
+              portfolioId={selectedPortfolio?._id}
+              currentActiveTheme={selectedPortfolio?.theme}
+            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}

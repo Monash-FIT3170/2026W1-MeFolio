@@ -80,8 +80,8 @@ const MediaUpload = ({ file, onChange }) => {
         data-testid="file-input"
       />
       <p className="text-sm text-muted">
-        <span className="text-alt font-semibold">Click to upload</span>{" "}
-        or drag & drop
+        <span className="text-alt font-semibold">Click to upload</span> or drag
+        & drop
       </p>
       <p className="text-xs text-muted mt-1">
         PNG · JPG · GIF · WEBP · MP4 · WEBM

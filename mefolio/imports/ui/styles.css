@@ -1,33 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
-
-
 
 :root {
   --theme-background: white;
-  --theme-selected: #0160D9;
+  --theme-selected: #0160d9;
   --theme-primary: #000000;
-  --theme-secondary: #FFFFFF;
-  --theme-surface-fill: #60A6FF;
-  --theme-accent1: #1600DB;
-  --theme-accent2: #68C0FF;
+  --theme-secondary: #ffffff;
+  --theme-surface-fill: #60a6ff;
+  --theme-accent1: #1600db;
+  --theme-accent2: #68c0ff;
   --theme-muted: #888888;
 }
 
 @theme inline {
   --color-background: var(--theme-background); /* Main background color */
-  --color-selected: var(--theme-selected); /* Background color for selected buttons */
+  --color-selected: var(
+    --theme-selected
+  ); /* Background color for selected buttons */
   --color-primary: var(--theme-primary); /* Primary text color */
   --color-secondary: var(--theme-secondary); /* Secondary text color */
   --color-alt: var(--theme-alt); /* Alt text color */
   --color-line: var(--theme-line); /* Line color */
-  --color-surface-fill: var(--theme-surface-fill); /* Surface fill color for cards, modals, etc. */
-  --color-button: var(--theme-button); /* Color for solid buttons (bordered for dark) */
+  --color-surface-fill: var(
+    --theme-surface-fill
+  ); /* Surface fill color for cards, modals, etc. */
+  --color-button: var(
+    --theme-button
+  ); /* Color for solid buttons (bordered for dark) */
   --color-accent1: var(--theme-accent1); /* Accent color 1 */
   --color-accent2: var(--theme-accent2); /* Accent color 2 */
   --color-muted: var(--theme-muted); /* Muted color for greyed out stuff */
@@ -48,7 +52,7 @@ html,
 }
 
 [data-theme="default"] {
-  --font-main: "Inter", sans-serif; 
+  --font-main: "Inter", sans-serif;
   --theme-background: #f6f8fa;
   --theme-selected: #e0e7ff;
   --theme-primary: #000000;
@@ -63,33 +67,33 @@ html,
 }
 
 [data-theme="terminal-retro"] {
-  --font-main: "IBM Plex Mono", monospace; 
+  --font-main: "IBM Plex Mono", monospace;
   --theme-background: #000000;
   --theme-selected: #000000;
-  --theme-primary: #00FF00;
+  --theme-primary: #00ff00;
   --theme-secondary: #ff00ff;
   --theme-alt: #ff00ff;
   --theme-surface-fill: #000000;
   --theme-accent1: #00aaff;
   --theme-accent2: #ffb000;
   --theme-muted: #888888;
-  --theme-line: #00FF00;
+  --theme-line: #00ff00;
   --theme-button: #000000;
 }
 
 [data-theme="modern-saas"] {
-  --font-main: "Manrope", sans-serif; 
+  --font-main: "Manrope", sans-serif;
   --theme-background: #111111;
-  --theme-selected: #0160D9;
+  --theme-selected: #0160d9;
   --theme-primary: #ffffff;
   --theme-secondary: #ffffff;
   --theme-alt: #ffffff;
-  --theme-surface-fill: #1F1F1F;
+  --theme-surface-fill: #1f1f1f;
   --theme-accent1: #009c00;
-  --theme-accent2: #68C0FF;
+  --theme-accent2: #68c0ff;
   --theme-muted: #888888;
   --theme-line: #434343;
-  --theme-button: #0160D9;
+  --theme-button: #0160d9;
 }
 
 [data-theme="minimalist"] {

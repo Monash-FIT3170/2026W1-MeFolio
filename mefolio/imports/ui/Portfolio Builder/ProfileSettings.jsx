@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 
 const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
-
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
@@ -20,7 +19,13 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: aboutMe.bio || "",
       location: aboutMe.profile?.location || "",
     });
-  }, [aboutMe.bio, aboutMe.title, aboutMe.profile?.location, profile.email, profile.name]);
+  }, [
+    aboutMe.bio,
+    aboutMe.title,
+    aboutMe.profile?.location,
+    profile.email,
+    profile.name,
+  ]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -50,12 +55,17 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
     };
 
     if (portfolioId) {
-      Meteor.call("portfolios.update", portfolioId, portfolioUpdates, (error) => {
-        if (error) {
-          console.error("Error updating portfolio:", error);
-          alert("Failed to save changes. Please try again.");
-        }
-      });
+      Meteor.call(
+        "portfolios.update",
+        portfolioId,
+        portfolioUpdates,
+        (error) => {
+          if (error) {
+            console.error("Error updating portfolio:", error);
+            alert("Failed to save changes. Please try again.");
+          }
+        },
+      );
     } else {
       // No portfolio yet — create one and include all profile fields.
       Meteor.call(

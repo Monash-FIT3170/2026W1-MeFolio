@@ -111,9 +111,7 @@ export const PortfolioPreview = () => {
       {/* Dashboard chrome — full-width border, padded content */}
       <div className="border-b border-slate-200">
         <div className="px-12 py-3 flex justify-between items-center">
-          <p className="text-2xl font-bold text-primary m-0">
-            Project Preview
-          </p>
+          <p className="text-2xl font-bold text-primary m-0">Project Preview</p>
           <button
             onClick={() => navigate("/")}
             className="px-6 py-2 bg-surface-fill border border-line rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
@@ -145,7 +143,7 @@ export const PortfolioPreview = () => {
       <section
         id="projects"
         className="bg-background border-b border-line px-10 lg:px-20 pt-10 pb-16 w-full"
-        >
+      >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
           <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
 
@@ -191,8 +189,8 @@ export const PortfolioPreview = () => {
             <div className="flex-none w-8" />
           </div>
 
-        <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-      </div>
+          <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        </div>
       </section>
     </div>
   );

@@ -4,7 +4,9 @@ import { ThemeCard } from "./ThemeCard";
 import { Meteor } from "meteor/meteor";
 
 const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
-  const [activeTheme, setActiveTheme] = useState(currentActiveTheme || "default");
+  const [activeTheme, setActiveTheme] = useState(
+    currentActiveTheme || "default",
+  );
 
   const handleApply = (themeId) => {
     if (!portfolioId) {
@@ -12,21 +14,49 @@ const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
       return;
     }
 
-    Meteor.call("portfolios.update", portfolioId, { theme: themeId }, (error) => {
-      if (error) {
-        console.error("Error updating theme:", error);
-      } else {
-        setActiveTheme(themeId);
-      }
-    });
+    Meteor.call(
+      "portfolios.update",
+      portfolioId,
+      { theme: themeId },
+      (error) => {
+        if (error) {
+          console.error("Error updating theme:", error);
+        } else {
+          setActiveTheme(themeId);
+        }
+      },
+    );
   };
 
   // Themes
   const Themes = [
-    { id: "default", title: "Default", description: "Sleek, standard and modern.", image: "/default-preview.png" },
-    { id: "minimalist", title: "Minimalist", description: "Clean, minimalist design with subtle typography and ample whitespace", image: "/minimalist-preview.png" },
-    { id: "terminal-retro", title: "Retro Terminal", description: "Nostalgic terminal aesthetic with monospace fonts and green CRT glow", image: "/terminal-retro-preview.png" },
-    { id: "modern-saas", title: "Modern SaaS", description: "Contemporary rich design with bold colors and smooth interactions", image: "/modern-saas-preview.png" },
+    {
+      id: "default",
+      title: "Default",
+      description: "Sleek, standard and modern.",
+      image: "/default-preview.png",
+    },
+    {
+      id: "minimalist",
+      title: "Minimalist",
+      description:
+        "Clean, minimalist design with subtle typography and ample whitespace",
+      image: "/minimalist-preview.png",
+    },
+    {
+      id: "terminal-retro",
+      title: "Retro Terminal",
+      description:
+        "Nostalgic terminal aesthetic with monospace fonts and green CRT glow",
+      image: "/terminal-retro-preview.png",
+    },
+    {
+      id: "modern-saas",
+      title: "Modern SaaS",
+      description:
+        "Contemporary rich design with bold colors and smooth interactions",
+      image: "/modern-saas-preview.png",
+    },
   ];
   return (
     <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">

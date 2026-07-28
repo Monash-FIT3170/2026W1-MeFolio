@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Card, CardHeader, CardTitle, CardContent } from "../../Portfolio Preview/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../../Portfolio Preview/Card";
 
-export function ThemeCard({ id, title, description, image, isActive, onApply }) {
+export function ThemeCard({
+  id,
+  title,
+  description,
+  image,
+  isActive,
+  onApply,
+}) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleApply = async () => {
@@ -10,7 +22,7 @@ export function ThemeCard({ id, title, description, image, isActive, onApply }) 
     setIsLoading(true);
     await onApply(id);
     setIsLoading(false);
-    };
+  };
 
   return (
     <Card className="overflow-hidden bg-surface-fill border-2 border-line rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group flex flex-col h-full">
@@ -31,22 +43,28 @@ export function ThemeCard({ id, title, description, image, isActive, onApply }) 
       </div>
 
       <CardHeader className="p-5 pb-2 flex-1">
-        <CardTitle className="text-xl font-bold text-primary">{title}</CardTitle>
+        <CardTitle className="text-xl font-bold text-primary">
+          {title}
+        </CardTitle>
         <p className="mt-1 text-sm text-primary">{description}</p>
       </CardHeader>
 
       <CardContent className="project-card-content">
         <div className="flex gap-3">
-          <button 
-            onClick={handleApply} 
-            disabled={isLoading || isActive} 
+          <button
+            onClick={handleApply}
+            disabled={isLoading || isActive}
             className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl font-bold text-sm transition-all ${
-              isActive 
-                ? "bg-button text-secondary border border-alr cursor-default opacity-100" 
+              isActive
+                ? "bg-button text-secondary border border-alr cursor-default opacity-100"
                 : "bg-background border border-primary text-alt hover:bg-alt/50 hover:text-background"
             }`}
           >
-            {isLoading ? "Applying..." : isActive ? "Active Theme" : "Apply Theme"}
+            {isLoading
+              ? "Applying..."
+              : isActive
+                ? "Active Theme"
+                : "Apply Theme"}
           </button>
         </div>
       </CardContent>

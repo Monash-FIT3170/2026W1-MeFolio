@@ -19,9 +19,7 @@ const Sidebar = ({
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-primary">
-        <div className="text-2xl font-extrabold text-primary mb-4">
-          MeFolio
-        </div>
+        <div className="text-2xl font-extrabold text-primary mb-4">MeFolio</div>
         <ModeSwitch onToggle={onPreviewToggle} />
       </div>
 

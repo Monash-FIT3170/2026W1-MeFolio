@@ -115,9 +115,7 @@ export function ProjectCard({
           {title}
         </CardTitle>
         {description && (
-          <p className="mt-1 text-sm text-muted line-clamp-3">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-muted line-clamp-3">{description}</p>
         )}
       </CardHeader>
 
