@@ -14,7 +14,7 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
-import ThemeSection from "./ThemeSection";
+import ThemeSection from "./Themes/ThemeSection";
 import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
@@ -297,8 +297,8 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto b">
-        <header className= "bg-surface-fill border-b border-line px-8 py-6"> 
-          <h1 className="text-2xl font-extrabold text-primary"> 
+        <header className="bg-surface-fill border-b border-line px-8 py-6 flex items-center justify-between">
+          <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
           <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export const PortfolioBuilderView = () => {
     PortfolioCollection.findOne({ userId: Meteor.userId() }),
   );
   const activeTheme = (newTheme) => {
-    if(portfolio){
+    if (portfolio) {
       PortfolioCollection.update(portfolio._id, { $set: { theme: newTheme } });
     }
   };

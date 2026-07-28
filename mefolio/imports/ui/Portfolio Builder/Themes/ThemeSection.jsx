@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { ThemeCard } from "./Themes/ThemeCard";
+import { ThemeCard } from "./ThemeCard";
 import { Meteor } from "meteor/meteor";
 
 const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
@@ -16,23 +16,23 @@ const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
       if (error) {
         console.error("Error updating theme:", error);
       } else {
-        setActiveTheme(themeId); 
+        setActiveTheme(themeId);
       }
     });
   };
 
-// Themes
-const Themes = [
-  { id: "default", title: "Default", description: "Sleek, standard and modern.", image: "/default-preview.png" },
-  { id: "minimalist", title: "Minimalist", description: "Clean, minimalist design with subtle typography and ample whitespace", image: "/minimalist-preview.png" },
-  { id: "terminal-retro", title: "Retro Terminal", description: "Nostalgic terminal aesthetic with monospace fonts and green CRT glow", image: "/terminal-retro-preview.png" },
-  { id: "modern-saas", title: "Modern SaaS", description: "Contemporary rich design with bold colors and smooth interactions", image: "/modern-saas-preview.png" },
-];
+  // Themes
+  const Themes = [
+    { id: "default", title: "Default", description: "Sleek, standard and modern.", image: "/default-preview.png" },
+    { id: "minimalist", title: "Minimalist", description: "Clean, minimalist design with subtle typography and ample whitespace", image: "/minimalist-preview.png" },
+    { id: "terminal-retro", title: "Retro Terminal", description: "Nostalgic terminal aesthetic with monospace fonts and green CRT glow", image: "/terminal-retro-preview.png" },
+    { id: "modern-saas", title: "Modern SaaS", description: "Contemporary rich design with bold colors and smooth interactions", image: "/modern-saas-preview.png" },
+  ];
   return (
     <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-primary mb-6">
-          Theme Selection
-        </h2>
+        Theme Selection
+      </h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Themes.map((theme) => (
           <ThemeCard
@@ -40,7 +40,7 @@ const Themes = [
             title={theme.title}
             description={theme.description}
             image={theme.image}
-            isActive={activeTheme === theme.id} 
+            isActive={activeTheme === theme.id}
             onApply={() => handleApply(theme.id)}
           />
         ))}
