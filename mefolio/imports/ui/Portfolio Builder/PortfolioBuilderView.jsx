@@ -14,6 +14,7 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
+import ThemeSection from "./ThemeSection";
 import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
@@ -355,6 +356,8 @@ const DashboardLayout = () => {
             />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} />
+          ) : activeTab === "themes" ? (
+            <ThemeSection portfolioId={selectedPortfolio?._id} currentActiveTheme={selectedPortfolio?.theme} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -378,6 +381,14 @@ const DashboardLayout = () => {
 };
 
 export const PortfolioBuilderView = () => {
+  const portfolio = useTracker(() =>
+    PortfolioCollection.findOne({ userId: Meteor.userId() }),
+  );
+  const activeTheme = (newTheme) => {
+    if(portfolio){
+      PortfolioCollection.update(portfolio._id, { $set: { theme: newTheme } });
+    }
+  };
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
