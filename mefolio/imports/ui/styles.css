@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 
@@ -26,6 +27,7 @@
   --color-accent1: var(--theme-accent1); /* Accent color 1 */
   --color-accent2: var(--theme-accent2); /* Accent color 2 */
   --color-muted: var(--theme-muted); /* Muted color for greyed out stuff */
+  --font-main: var(--font-main); /* Main font family */
 }
 
 body,
@@ -37,11 +39,12 @@ html,
   height: 100%;
   min-height: 100vh;
   /* font-family: 'IBM Plex Mono', monospace; */
-  /* font-family: 'Manrope', sans-serif; */
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: 'Manrope', sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
 }
 
 [data-theme="default"] {
+  --font-main: "Manrope", sans-serif; 
   --theme-background: #f6f8fa;
   --theme-selected: #e0e7ff;
   --theme-primary: #000000;
@@ -56,6 +59,7 @@ html,
 }
 
 [data-theme="terminal-retro"] {
+  --font-main: "IBM Plex Mono", monospace; 
   --theme-background: #000000;
   --theme-selected: #000000;
   --theme-primary: #00FF00;
@@ -70,6 +74,7 @@ html,
 }
 
 [data-theme="modern-saas"] {
+  --font-main: "Inter", sans-serif; 
   --theme-background: #111111;
   --theme-selected: #0160D9;
   --theme-primary: #ffffff;
@@ -81,6 +86,21 @@ html,
   --theme-muted: #888888;
   --theme-line: #434343;
   --theme-button: #0160D9;
+}
+
+[data-theme="minimalist"] {
+  --font-main: "Roboto", sans-serif;
+  --theme-background: #f8fafc;
+  --theme-selected: #e5e7eb;
+  --theme-primary: #111827;
+  --theme-secondary: #4b5563;
+  --theme-alt: #374151;
+  --theme-surface-fill: #ffffff;
+  --theme-accent1: #6b7280;
+  --theme-accent2: #d1d5db;
+  --theme-muted: #9ca3af;
+  --theme-line: #d1d5db;
+  --theme-button: #9ca3af;
 }
 
 /* Add more data-themes here as needed - see example format*/
