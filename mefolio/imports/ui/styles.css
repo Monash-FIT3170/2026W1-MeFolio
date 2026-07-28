@@ -44,7 +44,7 @@ html,
 }
 
 [data-theme="default"] {
-  --font-main: "Manrope", sans-serif; 
+  --font-main: "Inter", sans-serif; 
   --theme-background: #f6f8fa;
   --theme-selected: #e0e7ff;
   --theme-primary: #000000;
@@ -74,7 +74,7 @@ html,
 }
 
 [data-theme="modern-saas"] {
-  --font-main: "Inter", sans-serif; 
+  --font-main: "Manrope", sans-serif; 
   --theme-background: #111111;
   --theme-selected: #0160D9;
   --theme-primary: #ffffff;

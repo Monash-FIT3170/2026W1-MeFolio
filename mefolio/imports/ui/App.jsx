@@ -15,82 +15,78 @@ import { PortfolioCollection } from "../api/portfolio.js";
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
-  const {portfolio, isPortfolioLoading} = useTracker(() => {
+  const { portfolio } = useTracker(() => {
     const handle = Meteor.subscribe("portfolios.all");
-    // Meteor.subscribe("portfolios.all");
     return {
-      isPortfolioLoading: !handle.ready(),
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() })
     };
-  }); 
-  console.log("Is loading: ", isPortfolioLoading, "Portfolio: ", portfolio);
+  });
   const navigate = useNavigate();
   if (isLoggingIn) return null;
   const activeTheme = portfolio?.theme || "default";
 
   return (
-    //TODO: pass in theme from portfolio settings - hardcoded for now
     <div data-theme={activeTheme} className="min-h-screen bg-background text-text font-main">
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          userId ? (
-            <Navigate to="/" />
-          ) : (
-            <LoginPage
-              onSignIn={() => navigate("/")}
-              onSwitchToSignUp={() => navigate("/signup")}
-              onForgotPassword={() => navigate("/forgot")}
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            userId ? (
+              <Navigate to="/" />
+            ) : (
+              <LoginPage
+                onSignIn={() => navigate("/")}
+                onSwitchToSignUp={() => navigate("/signup")}
+                onForgotPassword={() => navigate("/forgot")}
+              />
+            )
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            userId ? (
+              <Navigate to="/" />
+            ) : (
+              <SignUpPage
+                onSignUp={() => navigate("/")}
+                onSwitchToSignIn={() => navigate("/login")}
+                onShowTerms={() => navigate("/terms")}
+                onShowPrivacy={() => navigate("/privacy")}
+              />
+            )
+          }
+        />
+        <Route
+          path="/forgot"
+          element={
+            <ForgotPasswordPage
+              onBackToLogin={() => navigate("/login")}
+              onPasswordReset={() => navigate("/login")}
             />
-          )
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          userId ? (
-            <Navigate to="/" />
-          ) : (
-            <SignUpPage
-              onSignUp={() => navigate("/")}
-              onSwitchToSignIn={() => navigate("/login")}
-              onShowTerms={() => navigate("/terms")}
-              onShowPrivacy={() => navigate("/privacy")}
-            />
-          )
-        }
-      />
-      <Route
-        path="/forgot"
-        element={
-          <ForgotPasswordPage
-            onBackToLogin={() => navigate("/login")}
-            onPasswordReset={() => navigate("/login")}
-          />
-        }
-      />
-      <Route
-        path="/terms"
-        element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
-      />
-      <Route
-        path="/privacy"
-        element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
-      />
-      <Route
-        path="/*"
-        element={
-          userId ? (
-            <div className="page">
-              <PortfolioBuilderView />
-            </div>
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-    </Routes>
+          }
+        />
+        <Route
+          path="/terms"
+          element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
+        />
+        <Route
+          path="/privacy"
+          element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
+        />
+        <Route
+          path="/*"
+          element={
+            userId ? (
+              <div className="page">
+                <PortfolioBuilderView />
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+      </Routes>
     </div>
   );
 };

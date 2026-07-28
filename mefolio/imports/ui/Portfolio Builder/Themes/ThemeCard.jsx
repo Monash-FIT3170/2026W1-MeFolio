@@ -42,8 +42,8 @@ export function ThemeCard({ id, title, description, image, isActive, onApply }) 
             disabled={isLoading || isActive} 
             className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl font-bold text-sm transition-all ${
               isActive 
-                ? "bg-button text-background cursor-default opacity-100" 
-                : "bg-background border border-alt text-alt hover:bg-alt/50 hover:text-background"
+                ? "bg-button text-secondary border border-alr cursor-default opacity-100" 
+                : "bg-background border border-primary text-alt hover:bg-alt/50 hover:text-background"
             }`}
           >
             {isLoading ? "Applying..." : isActive ? "Active Theme" : "Apply Theme"}
