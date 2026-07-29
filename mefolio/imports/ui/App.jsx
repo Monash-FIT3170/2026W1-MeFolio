@@ -65,31 +65,55 @@ export const App = () => {
               onBackToLogin={() => navigate("/login")}
               onPasswordReset={() => navigate("/login")}
             />
-          }
-        />
-        <Route
-          path="/terms"
-          element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
-        />
-        <Route
-          path="/privacy"
-          element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
-        />
-        {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
-        <Route path="/recruiter/:username" element={<RecruiterLoginPage />} />
-        <Route
-          path="/*"
-          element={
-            userId ? (
-              <div className="page">
-                <PortfolioBuilderView />
-              </div>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-      </Routes>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          userId ? (
+            <Navigate to="/" />
+          ) : (
+            <SignUpPage
+              onSignUp={() => Meteor.logout(() => navigate("/login"))}
+              onSwitchToSignIn={() => navigate("/login")}
+              onShowTerms={() => navigate("/terms")}
+              onShowPrivacy={() => navigate("/privacy")}
+            />
+          )
+        }
+      />
+      <Route
+        path="/forgot"
+        element={
+          <ForgotPasswordPage
+            onBackToLogin={() => navigate("/login")}
+            onPasswordReset={() => navigate("/login")}
+          />
+        }
+      />
+      <Route
+        path="/terms"
+        element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
+      />
+      <Route
+        path="/privacy"
+        element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
+      />
+      {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
+      <Route path="/recruiter/:username" element={<RecruiterLoginPage />} />
+      <Route
+        path="/*"
+        element={
+          userId ? (
+            <div className="page">
+              <PortfolioBuilderView />
+            </div>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+    </Routes>
     </div>
   );
 };
