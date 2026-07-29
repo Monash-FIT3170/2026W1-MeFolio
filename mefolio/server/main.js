@@ -277,6 +277,20 @@ Meteor.publish("portfolios.byUsername", function (username) {
 });
 
 Meteor.methods({
+  // TEMP METHOD
+  // TO DO: MAKE REAL ACCESS METHOD
+  // recruiter login screen (/recruiter/:username) can be exercised locally.
+  // Dev access code is "letmein". REMOVE/REPLACE before merging to dev.
+  async "recruiter.verifyAccess"({ username, accessCode }) {
+    check(username, String);
+    check(accessCode, String);
+    const DEV_ACCESS_CODE = "letmein";
+    if (accessCode !== DEV_ACCESS_CODE) {
+      throw new Meteor.Error("invalid-code", "Incorrect access code.");
+    }
+    return true;
+  },
+
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
       throw new Meteor.Error(
