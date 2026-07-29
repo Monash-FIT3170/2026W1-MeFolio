@@ -1,4 +1,3 @@
-import React from "react";
 
 const GitHubIcon = () => (
   <svg
@@ -19,20 +18,6 @@ const LinkedInIcon = () => (
     fill="currentColor"
   >
     <path d="M4.98 3.5A2.49 2.49 0 0 1 2.5 6 2.49 2.49 0 0 1 0 3.5 2.49 2.49 0 0 1 2.5 1a2.49 2.49 0 0 1 2.48 2.5ZM.5 8h4v15h-4V8Zm6.5 0h3.84v2.05h.05c.53-1.01 1.84-2.08 3.79-2.08 4.06 0 4.82 2.54 4.82 5.84V23h-4v-7.92c0-1.89-.03-4.33-2.63-4.33-2.63 0-3.03 2.06-3.03 4.19V23H7V8Z" />
-  </svg>
-);
-
-const EmailIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-    className="w-6 h-6 block"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <rect x="3" y="5" width="18" height="14" rx="2" />
-    <path d="M3 7l9 6 9-6" />
   </svg>
 );
 

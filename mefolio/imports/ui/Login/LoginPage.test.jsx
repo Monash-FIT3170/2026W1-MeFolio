@@ -4,7 +4,6 @@
  * Ensures that the LoginPage component renders correctly and handles user interactions as expected.
  */
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { expect } from "chai";
 import { Meteor } from "meteor/meteor";

@@ -4,7 +4,6 @@
  * Ensures that the ForgotPasswordPage component renders correctly and handles user interactions as expected.
  */
 
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { expect } from "chai";
 import { describe, it } from "mocha";

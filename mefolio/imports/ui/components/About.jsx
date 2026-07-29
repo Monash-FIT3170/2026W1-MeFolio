@@ -1,11 +1,9 @@
-import React from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 
 import { PortfolioCollection } from "/imports/api/portfolio";
 
 import AboutDetails from "./AboutDetails.jsx";
-import SkillsList from "./SkillsList.jsx";
 import ContactButtons from "./ContactButtons.jsx";
 import SocialLinksRow from "./SocialLinksRow.jsx";
 

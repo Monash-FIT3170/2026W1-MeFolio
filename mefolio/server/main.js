@@ -4,7 +4,8 @@ import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { ResumeFiles } from "/imports/api/files/resumeFiles";
+// Imported for its side effect: registers the ResumeFiles FilesCollection on the server.
+import "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 
 Accounts.config({

@@ -1,3 +1,5 @@
+import { Meteor } from "meteor/meteor";
+
 const LogoutButton = () => {
     const handleLogout = () => {
         Meteor.logout((err) => {
