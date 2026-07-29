@@ -4,6 +4,7 @@ import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { ProjectEngagement } from "/imports/api/projectEngagement";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 
@@ -233,6 +234,31 @@ Meteor.startup(async () => {
       ),
     );
   }
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+
+  const projects = await ProjectCollection.find({}, { fields: { _id: 1 } }).fetchAsync();
+
+  await Promise.all(
+    projects.map(async ({ _id: projectId }) => {
+      const existingEngagementForToday = await ProjectEngagement.findOneAsync({
+        project_id: projectId,
+        date: { $gte: startOfDay, $lt: endOfDay },
+      });
+
+      if (!existingEngagementForToday) {
+        await ProjectEngagement.insertAsync({
+          project_id: projectId,
+          clicks: 0,
+          date: new Date(),
+        });
+      }
+    }),
+  );
 });
 
 Meteor.publish("projects.all", function () {
@@ -273,6 +299,11 @@ Meteor.publish("portfolioProjects.all", function () {
 Meteor.publish("portfolios.byUsername", function (username) {
   check(username, String);
   return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
+});
+
+Meteor.publish("projectEngagements.byProjectId", function (projectId) {
+  check(projectId, String);
+  return ProjectEngagement.find({ project_id: projectId }, { sort: { date: -1 } });
 });
 
 Meteor.methods({
