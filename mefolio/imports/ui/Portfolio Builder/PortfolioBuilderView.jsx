@@ -384,14 +384,40 @@ const DashboardLayout = () => {
 };
 
 export const PortfolioBuilderView = () => {
-  const portfolio = useTracker(() =>
-    PortfolioCollection.findOne({ userId: Meteor.userId() }),
-  );
+  const { portfolio, ready } = useTracker(() => {
+    const portfoliosSub = Meteor.subscribe("portfolios.all");
+    const currentUserSub = Meteor.subscribe("users.current"); 
+
+    const user = Meteor.user();
+    const portfolios = PortfolioCollection.find({}).fetch();
+
+    return {
+      portfolio: getSelectedPortfolio(portfolios, user),
+      ready: portfoliosSub.ready() && currentUserSub.ready(),
+    };
+  });
+
+  // AUTO-CREATE PORTFOLIO FOR USER IF NOT EXISTS
+  // note this is intentionally minimal as extra fields can be added later as the user edits their portfolio. 
+  useEffect(() => {
+    if (ready && !portfolio) {
+      Meteor.call("portfolios.insert", {
+        title: "My Portfolio",
+        projects: [],
+        theme: "default",
+        createdAt: new Date(),
+      });
+    }
+  }, [ready, portfolio]);
+
   const activeTheme = (newTheme) => {
-    if (portfolio) {
-      PortfolioCollection.update(portfolio._id, { $set: { theme: newTheme } });
+    if (portfolio?._id) {
+      Meteor.call("portfolios.update", portfolio._id, { theme: newTheme });
     }
   };
+
+  if (!ready) return null;
+
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
