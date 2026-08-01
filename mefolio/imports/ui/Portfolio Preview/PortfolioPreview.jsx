@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";

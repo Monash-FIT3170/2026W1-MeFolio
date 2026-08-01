@@ -93,10 +93,6 @@ const getPortfolioProjects = (
   );
 };
 
-// Newest project first (falls back to insertion order when createdAt is absent).
-const byNewestFirst = (a, b) =>
-  new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
-
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");

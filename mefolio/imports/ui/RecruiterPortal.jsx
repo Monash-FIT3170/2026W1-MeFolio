@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import { Eye, Trash2, Plus, Download } from "lucide-react";
