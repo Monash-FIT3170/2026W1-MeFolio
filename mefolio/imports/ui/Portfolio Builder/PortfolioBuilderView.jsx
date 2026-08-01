@@ -386,7 +386,7 @@ const DashboardLayout = () => {
 export const PortfolioBuilderView = () => {
   const { portfolio, ready } = useTracker(() => {
     const portfoliosSub = Meteor.subscribe("portfolios.all");
-    const currentUserSub = Meteor.subscribe("users.current"); 
+    const currentUserSub = Meteor.subscribe("users.current");
 
     const user = Meteor.user();
     const portfolios = PortfolioCollection.find({}).fetch();
@@ -398,7 +398,7 @@ export const PortfolioBuilderView = () => {
   });
 
   // AUTO-CREATE PORTFOLIO FOR USER IF NOT EXISTS
-  // note this is intentionally minimal as extra fields can be added later as the user edits their portfolio. 
+  // note this is intentionally minimal as extra fields can be added later as the user edits their portfolio.
   useEffect(() => {
     if (ready && !portfolio) {
       Meteor.call("portfolios.insert", {

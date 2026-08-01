@@ -85,7 +85,6 @@ export const mapProfile = (user) => {
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
 export const mapAboutMe = (portfolio) => {
-
   return {
     ...defaultPortfolioProfileData,
     ...portfolio,
