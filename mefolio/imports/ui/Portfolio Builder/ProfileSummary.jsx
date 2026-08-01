@@ -3,17 +3,17 @@ import PropTypes from "prop-types";
 // Small profile summary shown at the bottom of the sidebar.
 const ProfileSummary = ({ profile }) => {
   return (
-    <div className="border-t border-gray-200 p-4">
-      <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+    <div className="border-t border-line p-4">
+      <div className="flex items-center gap-3 rounded-lg bg-background p-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-button border border-secondary text-sm font-bold text-secondary">
           {profile.initials}
         </div>
 
         <div className="min-w-0">
-          <p className="m-0 truncate text-sm font-semibold text-gray-900">
+          <p className="m-0 truncate text-sm font-semibold text-primary">
             {profile.name}
           </p>
-          <span className="block truncate text-xs text-gray-500">
+          <span className="block truncate text-xs text-primary">
             {profile.email}
           </span>
         </div>

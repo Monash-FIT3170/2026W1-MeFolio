@@ -14,7 +14,7 @@ const ContactButtons = ({ portfolio }) => {
     <div className="flex flex-wrap gap-4">
       <a
         href={email ? `mailto:${email}` : undefined}
-        className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-[0.98]"
+        className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-alt bg-alt/50 hover:bg-alt/20 rounded-lg transition-colors active:scale-[0.98]"
       >
         <svg
           width="16"
@@ -38,7 +38,7 @@ const ContactButtons = ({ portfolio }) => {
           href={resumeLink}
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-lg transition-colors active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-primary bg-surface-fill border border-line hover:bg-muted hover:border-muted rounded-lg transition-colors active:scale-[0.98]"
         >
           <svg
             width="16"
@@ -63,7 +63,7 @@ const ContactButtons = ({ portfolio }) => {
         <a
           href={resumeLink}
           download
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-accent1 bg-accent1/50 hover:bg-accent1/20 rounded-lg transition-colors active:scale-[0.98]"
         >
           <svg
             width="16"

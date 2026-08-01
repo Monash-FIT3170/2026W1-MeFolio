@@ -14,6 +14,7 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
+import ThemeSection from "./Themes/ThemeSection";
 import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
@@ -280,7 +281,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
@@ -291,9 +292,9 @@ const DashboardLayout = () => {
         }}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold text-gray-900">
+      <main className="flex-1 overflow-y-auto b">
+        <header className="bg-surface-fill border-b border-line px-8 py-6 flex items-center justify-between">
+          <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
           <div className="flex items-center gap-3">
@@ -301,7 +302,7 @@ const DashboardLayout = () => {
             {activeTab === "projects" && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+                className="px-5 py-2 rounded-lg bg-button text-secondary text-sm font-semibold hover:bg-alt/50 hover:text-secondary transition"
               >
                 Add Project
               </button>
@@ -351,6 +352,11 @@ const DashboardLayout = () => {
             />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} />
+          ) : activeTab === "themes" ? (
+            <ThemeSection
+              portfolioId={selectedPortfolio?._id}
+              currentActiveTheme={selectedPortfolio?.theme}
+            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
@@ -374,6 +380,40 @@ const DashboardLayout = () => {
 };
 
 export const PortfolioBuilderView = () => {
+  const { portfolio, ready } = useTracker(() => {
+    const portfoliosSub = Meteor.subscribe("portfolios.all");
+    const currentUserSub = Meteor.subscribe("users.current");
+
+    const user = Meteor.user();
+    const portfolios = PortfolioCollection.find({}).fetch();
+
+    return {
+      portfolio: getSelectedPortfolio(portfolios, user),
+      ready: portfoliosSub.ready() && currentUserSub.ready(),
+    };
+  });
+
+  // AUTO-CREATE PORTFOLIO FOR USER IF NOT EXISTS
+  // note this is intentionally minimal as extra fields can be added later as the user edits their portfolio.
+  useEffect(() => {
+    if (ready && !portfolio) {
+      Meteor.call("portfolios.insert", {
+        title: "My Portfolio",
+        projects: [],
+        theme: "default",
+        createdAt: new Date(),
+      });
+    }
+  }, [ready, portfolio]);
+
+  const activeTheme = (newTheme) => {
+    if (portfolio?._id) {
+      Meteor.call("portfolios.update", portfolio._id, { theme: newTheme });
+    }
+  };
+
+  if (!ready) return null;
+
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />

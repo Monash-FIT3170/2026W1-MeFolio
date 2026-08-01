@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 
 const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
-
   const [form, setForm] = useState({
     name: profile.name || "",
     email: profile.email || "",
@@ -20,7 +19,13 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: aboutMe.bio || "",
       location: aboutMe.profile?.location || "",
     });
-  }, [aboutMe.bio, aboutMe.title, aboutMe.profile?.location, profile.email, profile.name]);
+  }, [
+    aboutMe.bio,
+    aboutMe.title,
+    aboutMe.profile?.location,
+    profile.email,
+    profile.name,
+  ]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -50,12 +55,17 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
     };
 
     if (portfolioId) {
-      Meteor.call("portfolios.update", portfolioId, portfolioUpdates, (error) => {
-        if (error) {
-          console.error("Error updating portfolio:", error);
-          alert("Failed to save changes. Please try again.");
-        }
-      });
+      Meteor.call(
+        "portfolios.update",
+        portfolioId,
+        portfolioUpdates,
+        (error) => {
+          if (error) {
+            console.error("Error updating portfolio:", error);
+            alert("Failed to save changes. Please try again.");
+          }
+        },
+      );
     } else {
       // No portfolio yet — create one and include all profile fields.
       Meteor.call(
@@ -81,33 +91,33 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-surface-fill rounded-xl border border-line p-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-6">
           Profile Settings
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-primary mb-2">
               Name
             </label>
             <input
               type="text"
               name="name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+              className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
               placeholder="Name"
               value={form.name}
               onChange={handleChange}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-primary mb-2">
               Email
             </label>
             <input
               type="email"
               name="email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+              className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
@@ -116,13 +126,13 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-primary mb-2">
             Portfolio Title
           </label>
           <input
             type="text"
             name="title"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+            className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none text-primary"
             placeholder="Portfolio Title"
             value={form.title}
             onChange={handleChange}
@@ -130,26 +140,12 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Location
-          </label>
-          <input
-            type="text"
-            name="location"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
-            placeholder="e.g. Sydney, NSW"
-            value={form.location}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-primary mb-2">
             Bio
           </label>
           <textarea
             name="bio"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none resize-none"
+            className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-accent2 focus:border-transparent outline-none resize-none text-primary"
             placeholder="Bio"
             value={form.bio}
             onChange={handleChange}
@@ -157,7 +153,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         </div>
 
         <button
-          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          className="px-6 py-2 bg-button border border-line text-secondary rounded-lg hover:bg-alt/50 hover:text-secondary transition"
           onClick={() => handleSave(form)}
         >
           Save Changes

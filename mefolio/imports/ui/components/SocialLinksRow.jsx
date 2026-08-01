@@ -86,7 +86,7 @@ const SocialLinksRow = ({ email, github, linkedin, otherLinks = [] }) => {
           href={link.href}
           aria-label={link.label}
           title={link.label}
-          className="inline-flex items-center justify-center w-7 h-7 text-gray-500 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center justify-center w-7 h-7 text-muted hover:text-primary transition-colors"
           {...(link.external
             ? { target: "_blank", rel: "noreferrer noopener" }
             : {})}

@@ -37,12 +37,12 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
         ${initialPreview ? `transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}` : ""}
         ${
           preview
-            ? "w-auto bg-white-50 border-indigo-500 text-indigo-500 hover:bg-indigo-50"
-            : "w-full border-none bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+            ? "w-auto bg-alt/50 border-alt text-alt hover:bg-background hover:text-primary"
+            : "w-full border-alt/50 bg-selected text-alt hover:bg-alt/50 hover:text-secondary"
         }
       `}
     >
-      <span className="font-medium">
+      <span className="font-bold">
         {preview ? "Back to Builder" : "View Portfolio"}
       </span>
     </button>

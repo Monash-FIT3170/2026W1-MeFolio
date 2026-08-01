@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const sectionStyle = {
-  backgroundColor: "white",
+  backgroundColor: "background",
   border: "1px solid #e5e7eb",
   borderRadius: "16px",
   padding: "24px",
@@ -16,7 +16,7 @@ const headingStyle = {
 
 const descriptionStyle = {
   margin: "0 0 24px",
-  color: "#6b7280",
+  color: "muted",
   fontSize: "14px",
 };
 
@@ -40,7 +40,7 @@ const fullWidthFieldStyle = {
 const labelStyle = {
   fontSize: "14px",
   fontWeight: "600",
-  color: "#374151",
+  color: "muted",
 };
 
 const inputStyle = {
@@ -48,7 +48,7 @@ const inputStyle = {
   borderRadius: "10px",
   padding: "12px 14px",
   fontSize: "14px",
-  color: "#111827",
+  color: "muted",
   outline: "none",
 };
 

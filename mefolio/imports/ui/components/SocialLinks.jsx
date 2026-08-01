@@ -5,7 +5,7 @@ const SocialLinks = () => {
       <a
         href="#"
         aria-label="GitHub"
-        className="text-gray-500 hover:text-gray-900 transition-colors inline-flex"
+        className="text-muted hover:text-primary transition-colors inline-flex"
       >
         <svg
           width="22"
@@ -23,7 +23,7 @@ const SocialLinks = () => {
       <a
         href="#"
         aria-label="LinkedIn"
-        className="text-gray-500 hover:text-gray-900 transition-colors inline-flex"
+        className="text-muted hover:text-primary transition-colors inline-flex"
       >
         <svg
           width="22"
@@ -43,7 +43,7 @@ const SocialLinks = () => {
       <a
         href="#"
         aria-label="Email"
-        className="text-gray-500 hover:text-gray-900 transition-colors inline-flex"
+        className="text-muted hover:text-primary transition-colors inline-flex"
       >
         <svg
           width="22"
