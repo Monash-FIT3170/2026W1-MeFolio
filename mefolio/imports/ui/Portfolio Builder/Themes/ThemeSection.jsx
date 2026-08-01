@@ -67,6 +67,7 @@ const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
         {Themes.map((theme) => (
           <ThemeCard
             key={theme.id}
+            id={theme.id}
             title={theme.title}
             description={theme.description}
             image={theme.image}
@@ -81,7 +82,7 @@ const ThemeSection = ({ portfolioId, currentActiveTheme }) => {
 
 ThemeSection.propTypes = {
   portfolioId: PropTypes.string.isRequired,
-  currentTheme: PropTypes.string,
+  currentActiveTheme: PropTypes.string,
 };
 
 export default ThemeSection;
