@@ -4,11 +4,6 @@ import TechStackInput from "./TechStackInput";
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
-const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i;
-const isVideoMedia = (media) =>
-  typeof media === "string" &&
-  (media.startsWith("data:video/") || VIDEO_EXTENSIONS.test(media));
-
 // Modal form for editing an existing project's details. Pre-fills from the
 // given project and reports the updated fields back through onSave.
 const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {

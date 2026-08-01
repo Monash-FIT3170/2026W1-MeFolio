@@ -4,7 +4,6 @@
  * Tests for breakpoint detection, touch target sizes, and responsive CSS classes
  */
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { expect } from "chai";
 import { describe, it } from "mocha";

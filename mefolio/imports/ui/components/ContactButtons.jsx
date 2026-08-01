@@ -1,4 +1,3 @@
-import React from "react";
 
 const ContactButtons = ({ portfolio }) => {
   const resumeLink = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)

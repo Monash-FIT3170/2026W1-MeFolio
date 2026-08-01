@@ -1,4 +1,3 @@
-import React from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -27,7 +26,6 @@ export const ProfileCard = () => {
   const profile = portfolio.profile || {};
 
   const name = profile.fullName || profile.name || "No name set";
-  const headline = profile.headline || portfolio.title || "No title set";
   const location = profile.location || "";
 
   const imageUrl = profile.avatarUrl || profile.avatar || null;

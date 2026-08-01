@@ -150,7 +150,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
         createdAt: new Date(),
         portfolioId,
       };
-      Meteor.call("projects.insert", payload, (err, newId) => {
+      Meteor.call("projects.insert", payload, (err) => {
         if (err) {
           console.error(err);
           return;
