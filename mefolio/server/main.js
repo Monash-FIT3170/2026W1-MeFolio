@@ -661,7 +661,7 @@ Meteor.methods({
   );
 },
   async "projectEngagement.getTotalClicks"(project_id){
-    check(project_id,String)
+    check(project_id,Number)
 
     const record =  
       await ProjectEngagement.find({
@@ -674,6 +674,27 @@ Meteor.methods({
   },
   
 
-  async "projectEngagement.getWeeklyClicks"(){},
+  async "projectEngagement.getWeeklyClicks"(project_id) {
+    check(project_id, Number);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+    return await ProjectEngagement.find(
+      {
+        project_id,
+        date: {
+          $gte: sevenDaysAgo,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+      },
+      {
+        sort: { date: 1 },
+      }
+    ).fetchAsync();
+    },
 
 });
