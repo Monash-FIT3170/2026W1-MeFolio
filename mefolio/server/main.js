@@ -1,4 +1,4 @@
-import { Meteor } from "meteor/meteor";
+dimport { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
@@ -501,4 +501,35 @@ Meteor.methods({
 
     return uniqueProjectIds;
   },
+
+  // Project enagagement methods  
+
+  async "projectEnagement.incrementClick"({projectId}){ 
+    const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+
+  await ProjectEngagement.updateAsync(
+    {
+      project_id: projectId,
+      date: {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      },
+    },
+    {
+      $inc: {
+        clicks: 1,
+      },
+    },
+  );
+},
+  async "projectEngagement.getTotalClicks"(project_id){
+  },
+  
+
+  async "projectEngagement.getWeeklyClicks"(){},
+
 });
