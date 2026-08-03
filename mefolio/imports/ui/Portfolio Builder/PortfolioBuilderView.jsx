@@ -22,6 +22,7 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import LogoutButton from "../Login/LogoutButton";
+import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
@@ -320,6 +321,8 @@ const DashboardLayout = () => {
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "analytics" ? (
+            <AnalyticsSection projects={orderedProjects} engagements={[]} />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (
