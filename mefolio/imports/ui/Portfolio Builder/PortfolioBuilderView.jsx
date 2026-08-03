@@ -21,6 +21,7 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import LogoutButton from "../Login/LogoutButton";
+import AnalyticsSection from "./AnalyticsSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -353,6 +354,8 @@ const DashboardLayout = () => {
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "analytics" ? (
+            <AnalyticsSection projects={orderedProjects} engagements={[]} />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} />
           ) : (
