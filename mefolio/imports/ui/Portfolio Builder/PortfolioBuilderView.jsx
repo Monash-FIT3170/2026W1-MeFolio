@@ -4,6 +4,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
+import { ProjectEngagement } from "../../api/projectEngagement";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -54,6 +55,7 @@ const getSelectedPortfolio = (portfolios = [], user) => {
 
   if (ownedPortfolio) return ownedPortfolio;
   if (getUserEmail(user) === "test@example.com") return portfolios[0];
+
   return null;
 };
 
@@ -101,18 +103,38 @@ const useDashboardData = () =>
     const portfolioProjectsHandler = Meteor.subscribe("portfolioProjects.all");
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
+    const projectDocuments = ProjectCollection.find({}).fetch();
+
+    const engagementHandlers = projectDocuments.map((project) =>
+      Meteor.subscribe("projectEngagements.byProjectId", project._id),
+    );
+
+    const engagementsReady = engagementHandlers.every((handler) =>
+      handler.ready(),
+    );
+
     return {
       isLoading:
         !portfoliosHandler.ready() ||
         !projectsHandler.ready() ||
         !portfolioProjectsHandler.ready() ||
-        !currentUserHandler.ready(),
+        !currentUserHandler.ready() ||
+        !engagementsReady,
+
       portfolios: PortfolioCollection.find({}).fetch(),
-      projectDocuments: ProjectCollection.find({}).fetch(),
+
+      projectDocuments,
+
       projectOrderDocuments: PortfolioProjectsCollection.find(
         {},
         { sort: { orderIndex: 1 } },
       ).fetch(),
+
+      engagements: ProjectEngagement.find(
+        {},
+        { sort: { date: 1 } },
+      ).fetch(),
+
       user: Meteor.user(),
     };
   });
@@ -132,10 +154,13 @@ const DashboardLayout = () => {
     portfolios,
     projectDocuments,
     projectOrderDocuments,
+    engagements,
     user,
   } = useDashboardData();
+
   const selectedPortfolio = getSelectedPortfolio(portfolios, user);
   const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
+
   const databaseProjects = getPortfolioProjects(
     selectedPortfolio,
     projectDocuments,
@@ -167,7 +192,46 @@ const DashboardLayout = () => {
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
 
+  const handleProjectsReorder = (nextProjects) => {
+    setOrderedProjects(nextProjects);
+
+    setSaveStatus(
+      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
+        ? "idle"
+        : "unsaved",
+    );
+  };
+
+  const handleSaveProjectOrder = () => {
+    if (!selectedPortfolio?._id) {
+      setSaveStatus("error");
+      return;
+    }
+
+    const projectIds = orderedProjects.map((project) => getProjectId(project));
+
+    setSaveStatus("saving");
+
+    Meteor.call(
+      "portfolioProjects.reorder",
+      {
+        portfolioId: selectedPortfolio._id,
+        projectIds,
+      },
+      (error) => {
+        if (error) {
+          setSaveStatus("error");
+          return;
+        }
+
+        setSourceProjectOrderKey(projectIds.join("|"));
+        setSaveStatus("saved");
+      },
+    );
+  };
+
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
+
   const handleProjectDragOver = (event) => event.preventDefault();
 
   const handleProjectDrop = (dropIndex) => {
@@ -178,6 +242,7 @@ const DashboardLayout = () => {
 
     const updatedProjects = [...orderedProjects];
     const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
+
     updatedProjects.splice(dropIndex, 0, draggedProject);
 
     setOrderedProjects(updatedProjects);
@@ -186,7 +251,7 @@ const DashboardLayout = () => {
     if (selectedPortfolio?._id) {
       Meteor.call("portfolioProjects.reorder", {
         portfolioId: selectedPortfolio._id,
-        projectIds: updatedProjects.map((p) => p._id || p.id),
+        projectIds: updatedProjects.map((project) => project._id || project.id),
       });
     }
   };
@@ -195,7 +260,10 @@ const DashboardLayout = () => {
 
   // New project becomes the first card in the display.
   const handleAddProject = (newProject) => {
-    setOrderedProjects((prev) => [newProject, ...prev]);
+    setOrderedProjects((previousProjects) => [
+      newProject,
+      ...previousProjects,
+    ]);
   };
 
   const handleEditProject = (project) => setEditingProject(project);
@@ -206,14 +274,15 @@ const DashboardLayout = () => {
         console.error("Failed to update project:", error);
         return;
       }
-      // Reflect the change immediately in the locally ordered list.
-      setOrderedProjects((prev) =>
-        prev.map((project) =>
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.map((project) =>
           (project._id || project.id) === projectId
             ? { ...project, ...updates }
             : project,
         ),
       );
+
       setEditingProject(null);
     });
   };
@@ -224,10 +293,13 @@ const DashboardLayout = () => {
         console.error("Failed to delete project:", error);
         return;
       }
-      // Remove the card from the display and close the modal.
-      setOrderedProjects((prev) =>
-        prev.filter((project) => (project._id || project.id) !== projectId),
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.filter(
+          (project) => (project._id || project.id) !== projectId,
+        ),
       );
+
       setEditingProject(null);
     });
   };
@@ -259,21 +331,24 @@ const DashboardLayout = () => {
         }}
       />
 
-      <main className="flex-1 overflow-y-auto b">
-        <header className="bg-surface-fill sticky z-99 top-0 border-b border-line px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold text-primary">
+      <main className="flex-1 overflow-y-auto">
+        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-6">
+          <h1 className="text-2xl font-extrabold text-gray-900">
             {currentTab.label}
           </h1>
+
           <div className="flex items-center gap-3">
             <DraftStatusIndicator
               status={draftStatus}
               onReview={() => setIsComparisonOpen(true)}
             />
             {activeTab === "settings" && <LogoutButton />}
+
             {activeTab === "projects" && (
               <button
+                type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="px-5 py-2 rounded-lg bg-button text-secondary text-sm font-semibold hover:bg-alt/50 hover:text-secondary transition"
+                className="rounded-lg bg-indigo-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-800"
               >
                 Add Project
               </button>
@@ -289,7 +364,9 @@ const DashboardLayout = () => {
               value={aboutMe}
               onChange={(updatedValue) => {
                 const portfolioId = selectedPortfolio?._id;
+
                 if (!portfolioId) return;
+
                 Meteor.call(
                   "portfolios.update",
                   portfolioId,
@@ -322,7 +399,10 @@ const DashboardLayout = () => {
               onDragEnd={handleProjectDragEnd}
             />
           ) : activeTab === "analytics" ? (
-            <AnalyticsSection projects={orderedProjects} engagements={[]} />
+            <AnalyticsSection
+              projects={orderedProjects}
+              engagements={engagements}
+            />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (
@@ -335,12 +415,14 @@ const DashboardLayout = () => {
           )}
         </div>
       </main>
+
       <AddProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
         portfolioId={selectedPortfolio?._id}
       />
+
       <EditProjectModal
         isOpen={Boolean(editingProject)}
         project={editingProject}
