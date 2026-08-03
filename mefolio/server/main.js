@@ -460,6 +460,67 @@ Meteor.methods({
     });
   },
 
+  async "portfolios.publish"(portfolioId) {
+    check(portfolioId, String);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to publish a portfolio.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.publish.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const missingFields = [];
+    if (!portfolio.title || !String(portfolio.title).trim()) {
+      missingFields.push("title");
+    }
+
+    if (!portfolio.bio || !String(portfolio.bio).trim()) {
+      missingFields.push("bio");
+    }
+
+    const profileName =
+      portfolio.profile?.fullName || portfolio.profile?.name || "";
+    if (!profileName.trim()) {
+      missingFields.push("profile.fullName");
+    }
+
+    if (!Array.isArray(portfolio.projects) || portfolio.projects.length === 0) {
+      missingFields.push("projects");
+    }
+
+    if (missingFields.length) {
+      throw new Meteor.Error(
+        "portfolios.publish.validationFailed",
+        `Required portfolio content missing: ${missingFields.join(", ")}`,
+      );
+    }
+
+    const publishedContent = { ...portfolio };
+    delete publishedContent._id;
+    delete publishedContent.isPublished;
+    delete publishedContent.publishedContent;
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: {
+        publishedContent,
+        isPublished: true,
+      },
+    });
+  },
+
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
   },
