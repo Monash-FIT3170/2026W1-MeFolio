@@ -5,6 +5,8 @@ export const defaultPortfolioProfileData = {
   userId: "",
   portfolioNumber: 1,
   title: "",
+  isPublished: false,
+  publishedContent: null,
   bio: {
     fullName: "",
     email: "",
@@ -36,6 +38,8 @@ export const samplePortfolioProfileData = {
   userId: "Superuser",
   portfolioNumber: 1,
   title: "Sample Portfolio",
+  isPublished: false,
+  publishedContent: null,
   bio: "This is a sample portfolio.",
   createdAt: new Date(),
   projects: [],

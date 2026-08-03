@@ -2,7 +2,10 @@ import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
-import { PortfolioCollection } from "/imports/api/portfolio";
+import {
+  PortfolioCollection,
+  createDefaultPortfolioPublishingState,
+} from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 // Imported for its side effect: registers the ResumeFiles FilesCollection on the server.
 import "/imports/api/files/resumeFiles";
@@ -148,6 +151,8 @@ Meteor.startup(async () => {
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.",
 
+      ...createDefaultPortfolioPublishingState(),
+
       // Agreed FEAT-05 structure
       profile: {
         fullName: "John Doe",
@@ -209,6 +214,28 @@ Meteor.startup(async () => {
       },
     });
   }
+
+  // FEAT-11: Backfill publication fields for portfolios created before
+  // draft/live separation was introduced.
+  await PortfolioCollection.updateAsync(
+    { isPublished: { $exists: false } },
+    {
+      $set: {
+        isPublished: false,
+      },
+    },
+    { multi: true },
+  );
+
+  await PortfolioCollection.updateAsync(
+    { publishedContent: { $exists: false } },
+    {
+      $set: {
+        publishedContent: null,
+      },
+    },
+    { multi: true },
+  );
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
@@ -373,6 +400,7 @@ Meteor.methods({
         userId: this.userId,
         title: "My Portfolio",
         projects: [],
+        ...createDefaultPortfolioPublishingState(),
         createdAt: new Date(),
       });
       portfolio = await PortfolioCollection.findOneAsync(newPortfolioId);
@@ -417,8 +445,13 @@ Meteor.methods({
   },
 
   async "portfolios.insert"(portfolioData) {
-    portfolioData.userId = this.userId;
-    return await PortfolioCollection.insertAsync(portfolioData);
+    const newPortfolio = {
+      ...portfolioData,
+      ...createDefaultPortfolioPublishingState(),
+      userId: this.userId,
+    };
+
+    return await PortfolioCollection.insertAsync(newPortfolio);
   },
 
   async "portfolios.update"(portfolioId, updates) {
