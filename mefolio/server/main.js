@@ -639,8 +639,7 @@ Meteor.methods({
 
   // Project enagagement methods  
 
-  async "projectEnagement.incrementClick"({projectId}){ 
-    const startOfDay = new Date();
+  async "projectEnagement.incrementClick"({projectId}){ const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
   const endOfDay = new Date(startOfDay);
@@ -662,6 +661,16 @@ Meteor.methods({
   );
 },
   async "projectEngagement.getTotalClicks"(project_id){
+    check(project_id,String)
+
+    const record =  
+      await ProjectEngagement.find({
+        project_id: project_id,
+      }).fetchAsync();
+
+      const totalClicks = record.reduce(
+        (total,record) =>total + record.clicks,0
+      )
   },
   
 
