@@ -508,15 +508,58 @@ Meteor.methods({
       );
     }
 
-    const publishedContent = { ...portfolio };
-    delete publishedContent._id;
-    delete publishedContent.isPublished;
-    delete publishedContent.publishedContent;
+    const projectIds = Array.isArray(portfolio.projects)
+      ? portfolio.projects
+      : [];
+
+    const projectRecords = await ProjectCollection.find({
+      _id: { $in: projectIds },
+    }).fetchAsync();
+
+    const orderedProjects = projectIds
+      .map((projectId) =>
+        projectRecords.find((project) => project._id === projectId),
+      )
+      .filter(Boolean)
+      .map((project) => ({
+        _id: project._id,
+        title: project.title || "",
+        description: project.description || "",
+        technologies: Array.isArray(project.technologies)
+          ? project.technologies
+          : [],
+        githubLink: project.githubLink || "",
+        liveDemoLink: project.liveDemoLink || "",
+        media: project.media || "",
+        status: project.status || "",
+      }));
+
+    if (orderedProjects.length !== projectIds.length) {
+      throw new Meteor.Error(
+        "portfolios.publish.projectsNotFound",
+        "One or more portfolio projects could not be found. Please review your projects before publishing.",
+      );
+    }
+
+    const publishedContent = {
+      title: portfolio.title,
+      bio: portfolio.bio,
+      profile: portfolio.profile || {},
+      about: portfolio.about || {},
+      contact: portfolio.contact || {},
+      socials: portfolio.socials || {},
+      cta: portfolio.cta || {},
+      projects: orderedProjects,
+      theme: portfolio.theme || "minimal",
+      badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      username: portfolio.username || "",
+    };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
         isPublished: true,
+        publishedAt: new Date(),
       },
     });
   },
