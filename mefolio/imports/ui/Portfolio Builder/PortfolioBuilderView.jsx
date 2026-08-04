@@ -25,9 +25,6 @@ import LogoutButton from "../Login/LogoutButton";
 
 const getProjectId = (project) => project?._id || project?.id;
 
-const getProjectOrderKey = (projects = []) =>
-  projects.map((project) => getProjectId(project)).join("|");
-
 const getProjectDataKey = (projects = []) =>
   projects
     .map((project) =>
@@ -120,7 +117,6 @@ const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
-  const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -158,51 +154,13 @@ const DashboardLayout = () => {
   useEffect(() => {
     const nextProjects = databaseProjects;
     const nextProjectDataKey = getProjectDataKey(nextProjects);
-    const nextProjectOrderKey = getProjectOrderKey(nextProjects);
 
     if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
       setOrderedProjects(nextProjects);
       setDataProjectKey(nextProjectDataKey);
-      setSourceProjectOrderKey(nextProjectOrderKey);
       setSaveStatus("idle");
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
-
-  const handleProjectsReorder = (nextProjects) => {
-    setOrderedProjects(nextProjects);
-    setSaveStatus(
-      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
-        ? "idle"
-        : "unsaved",
-    );
-  };
-
-  const handleSaveProjectOrder = () => {
-    if (!selectedPortfolio?._id) {
-      setSaveStatus("error");
-      return;
-    }
-
-    const projectIds = orderedProjects.map((project) => getProjectId(project));
-
-    setSaveStatus("saving");
-    Meteor.call(
-      "portfolioProjects.reorder",
-      {
-        portfolioId: selectedPortfolio._id,
-        projectIds,
-      },
-      (error) => {
-        if (error) {
-          setSaveStatus("error");
-          return;
-        }
-
-        setSourceProjectOrderKey(projectIds.join("|"));
-        setSaveStatus("saved");
-      },
-    );
-  };
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
   const handleProjectDragOver = (event) => event.preventDefault();
@@ -379,6 +337,34 @@ const DashboardLayout = () => {
   );
 };
 
+const OwnerPreviewRoute = () => {
+  const {
+    isLoading,
+    portfolios,
+    projectDocuments,
+    projectOrderDocuments,
+    user,
+  } = useDashboardData();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    projectDocuments,
+    projectOrderDocuments,
+  );
+
+  if (isLoading) {
+    return <p className="p-8 text-lg">Loading draft preview...</p>;
+  }
+
+  return (
+    <PortfolioPreview
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      isStaging
+    />
+  );
+};
+
 export const PortfolioBuilderView = () => {
   const { portfolio, ready } = useTracker(() => {
     const portfoliosSub = Meteor.subscribe("portfolios.all");
@@ -406,18 +392,12 @@ export const PortfolioBuilderView = () => {
     }
   }, [ready, portfolio]);
 
-  const activeTheme = (newTheme) => {
-    if (portfolio?._id) {
-      Meteor.call("portfolios.update", portfolio._id, { theme: newTheme });
-    }
-  };
-
   if (!ready) return null;
 
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<PortfolioPreview />} />
+      <Route path="/preview" element={<OwnerPreviewRoute />} />
     </Routes>
   );
 };

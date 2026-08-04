@@ -43,7 +43,7 @@ export const ModeSwitch = ({ initialPreview = false, onToggle }) => {
       `}
     >
       <span className="font-bold">
-        {preview ? "Back to Builder" : "View Portfolio"}
+        {preview ? "Back to Builder" : "Preview Portfolio"}
       </span>
     </button>
   );

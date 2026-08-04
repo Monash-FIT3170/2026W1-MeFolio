@@ -1,9 +1,17 @@
+import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 
-export const ProfileCard = () => {
+export const ProfileCard = ({ portfolio: draftPortfolio = null }) => {
   const { portfolio, isLoading } = useTracker(() => {
+    if (draftPortfolio) {
+      return {
+        portfolio: draftPortfolio,
+        isLoading: false,
+      };
+    }
+
     const handle = Meteor.subscribe("portfolios.all");
     const userId = Meteor.userId();
     const portfolio =
@@ -13,7 +21,7 @@ export const ProfileCard = () => {
       portfolio,
       isLoading: !handle.ready(),
     };
-  });
+  }, [draftPortfolio]);
 
   if (isLoading || !portfolio) {
     return (
@@ -66,4 +74,8 @@ export const ProfileCard = () => {
       </div>
     </div>
   );
+};
+
+ProfileCard.propTypes = {
+  portfolio: PropTypes.object,
 };
