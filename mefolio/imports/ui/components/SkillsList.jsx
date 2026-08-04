@@ -1,4 +1,3 @@
-
 const SkillsList = () => {
   return (
     <div className="skills-list">
