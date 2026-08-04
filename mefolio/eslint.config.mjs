@@ -33,7 +33,10 @@ export default defineConfig([
       // and icons aren't falsely flagged by no-unused-vars.
       "react/jsx-uses-vars": "error",
       // Allow intentionally-unused identifiers/args prefixed with "_".
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
   // Node/CommonJS config files use module/require/__dirname (restored from TECH-03).

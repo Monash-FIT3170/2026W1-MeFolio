@@ -281,7 +281,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
@@ -293,7 +293,7 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto b">
-        <header className="bg-surface-fill border-b border-line px-8 py-6 flex items-center justify-between">
+        <header className="bg-surface-fill sticky z-99 top-0 border-b border-line px-8 py-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
