@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
@@ -17,8 +18,19 @@ const getUserEmail = (user) =>
   user?.services?.github?.email ||
   "";
 
-export const PortfolioPreview = () => {
-  const { projects } = useTracker(() => {
+export const PortfolioPreview = ({
+  portfolio: draftPortfolio = null,
+  projects: draftProjects = null,
+  isStaging = false,
+}) => {
+  const { portfolio: loadedPortfolio, projects: loadedProjects } = useTracker(() => {
+    if (draftPortfolio || draftProjects) {
+      return {
+        portfolio: draftPortfolio,
+        projects: draftProjects || [],
+      };
+    }
+
     const portfolioSub = Meteor.subscribe("portfolios.all");
     const projectsSub = Meteor.subscribe("projects.all");
     const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
@@ -30,7 +42,7 @@ export const PortfolioPreview = () => {
       !portfolioProjectsSub.ready() ||
       !currentUserSub.ready()
     ) {
-      return { projects: [] };
+      return { portfolio: null, projects: [] };
     }
 
     const currentUser = Meteor.user();
@@ -40,7 +52,7 @@ export const PortfolioPreview = () => {
         ? PortfolioCollection.findOne()
         : null);
 
-    if (!portfolio?._id) return { projects: [] };
+    if (!portfolio?._id) return { portfolio: null, projects: [] };
 
     const projectOrderDocuments = PortfolioProjectsCollection.find(
       { portfolioId: portfolio._id },
@@ -50,7 +62,7 @@ export const PortfolioPreview = () => {
       ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
       : portfolio.projects || [];
 
-    if (!orderedProjectIds.length) return { projects: [] };
+    if (!orderedProjectIds.length) return { portfolio, projects: [] };
 
     const projectMap = new Map(
       ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -61,8 +73,11 @@ export const PortfolioPreview = () => {
       .map((projectId) => projectMap.get(projectId))
       .filter(Boolean);
 
-    return { projects };
-  });
+    return { portfolio, projects };
+  }, [draftPortfolio, draftProjects]);
+
+  const portfolio = draftPortfolio || loadedPortfolio;
+  const projects = draftProjects || loadedProjects;
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -111,7 +126,16 @@ export const PortfolioPreview = () => {
       {/* Dashboard chrome — full-width border, padded content */}
       <div className="border-b border-slate-200">
         <div className="px-12 py-3 flex justify-between items-center">
-          <p className="text-2xl font-bold text-primary m-0">Project Preview</p>
+          <div>
+            {isStaging && (
+              <p className="text-xs font-bold uppercase text-alt mb-1">
+                Private staging view
+              </p>
+            )}
+            <p className="text-2xl font-bold text-primary m-0">
+              {isStaging ? "Draft Portfolio Preview" : "Project Preview"}
+            </p>
+          </div>
           <button
             onClick={() => navigate("/")}
             className="px-6 py-2 bg-surface-fill border border-line rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
@@ -129,12 +153,12 @@ export const PortfolioPreview = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_40%] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-20 lg:py-32 max-w-7xl mx-auto w-full">
           {/* Left column */}
           <div className="flex flex-col gap-6">
-            <About />
+            <About portfolio={portfolio} />
           </div>
 
           {/* Right column - profile card */}
           <div className="flex justify-center items-center order-first lg:order-last w-full">
-            <ProfileCard />
+            <ProfileCard portfolio={portfolio} />
           </div>
         </div>
       </section>
@@ -194,4 +218,10 @@ export const PortfolioPreview = () => {
       </section>
     </div>
   );
+};
+
+PortfolioPreview.propTypes = {
+  portfolio: PropTypes.object,
+  projects: PropTypes.arrayOf(PropTypes.object),
+  isStaging: PropTypes.bool,
 };
