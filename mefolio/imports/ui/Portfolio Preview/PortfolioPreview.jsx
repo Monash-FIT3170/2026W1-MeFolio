@@ -124,21 +124,21 @@ export const PortfolioPreview = ({
   return (
     <div className="bg-surface-fill min-h-screen">
       {/* Dashboard chrome — full-width border, padded content */}
-      <div className="border-b border-slate-200">
-        <div className="px-12 py-3 flex justify-between items-center">
-          <div>
-            {isStaging && (
-              <p className="text-xs font-bold uppercase text-alt mb-1">
-                Private staging view
-              </p>
-            )}
-            <p className="text-2xl font-bold text-primary m-0">
-              {isStaging ? "Draft Portfolio Preview" : "Project Preview"}
+      <div className="border-b border-line bg-surface-fill/95">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-base font-bold text-primary m-0">
+              {isStaging ? "Draft preview" : "Project preview"}
             </p>
+            {isStaging && (
+              <span className="rounded-full border border-alt/30 bg-alt/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-alt">
+                Private staging view
+              </span>
+            )}
           </div>
           <button
             onClick={() => navigate("/")}
-            className="px-6 py-2 bg-surface-fill border border-line rounded-xl font-bold text-primary hover:bg-primary hover:text-background transition-all shadow-sm"
+            className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
           >
             Back to Dashboard
           </button>
