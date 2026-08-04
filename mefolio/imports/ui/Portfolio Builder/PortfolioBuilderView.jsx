@@ -168,7 +168,7 @@ const DashboardLayout = () => {
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
 
-  const handleProjectsReorder = (nextProjects) => {
+  const _handleProjectsReorder = (nextProjects) => {
     setOrderedProjects(nextProjects);
     setSaveStatus(
       getProjectOrderKey(nextProjects) === sourceProjectOrderKey
@@ -177,7 +177,7 @@ const DashboardLayout = () => {
     );
   };
 
-  const handleSaveProjectOrder = () => {
+  const _handleSaveProjectOrder = () => {
     if (!selectedPortfolio?._id) {
       setSaveStatus("error");
       return;
@@ -406,7 +406,7 @@ export const PortfolioBuilderView = () => {
     }
   }, [ready, portfolio]);
 
-  const activeTheme = (newTheme) => {
+  const _activeTheme = (newTheme) => {
     if (portfolio?._id) {
       Meteor.call("portfolios.update", portfolio._id, { theme: newTheme });
     }

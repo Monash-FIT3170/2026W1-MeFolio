@@ -35,7 +35,7 @@ const LinkIcon = () => (
   </svg>
 );
 
-const buildLinks = ({ email, github, linkedin, otherLinks = [] }) => {
+const buildLinks = ({ _email, github, linkedin, otherLinks = [] }) => {
   const links = [];
 
   if (github) {
