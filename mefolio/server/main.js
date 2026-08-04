@@ -1,4 +1,4 @@
-dimport { Meteor } from "meteor/meteor";
+import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
