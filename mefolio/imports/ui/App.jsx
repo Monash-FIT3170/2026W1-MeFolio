@@ -1,5 +1,3 @@
-import "./styles.css";
-
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";

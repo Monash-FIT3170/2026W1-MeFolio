@@ -80,7 +80,7 @@ const Sidebar = ({
 
       {/* Desktop Sidebar - Only shows on desktop/tablet */}
       {!isMobile && (
-        <aside className="w-64 bg-surface-fill border-r border-line flex flex-col shrink-0">
+        <aside className="w-64 h-screen sticky z-99 top-0 bg-surface-fill border-r border-line flex flex-col shrink-0">
           <SidebarContent />
         </aside>
       )}
