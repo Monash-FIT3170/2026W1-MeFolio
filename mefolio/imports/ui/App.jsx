@@ -9,6 +9,8 @@ import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
 import { PortfolioCollection } from "../api/portfolio.js";
 import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
+import { RecruiterAccessGate } from "./Recruiter/RecruiterAccessGate.jsx";
+import { RecruiterPortal } from "./Recruiter/RecruiterPortal.jsx";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
@@ -78,15 +80,11 @@ export const App = () => {
         {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
         <Route path="/recruiter/:username" element={<RecruiterLoginPage />} />
         <Route
-          path="/*"
+          path="/recruiter/:username/view"
           element={
-            userId ? (
-              <div className="page">
-                <PortfolioBuilderView />
-              </div>
-            ) : (
-              <Navigate to="/login" />
-            )
+            <RecruiterAccessGate>
+              <RecruiterPortal />
+            </RecruiterAccessGate>
           }
         />
       </Routes>
