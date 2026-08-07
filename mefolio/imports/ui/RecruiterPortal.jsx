@@ -1,11 +1,25 @@
 import { useRef, useState, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
-import { 
-  Eye, Trash2, Plus, Download, 
-  Building, DollarSign, FileText, Globe, 
-  KeyRound, RefreshCw, Copy, Check, EyeOff,
-  User, Phone, MapPin, Calendar, MessageSquare
+import {
+  Eye,
+  Trash2,
+  Plus,
+  Download,
+  Building,
+  DollarSign,
+  FileText,
+  Globe,
+  KeyRound,
+  RefreshCw,
+  Copy,
+  Check,
+  EyeOff,
+  User,
+  Phone,
+  MapPin,
+  Calendar,
+  MessageSquare,
 } from "lucide-react";
 
 const RecruiterPortal = ({ portfolio, userId }) => {
@@ -13,24 +27,24 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
   // Resume state
   const [resumes, setResumes] = useState([]);
-  
+
   // Recruiter settings state
   const [recruiterInfo, setRecruiterInfo] = useState({
-    companyName: portfolio?.recruiterInfo?.companyName || '',
-    salaryExpectation: portfolio?.recruiterInfo?.salaryExpectation || '',
-    phoneNumber: portfolio?.recruiterInfo?.phoneNumber || '',
-    currentLocation: portfolio?.recruiterInfo?.currentLocation || '',
-    availability: portfolio?.recruiterInfo?.availability || '',
-    personalNote: portfolio?.recruiterInfo?.personalNote || '',
+    companyName: portfolio?.recruiterInfo?.companyName || "",
+    salaryExpectation: portfolio?.recruiterInfo?.salaryExpectation || "",
+    phoneNumber: portfolio?.recruiterInfo?.phoneNumber || "",
+    currentLocation: portfolio?.recruiterInfo?.currentLocation || "",
+    availability: portfolio?.recruiterInfo?.availability || "",
+    personalNote: portfolio?.recruiterInfo?.personalNote || "",
     allowAccess: portfolio?.recruiterInfo?.allowAccess || false,
-    accessCode: portfolio?.recruiterInfo?.accessCode || '',
+    accessCode: portfolio?.recruiterInfo?.accessCode || "",
   });
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   // Load resumes
   useEffect(() => {
@@ -134,16 +148,16 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
   // Recruiter settings handlers
   const handleChange = (field, value) => {
-    setRecruiterInfo(prev => ({ ...prev, [field]: value }));
+    setRecruiterInfo((prev) => ({ ...prev, [field]: value }));
     setIsEditing(true);
   };
 
   const handleSave = () => {
     setIsSaving(true);
-    setMessage({ type: '', text: '' });
+    setMessage({ type: "", text: "" });
 
     if (!portfolio?._id) {
-      setMessage({ type: 'error', text: 'No portfolio found.' });
+      setMessage({ type: "error", text: "No portfolio found." });
       setIsSaving(false);
       return;
     }
@@ -157,14 +171,20 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       (err) => {
         setIsSaving(false);
         if (err) {
-          setMessage({ type: 'error', text: `Failed to save: ${err.reason || 'Unknown error'}` });
+          setMessage({
+            type: "error",
+            text: `Failed to save: ${err.reason || "Unknown error"}`,
+          });
           console.error(err);
         } else {
-          setMessage({ type: 'success', text: 'Recruiter settings saved successfully!' });
+          setMessage({
+            type: "success",
+            text: "Recruiter settings saved successfully!",
+          });
           setIsEditing(false);
-          setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+          setTimeout(() => setMessage({ type: "", text: "" }), 3000);
         }
-      }
+      },
     );
   };
 
@@ -176,9 +196,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     }
   };
 
-  const recruiterLink = recruiterInfo.accessCode 
+  const recruiterLink = recruiterInfo.accessCode
     ? `${window.location.origin}/recruiter/${userId}`
-    : '';
+    : "";
 
   return (
     <div className="space-y-8">
@@ -201,14 +221,19 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                   onClick={() => {
                     setIsEditing(false);
                     setRecruiterInfo({
-                      companyName: portfolio?.recruiterInfo?.companyName || '',
-                      salaryExpectation: portfolio?.recruiterInfo?.salaryExpectation || '',
-                      phoneNumber: portfolio?.recruiterInfo?.phoneNumber || '',
-                      currentLocation: portfolio?.recruiterInfo?.currentLocation || '',
-                      availability: portfolio?.recruiterInfo?.availability || '',
-                      personalNote: portfolio?.recruiterInfo?.personalNote || '',
-                      allowAccess: portfolio?.recruiterInfo?.allowAccess || false,
-                      accessCode: portfolio?.recruiterInfo?.accessCode || '',
+                      companyName: portfolio?.recruiterInfo?.companyName || "",
+                      salaryExpectation:
+                        portfolio?.recruiterInfo?.salaryExpectation || "",
+                      phoneNumber: portfolio?.recruiterInfo?.phoneNumber || "",
+                      currentLocation:
+                        portfolio?.recruiterInfo?.currentLocation || "",
+                      availability:
+                        portfolio?.recruiterInfo?.availability || "",
+                      personalNote:
+                        portfolio?.recruiterInfo?.personalNote || "",
+                      allowAccess:
+                        portfolio?.recruiterInfo?.allowAccess || false,
+                      accessCode: portfolio?.recruiterInfo?.accessCode || "",
                     });
                   }}
                   className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
@@ -220,7 +245,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                   disabled={isSaving}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors min-h-[44px] disabled:opacity-50"
                 >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </>
             )}
@@ -236,10 +261,15 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </div>
 
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg text-sm font-bold ${
-            message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
-            message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : ''
-          }`}>
+          <div
+            className={`mb-6 p-4 rounded-lg text-sm font-bold ${
+              message.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : message.type === "error"
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : ""
+            }`}
+          >
             {message.text}
           </div>
         )}
@@ -254,7 +284,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="text"
               value={recruiterInfo.companyName}
-              onChange={(e) => handleChange('companyName', e.target.value)}
+              onChange={(e) => handleChange("companyName", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., Google, Atlassian"
@@ -270,7 +300,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="text"
               value={recruiterInfo.salaryExpectation}
-              onChange={(e) => handleChange('salaryExpectation', e.target.value)}
+              onChange={(e) =>
+                handleChange("salaryExpectation", e.target.value)
+              }
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., $120,000 - $150,000"
@@ -286,7 +318,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="tel"
               value={recruiterInfo.phoneNumber}
-              onChange={(e) => handleChange('phoneNumber', e.target.value)}
+              onChange={(e) => handleChange("phoneNumber", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., +61 412 345 678"
@@ -302,7 +334,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="text"
               value={recruiterInfo.currentLocation}
-              onChange={(e) => handleChange('currentLocation', e.target.value)}
+              onChange={(e) => handleChange("currentLocation", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., Sydney, Australia"
@@ -318,7 +350,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="text"
               value={recruiterInfo.availability}
-              onChange={(e) => handleChange('availability', e.target.value)}
+              onChange={(e) => handleChange("availability", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., Immediate, 2 weeks notice"
@@ -334,7 +366,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             <input
               type="url"
               value={recruiterInfo.resumeLink}
-              onChange={(e) => handleChange('resumeLink', e.target.value)}
+              onChange={(e) => handleChange("resumeLink", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="https://example.com/resume.pdf"
@@ -350,7 +382,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           </label>
           <textarea
             value={recruiterInfo.personalNote}
-            onChange={(e) => handleChange('personalNote', e.target.value)}
+            onChange={(e) => handleChange("personalNote", e.target.value)}
             disabled={!isEditing}
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 resize-none min-h-[44px]"
@@ -363,7 +395,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
               <KeyRound className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-gray-900">Recruiter Access Code</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                Recruiter Access Code
+              </h3>
             </div>
             {isEditing && (
               <button
@@ -380,8 +414,10 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="flex-1 w-full relative">
               <input
-                type={showAccessCode ? 'text' : 'password'}
-                value={recruiterInfo.accessCode || 'No access code generated yet'}
+                type={showAccessCode ? "text" : "password"}
+                value={
+                  recruiterInfo.accessCode || "No access code generated yet"
+                }
                 readOnly
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-mono min-h-[44px]"
               />
@@ -389,7 +425,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                 onClick={() => setShowAccessCode(!showAccessCode)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors"
               >
-                {showAccessCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showAccessCode ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
             <button
@@ -397,7 +437,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               disabled={!recruiterInfo.accessCode}
               className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? (
+                <Check className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </button>
           </div>
 
@@ -411,7 +455,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                 {recruiterLink}
               </code>
               <p className="text-xs text-blue-600 mt-2">
-                Recruiters will need the access code to view your private portfolio information.
+                Recruiters will need the access code to view your private
+                portfolio information.
               </p>
             </div>
           )}
@@ -421,7 +466,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               <input
                 type="checkbox"
                 checked={recruiterInfo.allowAccess}
-                onChange={(e) => handleChange('allowAccess', e.target.checked)}
+                onChange={(e) => handleChange("allowAccess", e.target.checked)}
                 disabled={!isEditing}
                 className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
@@ -441,9 +486,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </h2>
 
         <p className="text-gray-500 mb-8">
-          Upload and manage your resumes. Recruiters will have access to download
-          these files. The top file in the list is chosen for the "View Resume"
-          button in the recruiter view.
+          Upload and manage your resumes. Recruiters will have access to
+          download these files. The top file in the list is chosen for the "View
+          Resume" button in the recruiter view.
         </p>
 
         <div className="mt-6 space-y-3">
