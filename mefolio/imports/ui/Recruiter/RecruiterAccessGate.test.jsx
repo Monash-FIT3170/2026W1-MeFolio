@@ -8,7 +8,6 @@
  * the mocking style used in LoginPage.test.jsx.
  */
 
-import React from "react";
 import { Meteor } from "meteor/meteor";
 import { expect } from "chai";
 import sinon from "sinon";
