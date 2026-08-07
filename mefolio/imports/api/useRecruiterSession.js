@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
-const TOKEN_KEY = 'recruiterAccessToken';
-const EXPIRES_KEY = 'recruiterAccessExpiresAt';
+const TOKEN_KEY = "recruiterAccessToken";
+const EXPIRES_KEY = "recruiterAccessExpiresAt";
 
 function readSession() {
   const token = localStorage.getItem(TOKEN_KEY);
