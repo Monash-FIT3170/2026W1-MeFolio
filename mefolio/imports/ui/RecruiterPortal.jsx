@@ -1,11 +1,6 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { Meteor } from "meteor/meteor";
-import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import {
-  Eye,
-  Trash2,
-  Plus,
-  Download,
   Building,
   DollarSign,
   FileText,
@@ -15,19 +10,15 @@ import {
   Copy,
   Check,
   EyeOff,
-  User,
+  Eye,
   Phone,
   MapPin,
   Calendar,
   MessageSquare,
+  Shield,
 } from "lucide-react";
 
 const RecruiterPortal = ({ portfolio, userId }) => {
-  const fileInputRef = useRef(null);
-
-  // Resume state
-  const [resumes, setResumes] = useState([]);
-
   // Recruiter settings state
   const [recruiterInfo, setRecruiterInfo] = useState({
     companyName: portfolio?.recruiterInfo?.companyName || "",
@@ -46,105 +37,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Load resumes
-  useEffect(() => {
-    const resumeLinks = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
-      ? portfolio.recruiterInfo.resumeLinks
-      : portfolio?.recruiterInfo?.resumeLink
-        ? [
-            {
-              name:
-                portfolio.recruiterInfo.resumeLink.split("/").pop() ||
-                "Resume.pdf",
-              url: portfolio.recruiterInfo.resumeLink,
-            },
-          ]
-        : [];
-
-    setResumes(resumeLinks);
-  }, [
-    portfolio?.recruiterInfo?.resumeLink,
-    portfolio?.recruiterInfo?.resumeLinks,
-  ]);
-
-  // Resume handlers
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const syncResumeLinks = (updatedLinks) => {
-    setResumes(updatedLinks);
-
-    if (!portfolio?._id) {
-      return;
-    }
-
-    Meteor.call(
-      "portfolios.update",
-      portfolio._id,
-      {
-        "recruiterInfo.resumeLinks": updatedLinks,
-      },
-      (err) => {
-        if (err) {
-          console.error(err);
-          alert("Could not save uploaded resume list.");
-        }
-      },
-    );
-  };
-
-  const handleDelete = (url) => {
-    const updated = resumes.filter((r) => r.url !== url);
-    syncResumeLinks(updated);
-  };
-
-  const handleFileUpload = (file) => {
-    const upload = ResumeFiles.insert(
-      {
-        file,
-        chunkSize: "dynamic",
-      },
-      false,
-    );
-
-    upload.on("end", (error, fileObj) => {
-      if (error) {
-        console.error(error);
-        alert("Upload failed");
-        return;
-      }
-
-      const fileUrl = `${fileObj._downloadRoute}/${fileObj._collectionName}/${fileObj._id}.${fileObj.extension}`;
-
-      const newResume = {
-        name: file.name,
-        url: fileUrl,
-      };
-
-      setResumes((prevResumes) => {
-        const updatedLinks = [...prevResumes, newResume];
-        syncResumeLinks(updatedLinks);
-        return updatedLinks;
-      });
-
-      alert("Upload successful");
-    });
-
-    upload.start();
-  };
-
-  const handleFileChange = (event) => {
-    const files = Array.from(event.target.files || []);
-
-    if (!files.length) return;
-
-    files.forEach((file) => {
-      handleFileUpload(file);
-    });
-
-    event.target.value = null;
-  };
+  const username = portfolio?.username || userId;
 
   // Recruiter settings handlers
   const handleChange = (field, value) => {
@@ -196,8 +89,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     }
   };
 
+  // Placeholder for recruiter link generation
   const recruiterLink = recruiterInfo.accessCode
-    ? `${window.location.origin}/recruiter/${userId}`
+    ? `${window.location.origin}/recruiter/${username}`
     : "";
 
   return (
@@ -389,154 +283,95 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             placeholder="Tell recruiters about what you're looking for in your next role..."
           />
         </div>
-
-        {/* Access Code Section */}
-        <div className="mt-6 border-t border-gray-200 pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-gray-900">
-                Recruiter Access Code
-              </h3>
-            </div>
-            {isEditing && (
-              <button
-                disabled
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-500 border border-gray-300 rounded-lg opacity-60 cursor-not-allowed min-h-[44px]"
-                title="Access code generation coming soon"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Generate New Code
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="flex-1 w-full relative">
-              <input
-                type={showAccessCode ? "text" : "password"}
-                value={
-                  recruiterInfo.accessCode || "No access code generated yet"
-                }
-                readOnly
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-mono min-h-[44px]"
-              />
-              <button
-                onClick={() => setShowAccessCode(!showAccessCode)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors"
-              >
-                {showAccessCode ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-            <button
-              onClick={copyAccessCode}
-              disabled={!recruiterInfo.accessCode}
-              className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {copied ? (
-                <Check className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-
-          {recruiterInfo.accessCode && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 font-medium flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                Share this link with recruiters:
-              </p>
-              <code className="block mt-2 p-2 bg-white rounded border border-blue-200 text-sm text-blue-700 break-all">
-                {recruiterLink}
-              </code>
-              <p className="text-xs text-blue-600 mt-2">
-                Recruiters will need the access code to view your private
-                portfolio information.
-              </p>
-            </div>
-          )}
-
-          <div className="mt-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={recruiterInfo.allowAccess}
-                onChange={(e) => handleChange("allowAccess", e.target.checked)}
-                disabled={!isEditing}
-                className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Allow recruiters to access my private portfolio information
-              </span>
-            </label>
-          </div>
-        </div>
       </section>
 
-      {/*  CV/Resume Management  */}
+      {/* Access Code Section */}
       <section className="bg-white border border-gray-200 rounded-2xl p-7">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-2">
-          <Download size={22} />
-          CV/Resume Management
+          <Shield size={22} />
+          Recruiter Access Code
         </h2>
 
         <p className="text-gray-500 mb-8">
-          Upload and manage your resumes. Recruiters will have access to
-          download these files. The top file in the list is chosen for the "View
-          Resume" button in the recruiter view.
+          Generate and manage access codes for recruiters to view your private
+          portfolio information!
         </p>
 
-        <div className="mt-6 space-y-3">
-          {resumes.map((resume, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center px-5 py-3.5 border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] shadow-sm"
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          {isEditing && (
+            <button
+              disabled
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-500 border border-gray-300 rounded-lg opacity-60 cursor-not-allowed min-h-[44px]"
+              title="Access code generation coming soon"
             >
-              <span className="text-sm font-medium">{resume.name}</span>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={resume.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2 rounded-md hover:bg-slate-100 transition"
-                >
-                  <Eye size={18} />
-                </a>
-
-                <button
-                  onClick={() => handleDelete(resume.url)}
-                  className="p-2 rounded-md hover:bg-red-100 text-red-600 transition"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
+              <RefreshCw className="w-4 h-4" />
+              Generate New Code
+            </button>
+          )}
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[#F1F5F9]">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex-1 w-full relative">
+            <input
+              type={showAccessCode ? "text" : "password"}
+              value={recruiterInfo.accessCode || "No access code generated yet"}
+              readOnly
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-mono min-h-[44px]"
+            />
+            <button
+              onClick={() => setShowAccessCode(!showAccessCode)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors"
+            >
+              {showAccessCode ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
           <button
-            onClick={handleClick}
-            className="inline-flex items-center gap-2 px-5.5 py-3 bg-transparent hover:bg-slate-50 text-sm font-semibold rounded-xl border border-slate-300 hover:border-[#5b3df5] transition-colors duration-150 cursor-pointer"
+            onClick={copyAccessCode}
+            disabled={!recruiterInfo.accessCode}
+            className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus size={16} />
-            Upload New Resume
+            {copied ? (
+              <Check className="w-4 h-4 text-green-600" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
         </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          style={{ display: "none" }}
-          accept="application/pdf"
-          onChange={handleFileChange}
-        />
+        {recruiterInfo.accessCode && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 font-medium flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              Share this link with recruiters:
+            </p>
+            <code className="block mt-2 p-2 bg-white rounded border border-blue-200 text-sm text-blue-700 break-all">
+              {recruiterLink}
+            </code>
+            <p className="text-xs text-blue-600 mt-2">
+              Recruiters will need the access code to view your private
+              portfolio information.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={recruiterInfo.allowAccess}
+              onChange={(e) => handleChange("allowAccess", e.target.checked)}
+              disabled={!isEditing}
+              className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Allow recruiters to access my private portfolio information
+            </span>
+          </label>
+        </div>
       </section>
     </div>
   );
