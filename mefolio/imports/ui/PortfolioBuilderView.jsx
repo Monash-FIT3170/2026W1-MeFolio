@@ -249,7 +249,7 @@ const DashboardLayout = () => {
               userId={user[0]?._id}
             />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={portfolio} />
+            <RecruiterPortal portfolio={portfolio} userId={user[0]?._id} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
