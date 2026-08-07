@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigate, useParams } from 'react-router-dom';
-import { useRecruiterSession } from '../../api/useRecruiterSession';
+import React from "react";
+import { Navigate, useParams } from "react-router-dom";
+import { useRecruiterSession } from "../../api/useRecruiterSession";
 
 /**
  * Route guard for /recruiter/:username/view.

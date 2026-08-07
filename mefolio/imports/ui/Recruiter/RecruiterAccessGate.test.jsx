@@ -54,7 +54,7 @@ if (Meteor.isClient) {
               }
             />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     }
 
