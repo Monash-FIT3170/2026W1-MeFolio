@@ -10,6 +10,7 @@ import "/imports/api/session.test.js";
 import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
+import "/imports/ui/Recruiter/RecruiterAccessGate.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
