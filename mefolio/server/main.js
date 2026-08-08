@@ -181,7 +181,6 @@ Meteor.startup(async () => {
       },
 
       cta: {
-        resumeUrl: "https://example.com/resume.pdf",
         contactEnabled: true,
       },
 
@@ -204,7 +203,6 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-        resumeLink: "https://example.com/resume.pdf",
         allowAccess: true,
       },
     });
