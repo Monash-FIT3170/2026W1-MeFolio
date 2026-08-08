@@ -24,7 +24,7 @@ const DraftStatusIndicator = ({ status, onReview }) => {
           onClick={onReview}
           className="px-4 py-2 rounded-lg border border-alt/50 text-alt text-sm font-semibold hover:bg-alt/10 transition"
         >
-          Review & Publish
+          Review Changes
         </button>
       )}
     </div>
