@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { KeyRound, Lock, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
+import { useRecruiterSession } from "../../api/useRecruiterSession";
 
 /**
  * FEAT-14: Recruiter Access Portal
@@ -19,6 +20,7 @@ import { KeyRound, Lock, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
 export function RecruiterLoginPage() {
   const { username } = useParams();
   const navigate = useNavigate();
+  const { login } = useRecruiterSession();
 
   const [accessCode, setAccessCode] = useState("");
   const [showCode, setShowCode] = useState(false);
@@ -35,16 +37,21 @@ export function RecruiterLoginPage() {
     }
 
     setIsSubmitting(true);
-    Meteor.call("recruiter.verifyAccess", { username, accessCode }, (err) => {
-      setIsSubmitting(false);
-      if (err) {
-        // Keep the portal locked; show a clear, non-revealing message.
-        setError(err.reason || "Incorrect access code. Please try again.");
-        return;
-      }
-      // TODO(FEAT-16): route to the recruiter-only view once it exists.
-      navigate(`/recruiter/${username}/view`);
-    });
+    Meteor.call(
+      "recruiter.verifyAccess",
+      { username, accessCode },
+      (err, result) => {
+        setIsSubmitting(false);
+        if (err) {
+          // Keep the portal locked; show a clear, non-revealing message.
+          setError(err.reason || "Incorrect access code. Please try again.");
+          return;
+        }
+        // Store the server-issued token so RecruiterAccessGate lets us in.
+        login(result.token, result.expiresAt);
+        navigate(`/recruiter/${username}/view`);
+      },
+    );
   };
 
   return (

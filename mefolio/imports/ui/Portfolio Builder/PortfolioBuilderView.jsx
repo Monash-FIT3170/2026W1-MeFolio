@@ -20,7 +20,7 @@ import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
-import RecruiterPortal from "../RecruiterPortal";
+import RecruiterPortal from "../Recruiter/RecruiterPortal";
 import LogoutButton from "../Login/LogoutButton";
 
 const getProjectId = (project) => project?._id || project?.id;

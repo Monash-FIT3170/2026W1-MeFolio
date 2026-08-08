@@ -16,7 +16,7 @@ export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
   const { portfolio } = useTracker(() => {
-    const handle = Meteor.subscribe("portfolios.all");
+    Meteor.subscribe("portfolios.all");
     return {
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };
@@ -85,6 +85,18 @@ export const App = () => {
             <RecruiterAccessGate>
               <RecruiterPortal />
             </RecruiterAccessGate>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            userId ? (
+              <div className="page">
+                <PortfolioBuilderView />
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
       </Routes>

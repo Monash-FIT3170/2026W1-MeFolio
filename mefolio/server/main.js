@@ -1,5 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
+import { Random } from "meteor/random";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
@@ -288,7 +289,13 @@ Meteor.methods({
     if (accessCode !== DEV_ACCESS_CODE) {
       throw new Meteor.Error("invalid-code", "Incorrect access code.");
     }
-    return true;
+    // Issue a short-lived access token the client stores to pass the gate.
+    // NOTE: not yet persisted/validated server-side — see FEAT-14 follow-up.
+    const TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
+    return {
+      token: Random.secret(),
+      expiresAt: Date.now() + TOKEN_TTL_MS,
+    };
   },
 
   async "users.update"(userId, updates) {

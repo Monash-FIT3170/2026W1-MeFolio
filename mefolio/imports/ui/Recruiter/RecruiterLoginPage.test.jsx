@@ -95,7 +95,8 @@ if (Meteor.isClient) {
     });
 
     it("navigates to the recruiter view on success", () => {
-      Meteor.call = (name, args, cb) => cb(undefined, true);
+      Meteor.call = (name, args, cb) =>
+        cb(undefined, { token: "abc123", expiresAt: Date.now() + 60000 });
       renderGate();
       fireEvent.change(screen.getByLabelText("Access code"), {
         target: { value: "letmein" },

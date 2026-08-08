@@ -8,7 +8,7 @@ import {
   User, Phone, MapPin, Calendar, MessageSquare
 } from "lucide-react";
 
-const RecruiterPortal = ({ portfolio, userId }) => {
+export const RecruiterPortal = ({ portfolio, userId }) => {
   const fileInputRef = useRef(null);
 
   // Resume state
