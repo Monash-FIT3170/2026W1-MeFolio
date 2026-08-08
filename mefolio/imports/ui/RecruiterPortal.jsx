@@ -4,9 +4,7 @@ import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import {
   Building,
   DollarSign,
-  FileText,
   Globe,
-  KeyRound,
   RefreshCw,
   Copy,
   Check,
@@ -353,22 +351,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               disabled={!isEditing}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
               placeholder="e.g., Immediate, 2 weeks notice"
-            />
-          </div>
-
-          {/* Resume Link (URL) */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Resume Link (URL)
-            </label>
-            <input
-              type="url"
-              value={recruiterInfo.resumeLink}
-              onChange={(e) => handleChange("resumeLink", e.target.value)}
-              disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
-              placeholder="https://example.com/resume.pdf"
             />
           </div>
         </div>
