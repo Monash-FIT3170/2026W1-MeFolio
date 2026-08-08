@@ -10,9 +10,9 @@ import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 
 // recruiter access token
-import './recruiter-tokens/collection.js';
-import './recruiter-tokens/methods.js';
-import './recruiter-tokens/verifytokenss.js';
+import "./recruiter-tokens/collection.js";
+import "./recruiter-tokens/methods.js";
+import "./recruiter-tokens/verifytokenss.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -281,7 +281,6 @@ Meteor.publish("portfolios.byUsername", function (username) {
 });
 
 Meteor.methods({
-
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
       throw new Meteor.Error(

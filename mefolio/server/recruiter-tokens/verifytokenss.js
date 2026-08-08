@@ -1,10 +1,10 @@
 // imports/api/portfolios/server/publications.js
-import { Meteor } from 'meteor/meteor';
-import { check } from 'meteor/check';
-import { RecruiterTokens } from './collection';
-import { Portfolios } from './collection';
+import { Meteor } from "meteor/meteor";
+import { check } from "meteor/check";
+import { RecruiterTokens } from "./collection";
+import { Portfolios } from "./collection";
 
-Meteor.publish('portfolio.recruiterView', function(portfolioId, token) {
+Meteor.publish("portfolio.recruiterView", function (portfolioId, token) {
   check(portfolioId, String);
   check(token, String);
 
@@ -12,12 +12,12 @@ Meteor.publish('portfolio.recruiterView', function(portfolioId, token) {
   const validToken = RecruiterTokens.findOne({
     portfolioId: portfolioId,
     token: token,
-    expiresAt: { $gt: new Date() } // Double check it hasn't expired
+    expiresAt: { $gt: new Date() }, // Double check it hasn't expired
   });
 
   // Return nothing if token is invalid
   if (!validToken) {
-    return this.ready(); 
+    return this.ready();
   }
 
   return [

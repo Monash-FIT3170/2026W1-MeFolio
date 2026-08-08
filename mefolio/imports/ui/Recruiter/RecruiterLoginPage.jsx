@@ -35,23 +35,27 @@ export function RecruiterLoginPage() {
     }
 
     setIsSubmitting(true);
-    Meteor.call("recruiter.verifyAccess", { portfolioId, accessCode }, (err) => {
-      setIsSubmitting(false);
-      
-      if (err) {
-        // Keep the portal locked; show a clear, non-revealing message.
-        setError(err.reason || "Incorrect access code. Please try again.");
-        return;
-      }
+    Meteor.call(
+      "recruiter.verifyAccess",
+      { portfolioId, accessCode },
+      (err) => {
+        setIsSubmitting(false);
 
-      // STEP 3: Save token to sessionStorage on success.
-      // Scoped to this specific user's portfolio. 
-      // It will auto-delete when the recruiter closes the tab/browser.
-      sessionStorage.setItem(`recruiter_token_${portfolioId}`, accessCode);
+        if (err) {
+          // Keep the portal locked; show a clear, non-revealing message.
+          setError(err.reason || "Incorrect access code. Please try again.");
+          return;
+        }
 
-      // Route to the recruiter-only view
-      navigate(`/recruiter/${portfolioId}/view`);
-    });
+        // STEP 3: Save token to sessionStorage on success.
+        // Scoped to this specific user's portfolio.
+        // It will auto-delete when the recruiter closes the tab/browser.
+        sessionStorage.setItem(`recruiter_token_${portfolioId}`, accessCode);
+
+        // Route to the recruiter-only view
+        navigate(`/recruiter/${portfolioId}/view`);
+      },
+    );
   };
 
   return (
@@ -72,7 +76,8 @@ export function RecruiterLoginPage() {
               Recruiter Access
             </h1>
             <p className="text-gray-500 mt-2">
-              Enter the access code to access the recruiter view for this portfolio.
+              Enter the access code to access the recruiter view for this
+              portfolio.
             </p>
           </div>
 
