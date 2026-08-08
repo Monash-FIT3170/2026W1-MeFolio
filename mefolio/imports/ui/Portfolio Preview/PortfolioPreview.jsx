@@ -23,58 +23,59 @@ export const PortfolioPreview = ({
   projects: draftProjects = null,
   isStaging = false,
 }) => {
-  const { portfolio: loadedPortfolio, projects: loadedProjects } = useTracker(() => {
-    if (draftPortfolio || draftProjects) {
-      return {
-        portfolio: draftPortfolio,
-        projects: draftProjects || [],
-      };
-    }
+  const { portfolio: loadedPortfolio, projects: loadedProjects } =
+    useTracker(() => {
+      if (draftPortfolio || draftProjects) {
+        return {
+          portfolio: draftPortfolio,
+          projects: draftProjects || [],
+        };
+      }
 
-    const portfolioSub = Meteor.subscribe("portfolios.all");
-    const projectsSub = Meteor.subscribe("projects.all");
-    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-    const currentUserSub = Meteor.subscribe("currentUser.profile");
+      const portfolioSub = Meteor.subscribe("portfolios.all");
+      const projectsSub = Meteor.subscribe("projects.all");
+      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+      const currentUserSub = Meteor.subscribe("currentUser.profile");
 
-    if (
-      !portfolioSub.ready() ||
-      !projectsSub.ready() ||
-      !portfolioProjectsSub.ready() ||
-      !currentUserSub.ready()
-    ) {
-      return { portfolio: null, projects: [] };
-    }
+      if (
+        !portfolioSub.ready() ||
+        !projectsSub.ready() ||
+        !portfolioProjectsSub.ready() ||
+        !currentUserSub.ready()
+      ) {
+        return { portfolio: null, projects: [] };
+      }
 
-    const currentUser = Meteor.user();
-    const portfolio =
-      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-      (getUserEmail(currentUser) === "test@example.com"
-        ? PortfolioCollection.findOne()
-        : null);
+      const currentUser = Meteor.user();
+      const portfolio =
+        PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
+        (getUserEmail(currentUser) === "test@example.com"
+          ? PortfolioCollection.findOne()
+          : null);
 
-    if (!portfolio?._id) return { portfolio: null, projects: [] };
+      if (!portfolio?._id) return { portfolio: null, projects: [] };
 
-    const projectOrderDocuments = PortfolioProjectsCollection.find(
-      { portfolioId: portfolio._id },
-      { sort: { orderIndex: 1 } },
-    ).fetch();
-    const orderedProjectIds = projectOrderDocuments.length
-      ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
-      : portfolio.projects || [];
+      const projectOrderDocuments = PortfolioProjectsCollection.find(
+        { portfolioId: portfolio._id },
+        { sort: { orderIndex: 1 } },
+      ).fetch();
+      const orderedProjectIds = projectOrderDocuments.length
+        ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+        : portfolio.projects || [];
 
-    if (!orderedProjectIds.length) return { portfolio, projects: [] };
+      if (!orderedProjectIds.length) return { portfolio, projects: [] };
 
-    const projectMap = new Map(
-      ProjectCollection.find({ _id: { $in: orderedProjectIds } })
-        .fetch()
-        .map((project) => [project._id, project]),
-    );
-    const projects = orderedProjectIds
-      .map((projectId) => projectMap.get(projectId))
-      .filter(Boolean);
+      const projectMap = new Map(
+        ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+          .fetch()
+          .map((project) => [project._id, project]),
+      );
+      const projects = orderedProjectIds
+        .map((projectId) => projectMap.get(projectId))
+        .filter(Boolean);
 
-    return { portfolio, projects };
-  }, [draftPortfolio, draftProjects]);
+      return { portfolio, projects };
+    }, [draftPortfolio, draftProjects]);
 
   const portfolio = draftPortfolio || loadedPortfolio;
   const projects = draftProjects || loadedProjects;
