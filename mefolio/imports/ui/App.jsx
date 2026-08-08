@@ -100,7 +100,7 @@ export const App = () => {
         element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
       />
       {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
-      <Route path="/recruiter/:username" element={<RecruiterLoginPage />} />
+      <Route path="/recruiter/:portfolioId" element={<RecruiterLoginPage />} />
       <Route
         path="/*"
         element={
