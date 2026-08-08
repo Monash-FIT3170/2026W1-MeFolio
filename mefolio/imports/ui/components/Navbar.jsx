@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -10,6 +10,7 @@ const Navbar = ({
   viewportMode = "desktop",
 }) => {
   const [darkMode, setDarkMode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { portfolio: loadedPortfolio } = useTracker(() => {
     if (draftPortfolio) {
@@ -62,23 +63,21 @@ const Navbar = ({
               >
                 Projects
               </a>
-
-              <a
-                href="#skills"
-                className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
-                style={{ minHeight: "unset" }}
-              >
-                Skills
-              </a>
-
-              <a
-                href="#contact"
-                className="text-sm font-medium text-primary hover:text-alt transition-colors leading-none"
-                style={{ minHeight: "unset" }}
-              >
-                Contact
-              </a>
             </>
+          )}
+
+          {isMobilePreview && (
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="p-2 rounded-lg text-primary hover:text-alt hover:bg-surface-fill transition-colors"
+              aria-label={
+                mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+              }
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           )}
 
           <button
@@ -91,6 +90,28 @@ const Navbar = ({
           </button>
         </div>
       </div>
+
+      {isMobilePreview && mobileMenuOpen && (
+        <nav className="border-t border-muted bg-background px-4 py-3">
+          <div className="flex flex-col gap-3">
+            <a
+              href="#about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-primary hover:text-alt"
+            >
+              About
+            </a>
+
+            <a
+              href="#projects"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-primary hover:text-alt"
+            >
+              Projects
+            </a>
+          </div>
+        </nav>
+      )}
     </header>
   );
 };
