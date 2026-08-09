@@ -4,19 +4,38 @@ import { check } from "meteor/check";
 import { RecruiterTokens } from "./collection";
 
 Meteor.methods({
-  async "tokens.generate"({ portfolioId, recruiterName }) {
+  /**
+   * @param {string} portfolioId
+   * @param {string} recruiterName
+   * @param {Date|null|string} expiresAt
+   * the string for expiresAt has to be a valid string for js' Date().
+   * we shoulda used type script
+   */
+  async "tokens.generate"({
+    portfolioId,
+    recruiterName,
+    expiresAt: provExpiresAt,
+  }) {
+    //Defining default values
+    const DEFAULT_MONTHS_TILL_EXPIRY = 3;
+    const DEFAULT_TOKEN_LENGTH = 10;
+
     if (!this.userId) throw new Meteor.Error("Not authorized");
 
-    // Generates a random, secure 10-character alphanumeric string
-    const token = Random.secret(10);
+    const token = Random.secret(DEFAULT_TOKEN_LENGTH);
 
-    // Set expiry (set to 3 months)
-    const expiresAt = new Date(); // Can be changed to hours/days for testing
-    expiresAt.setMonth(expiresAt.getMonth() + 3);
+    const defaultExpiry = new Date();
+    defaultExpiry.setMonth(
+      defaultExpiry.getMonth() + DEFAULT_MONTHS_TILL_EXPIRY,
+    );
 
-    RecruiterTokens.insertAsync({
+    const expiresAt = provExpiresAt ? new Date(provExpiresAt) : defaultExpiry;
+
+    if (expiresAt < new Date()) throw new Meteor.Error("Invalid expiry date");
+
+    await RecruiterTokens.insertAsync({
       userId: this.userId,
-      portfolioId, // changed from portfolio number to portfolio mongo _id
+      portfolioId,
       recruiterName: recruiterName,
       token,
       createdAt: new Date(),
