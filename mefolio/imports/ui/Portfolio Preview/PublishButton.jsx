@@ -184,6 +184,17 @@ const PublishButton = ({ portfolio }) => {
           </span>
         )}
 
+        {portfolio?.isPublished && (
+          <button
+            type="button"
+            data-testid="view-published-link"
+            onClick={() => navigate("/published")}
+            className="text-xs font-semibold text-alt underline transition hover:no-underline"
+          >
+            View published portfolio
+          </button>
+        )}
+
         {status === "error" && (
           <span
             data-testid="publish-error-message"
