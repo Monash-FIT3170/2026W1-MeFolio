@@ -126,6 +126,88 @@ MissingContentDialog.propTypes = {
   onGoToDashboard: PropTypes.func.isRequired,
 };
 
+// Names the portfolio that is about to be published. A user may end up with
+// several portfolios, so the target is stated explicitly rather than implied
+// by whichever preview happens to be open.
+const ConfirmPublishDialog = ({
+  portfolioTitle,
+  isRepublish,
+  onCancel,
+  onConfirm,
+}) => {
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+
+  return (
+    <div
+      ref={overlayRef}
+      data-testid="publish-confirm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="publish-confirm-title"
+      onClick={(e) => {
+        if (e.target === overlayRef.current) onCancel();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5 backdrop-blur-sm"
+    >
+      <div className="w-full max-w-md rounded-2xl bg-surface-fill shadow-2xl">
+        <div className="border-b border-line px-6 py-5">
+          <h2
+            id="publish-confirm-title"
+            className="text-lg font-bold text-primary"
+          >
+            Publish this portfolio?
+          </h2>
+          <p
+            data-testid="publish-confirm-target"
+            className="mt-3 rounded-lg border border-line bg-background px-3 py-2 text-sm font-semibold text-primary"
+          >
+            {portfolioTitle}
+          </p>
+          <p className="mt-3 text-sm text-muted">
+            {isRepublish
+              ? "The version shown in this preview will replace what is currently published."
+              : "The version shown in this preview will become your published portfolio."}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-2.5 rounded-b-2xl border-t border-line bg-background px-6 py-4">
+          <button
+            type="button"
+            data-testid="publish-confirm-cancel"
+            onClick={onCancel}
+            className="rounded-lg border border-line bg-surface-fill px-5 py-2 text-sm font-medium text-muted transition hover:bg-selected"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            data-testid="publish-confirm-accept"
+            onClick={onConfirm}
+            className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+          >
+            Publish
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ConfirmPublishDialog.propTypes = {
+  portfolioTitle: PropTypes.string.isRequired,
+  isRepublish: PropTypes.bool,
+  onCancel: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+};
+
 // Publishes the draft portfolio to the live site. Required content is checked
 // first, and publishing is blocked with an explanation when anything is
 // missing.
@@ -133,6 +215,7 @@ const PublishButton = ({ portfolio }) => {
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBlockedDialogOpen, setIsBlockedDialogOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const navigate = useNavigate();
 
   const portfolioId = portfolio?._id;
@@ -147,6 +230,11 @@ const PublishButton = ({ portfolio }) => {
       return;
     }
 
+    setIsConfirmOpen(true);
+  };
+
+  const runPublish = () => {
+    setIsConfirmOpen(false);
     setStatus("publishing");
     setErrorMessage("");
 
@@ -214,6 +302,15 @@ const PublishButton = ({ portfolio }) => {
           {isPublishing ? "Publishing..." : "Publish"}
         </button>
       </div>
+
+      {isConfirmOpen && (
+        <ConfirmPublishDialog
+          portfolioTitle={portfolio?.title || "Untitled portfolio"}
+          isRepublish={Boolean(portfolio?.isPublished)}
+          onCancel={() => setIsConfirmOpen(false)}
+          onConfirm={runPublish}
+        />
+      )}
 
       {isBlockedDialogOpen && (
         <MissingContentDialog
