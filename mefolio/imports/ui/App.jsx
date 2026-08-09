@@ -13,7 +13,7 @@ export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
   const { portfolio } = useTracker(() => {
-    const handle = Meteor.subscribe("portfolios.all");
+    const _handle = Meteor.subscribe("portfolios.all");
     return {
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };

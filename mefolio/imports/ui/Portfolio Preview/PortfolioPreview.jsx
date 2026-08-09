@@ -81,6 +81,7 @@ export const PortfolioPreview = ({
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const [viewportMode, setViewportMode] = useState("desktop");
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
@@ -122,42 +123,98 @@ export const PortfolioPreview = ({
   };
 
   return (
-    <div className="bg-surface-fill min-h-screen">
+    <div className="bg-surface-fill min-h-screen pb-8">
       {/* Dashboard chrome — full-width border, padded content */}
       <div className="border-b border-line bg-surface-fill/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-base font-bold text-primary m-0">
               {isStaging ? "Draft preview" : "Project preview"}
             </p>
+
             {isStaging && (
               <span className="rounded-full border border-alt/30 bg-alt/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-alt">
                 Private staging view
               </span>
             )}
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
-          >
-            Back to Dashboard
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div
+              className="flex rounded-lg border border-line bg-background p-1"
+              role="group"
+              aria-label="Preview viewport"
+            >
+              <button
+                type="button"
+                onClick={() => setViewportMode("desktop")}
+                aria-pressed={viewportMode === "desktop"}
+                aria-label="Show desktop preview"
+                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                  viewportMode === "desktop"
+                    ? "bg-primary text-background"
+                    : "text-primary hover:bg-surface-fill"
+                }`}
+              >
+                Desktop
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewportMode("mobile")}
+                aria-pressed={viewportMode === "mobile"}
+                aria-label="Show mobile preview"
+                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                  viewportMode === "mobile"
+                    ? "bg-primary text-background"
+                    : "text-primary hover:bg-surface-fill"
+                }`}
+              >
+                Mobile
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Full-width navbar */}
-      <Navbar />
+      <div
+        className={`mx-auto overflow-hidden bg-background transition-all duration-300 ${
+          viewportMode === "mobile"
+            ? "w-[390px] max-w-full border border-line shadow-xl rounded-b-2xl"
+            : "w-full"
+        }`}
+      >
+        <Navbar portfolio={portfolio} viewportMode={viewportMode} />
 
       {/* Hero section — about + profile card */}
       <section className="bg-background border-b border-muted">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_40%] items-center min-h-[calc(100vh-64px)] px-10 lg:px-20 gap-12 py-20 lg:py-32 max-w-7xl mx-auto w-full">
+        <div
+          className={`grid items-center mx-auto w-full ${
+            viewportMode === "mobile"
+              ? "grid-cols-1 min-h-0 px-5 py-10 gap-8"
+              : "grid-cols-[1fr_40%] min-h-[calc(100vh-64px)] px-20 py-32 gap-12 max-w-7xl"
+          }`}
+        >
           {/* Left column */}
           <div className="flex flex-col gap-6">
             <About portfolio={portfolio} />
           </div>
 
           {/* Right column - profile card */}
-          <div className="flex justify-center items-center order-first lg:order-last w-full">
+          <div
+            className={`flex justify-center items-center w-full ${
+              viewportMode === "mobile" ? "order-first" : "order-last"
+            }`}
+          >
             <ProfileCard portfolio={portfolio} />
           </div>
         </div>
@@ -166,17 +223,35 @@ export const PortfolioPreview = ({
       {/* Project gallery section */}
       <section
         id="projects"
-        className="bg-background border-b border-line px-10 lg:px-20 pt-10 pb-16 w-full"
+        className={`bg-background border-b border-line w-full ${
+          viewportMode === "mobile"
+            ? "px-5 pt-8 pb-10"
+            : "px-20 pt-10 pb-16"
+        }`}
       >
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <header
+          className={`flex justify-between mb-4 gap-3 ${
+            viewportMode === "mobile"
+              ? "flex-col items-start"
+              : "flex-row items-center"
+          }`}
+        >
           <h1 className="text-3xl font-bold text-primary">Project Gallery</h1>
 
-          <div className="flex items-center gap-3">
+          <div
+            className={`flex gap-3 ${
+              viewportMode === "mobile"
+                ? "w-full flex-col items-start"
+                : "items-center"
+            }`}
+          >
             <label className="text-sm text-muted">Filter by skill:</label>
             <select
               value={selectedSkill}
               onChange={(e) => setSelectedSkill(e.target.value)}
-              className="rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary"
+              className={`rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
+                viewportMode === "mobile" ? "w-full" : ""
+              }`}
             >
               <option value="All">All Skills</option>
               {availableSkills.map((s) => (
@@ -198,7 +273,9 @@ export const PortfolioPreview = ({
 
         <div className="relative w-full">
           <div
-            className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden gap-8 pb-8 ${isDown ? "cursor-grabbing" : ""}`}
+            className={`flex flex-row flex-nowrap overflow-x-auto cursor-grab select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-8 ${
+              viewportMode === "mobile" ? "gap-4" : "gap-8"
+            } ${isDown ? "cursor-grabbing" : ""}`}
             ref={scrollRef}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseLeave}
@@ -206,7 +283,12 @@ export const PortfolioPreview = ({
             onMouseMove={handleMouseMove}
           >
             {displayedProjects.map((project) => (
-              <div className="shrink-0 w-[380px]" key={project._id}>
+              <div
+                className={`shrink-0 ${
+                  viewportMode === "mobile" ? "w-[330px] max-w-full" : "w-[380px]"
+                }`}
+                key={project._id}
+              >
                 <ProjectCard project={project} />
               </div>
             ))}
@@ -216,6 +298,7 @@ export const PortfolioPreview = ({
           <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
         </div>
       </section>
+      </div>
     </div>
   );
 };
