@@ -1,4 +1,3 @@
-
 const GitHubIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -35,7 +34,7 @@ const LinkIcon = () => (
   </svg>
 );
 
-const buildLinks = ({ email, github, linkedin, otherLinks = [] }) => {
+const buildLinks = ({ github, linkedin, otherLinks = [] }) => {
   const links = [];
 
   if (github) {

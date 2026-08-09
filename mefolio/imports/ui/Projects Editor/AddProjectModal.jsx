@@ -90,7 +90,7 @@ const MediaUpload = ({ file, onChange }) => {
   );
 };
 
-const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
+const AddProjectModal = ({ isOpen, onClose, portfolioId }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const overlayRef = useRef(null);
