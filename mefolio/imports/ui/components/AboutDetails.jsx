@@ -1,4 +1,3 @@
-
 const AboutDetails = ({ portfolio }) => {
   return (
     <div className="flex flex-col items-start gap-6">
