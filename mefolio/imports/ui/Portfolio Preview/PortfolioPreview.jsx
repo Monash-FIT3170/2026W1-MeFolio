@@ -23,6 +23,7 @@ export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
   projects: draftProjects = null,
   isStaging = false,
+  isPublishedView = false,
 }) => {
   const { portfolio: loadedPortfolio, projects: loadedProjects } =
     useTracker(() => {
@@ -131,12 +132,21 @@ export const PortfolioPreview = ({
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-base font-bold text-primary m-0">
-              {isStaging ? "Draft preview" : "Project preview"}
+              {isPublishedView
+                ? "Published portfolio"
+                : isStaging
+                  ? "Draft preview"
+                  : "Project preview"}
             </p>
 
             {isStaging && (
               <span className="rounded-full border border-alt/30 bg-alt/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-alt">
                 Private staging view
+              </span>
+            )}
+            {isPublishedView && (
+              <span className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-green-600">
+                Published version
               </span>
             )}
           </div>
@@ -311,4 +321,5 @@ PortfolioPreview.propTypes = {
   portfolio: PropTypes.object,
   projects: PropTypes.arrayOf(PropTypes.object),
   isStaging: PropTypes.bool,
+  isPublishedView: PropTypes.bool,
 };
