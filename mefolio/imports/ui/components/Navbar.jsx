@@ -1,16 +1,22 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 
-const Navbar = () => {
+// Callers that already hold the portfolio being displayed can pass it in, so
+// the heading matches that content instead of whichever portfolio the client
+// happens to have cached. Falls back to the previous lookup when omitted.
+const Navbar = ({ portfolio: providedPortfolio = null }) => {
   const [darkMode, setDarkMode] = useState(false);
 
   const { portfolio } = useTracker(() => {
+    if (providedPortfolio) return { portfolio: providedPortfolio };
+
     Meteor.subscribe("portfolios.all");
     return { portfolio: PortfolioCollection.findOne() };
-  });
+  }, [providedPortfolio]);
 
   const displayName =
     portfolio?.profile?.fullName || portfolio?.title || "Portfolio";
@@ -65,6 +71,10 @@ const Navbar = () => {
       </div>
     </header>
   );
+};
+
+Navbar.propTypes = {
+  portfolio: PropTypes.object,
 };
 
 export default Navbar;
