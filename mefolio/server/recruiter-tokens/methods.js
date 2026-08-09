@@ -4,7 +4,7 @@ import { check } from "meteor/check";
 import { RecruiterTokens } from "./collection";
 
 Meteor.methods({
-  "tokens.generate"({ portfolioId, recruiterName }) {
+  async "tokens.generate"({ portfolioId, recruiterName }) {
     if (!this.userId) throw new Meteor.Error("Not authorized");
 
     // Generates a random, secure 10-character alphanumeric string
@@ -14,7 +14,7 @@ Meteor.methods({
     const expiresAt = new Date(); // Can be changed to hours/days for testing
     expiresAt.setMonth(expiresAt.getMonth() + 3);
 
-    RecruiterTokens.insert({
+    RecruiterTokens.insertAsync({
       userId: this.userId,
       portfolioId, // changed from portfolio number to portfolio mongo _id
       recruiterName: recruiterName,
@@ -26,12 +26,12 @@ Meteor.methods({
     return token;
   },
 
-  "recruiter.verifyAccess"({ portfolioId, accessCode }) {
+  async "recruiter.verifyAccess"({ portfolioId, accessCode }) {
     check(portfolioId, String);
     check(accessCode, String);
 
     // Query db collection for an active mathcing token
-    const validToken = RecruiterTokens.findOne({
+    const validToken = await RecruiterTokens.findOneAsync({
       portfolioId: portfolioId,
       token: accessCode,
       expiresAt: { $gt: new Date() },

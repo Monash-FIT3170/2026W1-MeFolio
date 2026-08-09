@@ -66,6 +66,38 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     portfolio?.recruiterInfo?.resumeLinks,
   ]);
 
+  // Generates Recruiter Access Token
+  const handleGenerateCode = () => {
+    if (!portfolio?._id) {
+      setMessage({ type: "error", text: "No portfolio found." });
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage({ type: "", text: "" });
+
+    Meteor.call(
+      "tokens.generate",
+      { portfolioId: portfolio._id, recruiterName: "General Recruiter" }, 
+      (err, token) => {
+        setIsSaving(false);
+        if (err) {
+          setMessage({
+            type: "error",
+            text: `Failed to generate code: ${err.reason || "Unknown error"}`,
+          });
+        } else {
+
+          handleChange("accessCode", token);
+          setMessage({
+            type: "success",
+            text: "New access code generated! Remember to click 'Save Changes'.",
+          });
+        }
+      }
+    );
+  };
+
   const handleClick = () => {
     fileInputRef.current?.click();
   };
@@ -194,7 +226,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   };
 
   const recruiterLink = recruiterInfo.accessCode
-    ? `${window.location.origin}/recruiter/${username}`
+    ? `${window.location.origin}/recruiter/${portfolio._id}`
     : "";
 
   return (
@@ -387,11 +419,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           {isEditing && (
             <button
-              disabled
-              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-500 border border-gray-300 rounded-lg opacity-60 cursor-not-allowed min-h-[44px]"
-              title="Access code generation coming soon"
+              onClick={handleGenerateCode}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors min-h-[44px] disabled:opacity-50"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
               Generate New Code
             </button>
           )}
