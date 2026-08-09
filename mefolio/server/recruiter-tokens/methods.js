@@ -31,7 +31,11 @@ Meteor.methods({
 
     const expiresAt = provExpiresAt ? new Date(provExpiresAt) : defaultExpiry;
 
-    if (expiresAt < new Date()) throw new Meteor.Error("Invalid expiry date");
+    if (expiresAt < new Date())
+      throw new Meteor.Error(
+        "invalid-expiry",
+        "Entered expiry date has passed. Please try again",
+      );
 
     await RecruiterTokens.insertAsync({
       userId: this.userId,
