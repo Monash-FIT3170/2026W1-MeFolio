@@ -10,6 +10,7 @@ import { ProjectCollection } from "../../api/projects.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import PublishButton from "./PublishButton.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -182,6 +183,8 @@ export const PortfolioPreview = ({
             >
               Back to Dashboard
             </button>
+
+            {isStaging && <PublishButton portfolio={portfolio} />}
           </div>
         </div>
       </div>
