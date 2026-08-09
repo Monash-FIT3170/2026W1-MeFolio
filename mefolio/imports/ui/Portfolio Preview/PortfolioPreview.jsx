@@ -10,6 +10,7 @@ import { ProjectCollection } from "../../api/projects.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import PublishButton from "./PublishButton.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -136,12 +137,15 @@ export const PortfolioPreview = ({
               </span>
             )}
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
-          >
-            Back to Dashboard
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
+            >
+              Back to Dashboard
+            </button>
+            {isStaging && <PublishButton portfolio={portfolio} />}
+          </div>
         </div>
       </div>
 
