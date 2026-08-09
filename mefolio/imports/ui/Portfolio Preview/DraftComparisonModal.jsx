@@ -18,28 +18,46 @@ const DraftComparisonModal = ({ isOpen, onClose, status }) => {
       <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-surface-fill border border-line shadow-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-extrabold text-primary">
-            {neverPublished ? "Draft not published yet" : "Draft vs live changes"}
+            {neverPublished
+              ? "Draft not published yet"
+              : "Draft vs live changes"}
           </h2>
-          <button onClick={onClose} className="text-muted hover:text-primary text-sm font-semibold">
+          <button
+            onClick={onClose}
+            className="text-muted hover:text-primary text-sm font-semibold"
+          >
             Close
           </button>
         </div>
 
         {!hasAnyChange && !neverPublished ? (
-          <p className="text-sm text-muted">Your draft matches the live portfolio, nothing has changed.</p>
+          <p className="text-sm text-muted">
+            Your draft matches the live portfolio, nothing has changed.
+          </p>
         ) : (
           <div className="space-y-5">
             {fieldChanges.length > 0 && (
               <div>
-                <h3 className="text-sm font-bold text-primary mb-2">Field changes</h3>
+                <h3 className="text-sm font-bold text-primary mb-2">
+                  Field changes
+                </h3>
                 <ul className="space-y-2">
                   {fieldChanges.map((change) => (
-                    <li key={change.path} className="text-sm rounded-lg border border-line px-3 py-2">
-                      <span className="font-semibold text-primary">{change.label}</span>
+                    <li
+                      key={change.path}
+                      className="text-sm rounded-lg border border-line px-3 py-2"
+                    >
+                      <span className="font-semibold text-primary">
+                        {change.label}
+                      </span>
                       <div className="text-muted mt-1">
-                        <span className="line-through opacity-70">{formatDiffValue(change.from)}</span>
+                        <span className="line-through opacity-70">
+                          {formatDiffValue(change.from)}
+                        </span>
                         {" -> "}
-                        <span className="text-alt font-semibold">{formatDiffValue(change.to)}</span>
+                        <span className="text-alt font-semibold">
+                          {formatDiffValue(change.to)}
+                        </span>
                       </div>
                     </li>
                   ))}
@@ -51,10 +69,15 @@ const DraftComparisonModal = ({ isOpen, onClose, status }) => {
               projectChanges.removed.length > 0 ||
               projectChanges.modified.length > 0) && (
               <div>
-                <h3 className="text-sm font-bold text-primary mb-2">Project changes</h3>
+                <h3 className="text-sm font-bold text-primary mb-2">
+                  Project changes
+                </h3>
                 <ul className="space-y-1 text-sm">
                   {projectChanges.added.map((p) => (
-                    <li key={`added-${p._id || p.id}`} className="text-green-600">
+                    <li
+                      key={`added-${p._id || p.id}`}
+                      className="text-green-600"
+                    >
                       + Added &quot;{p.title}&quot;
                     </li>
                   ))}
@@ -75,7 +98,10 @@ const DraftComparisonModal = ({ isOpen, onClose, status }) => {
         )}
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-line text-primary text-sm font-semibold">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-line text-primary text-sm font-semibold"
+          >
             Close
           </button>
         </div>

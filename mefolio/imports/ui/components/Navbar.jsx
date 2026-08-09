@@ -72,7 +72,9 @@ const Navbar = ({
               onClick={() => setMobileMenuOpen((open) => !open)}
               className="p-2 rounded-lg text-primary hover:text-alt hover:bg-surface-fill transition-colors"
               aria-label={
-                mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+                mobileMenuOpen
+                  ? "Close navigation menu"
+                  : "Open navigation menu"
               }
               aria-expanded={mobileMenuOpen}
             >
@@ -81,7 +83,7 @@ const Navbar = ({
           )}
 
           <button
-          type="button"
+            type="button"
             onClick={() => setDarkMode(!darkMode)}
             className="p-2 rounded-lg text-primary hover:text-alt hover:bg-background transition-colors"
             aria-label="Toggle dark mode"
