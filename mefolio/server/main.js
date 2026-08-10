@@ -192,7 +192,7 @@ Meteor.startup(async () => {
 
       createdAt: new Date(),
       projects: projectIds,
-      theme: "minimal",
+      theme: "minimalist",
       username: "me",
       badges: [
         {

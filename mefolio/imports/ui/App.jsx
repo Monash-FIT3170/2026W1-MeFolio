@@ -9,12 +9,13 @@ import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
 import { PortfolioCollection } from "../api/portfolio.js";
 import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
+import { RecruiterView } from "./Recruiter/RecruiterView.jsx";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
   const { portfolio } = useTracker(() => {
-    const handle = Meteor.subscribe("portfolios.all");
+    Meteor.subscribe("portfolios.all");
     return {
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };
@@ -65,55 +66,39 @@ export const App = () => {
               onBackToLogin={() => navigate("/login")}
               onPasswordReset={() => navigate("/login")}
             />
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          userId ? (
-            <Navigate to="/" />
-          ) : (
-            <SignUpPage
-              onSignUp={() => Meteor.logout(() => navigate("/login"))}
-              onSwitchToSignIn={() => navigate("/login")}
-              onShowTerms={() => navigate("/terms")}
-              onShowPrivacy={() => navigate("/privacy")}
-            />
-          )
-        }
-      />
-      <Route
-        path="/forgot"
-        element={
-          <ForgotPasswordPage
-            onBackToLogin={() => navigate("/login")}
-            onPasswordReset={() => navigate("/login")}
-          />
-        }
-      />
-      <Route
-        path="/terms"
-        element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
-      />
-      <Route
-        path="/privacy"
-        element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
-      />
-      {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
-      <Route path="/recruiter/:portfolioId" element={<RecruiterLoginPage />} />
-      <Route
-        path="/*"
-        element={
-          userId ? (
-            <div className="page">
-              <PortfolioBuilderView />
-            </div>
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-    </Routes>
+          }
+        />
+        <Route
+          path="/terms"
+          element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
+        />
+        <Route
+          path="/privacy"
+          element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
+        />
+        {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
+        <Route
+          path="/recruiter/:portfolioId"
+          element={<RecruiterLoginPage />}
+        />
+        {/* FEAT-14: recruiter-only view (placeholder until FEAT-15). */}
+        <Route
+          path="/recruiter/:portfolioId/view"
+          element={<RecruiterView />}
+        />
+        <Route
+          path="/*"
+          element={
+            userId ? (
+              <div className="page">
+                <PortfolioBuilderView />
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+      </Routes>
     </div>
   );
 };

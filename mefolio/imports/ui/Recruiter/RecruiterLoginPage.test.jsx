@@ -26,18 +26,18 @@ if (Meteor.isClient) {
       Meteor.call = originalCall;
     });
 
-    // Renders the gate at /recruiter/testuser with stub destination routes so
-    // navigation on success can be asserted.
+    // Renders the gate at /recruiter/:portfolioId with stub destination routes
+    // so navigation on success can be asserted.
     const renderGate = () =>
       render(
-        <MemoryRouter initialEntries={["/recruiter/testuser"]}>
+        <MemoryRouter initialEntries={["/recruiter/testPortfolioId"]}>
           <Routes>
             <Route
-              path="/recruiter/:username"
+              path="/recruiter/:portfolioId"
               element={<RecruiterLoginPage />}
             />
             <Route
-              path="/recruiter/:username/view"
+              path="/recruiter/:portfolioId/view"
               element={<div>Recruiter View</div>}
             />
             <Route path="/login" element={<div>Login Page</div>} />
@@ -52,10 +52,10 @@ if (Meteor.isClient) {
       expect(screen.getByLabelText("Access code")).to.exist;
     });
 
-    it("names the portfolio owner from the URL", () => {
+    it("shows the access instructions for the portfolio", () => {
       Meteor.call = () => {};
       renderGate();
-      expect(screen.getByText(/@testuser/)).to.exist;
+      expect(screen.getByText(/access the recruiter view for this/i)).to.exist;
     });
 
     it("shows a validation error when submitting with no code", () => {

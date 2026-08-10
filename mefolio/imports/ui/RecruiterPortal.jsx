@@ -20,7 +20,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-const RecruiterPortal = ({ portfolio, userId }) => {
+const RecruiterPortal = ({ portfolio }) => {
   const fileInputRef = useRef(null);
 
   const [resumes, setResumes] = useState([]);
@@ -41,9 +41,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-
-  const username = portfolio?.username || userId;
 
   // Load resumes
   useEffect(() => {
@@ -78,7 +77,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "tokens.generate",
-      { portfolioId: portfolio._id, recruiterName: "General Recruiter" }, 
+      { portfolioId: portfolio._id, recruiterName: "General Recruiter" },
       (err, token) => {
         setIsSaving(false);
         if (err) {
@@ -87,14 +86,13 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             text: `Failed to generate code: ${err.reason || "Unknown error"}`,
           });
         } else {
-
           handleChange("accessCode", token);
           setMessage({
             type: "success",
             text: "New access code generated! Remember to click 'Save Changes'.",
           });
         }
-      }
+      },
     );
   };
 
@@ -217,11 +215,21 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     );
   };
 
-  const copyAccessCode = () => {
-    if (recruiterInfo.accessCode) {
-      navigator.clipboard.writeText(recruiterInfo.accessCode);
+  // Copy the access code to the clipboard. Wrapped in try/catch because
+  // navigator.clipboard.writeText rejects (e.g. "Document is not focused")
+  // in some browser states, which otherwise surfaces as an uncaught error.
+  const copyAccessCode = async () => {
+    if (!recruiterInfo.accessCode) return;
+    try {
+      await navigator.clipboard.writeText(recruiterInfo.accessCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      setMessage({
+        type: "error",
+        text: "Could not copy the code. Please copy it manually.",
+      });
     }
   };
 
@@ -229,17 +237,33 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     ? `${window.location.origin}/recruiter/${portfolio._id}`
     : "";
 
+  // Copy the shareable recruiter link. Same try/catch guard as the code copy.
+  const copyLink = async () => {
+    if (!recruiterLink) return;
+    try {
+      await navigator.clipboard.writeText(recruiterLink);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      setMessage({
+        type: "error",
+        text: "Could not copy the link. Please copy it manually.",
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* RECRUITER SETTINGS SECTION */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-7">
+      <section className="bg-surface-fill border border-line rounded-2xl p-7">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+            <h2 className="flex items-center gap-2 text-xl font-semibold text-primary">
               <Building size={22} />
               Recruiter Settings
             </h2>
-            <p className="text-gray-500 mt-1">
+            <p className="text-muted mt-1">
               Manage your recruiter profile information and access settings.
             </p>
           </div>
@@ -265,14 +289,14 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                       accessCode: portfolio?.recruiterInfo?.accessCode || "",
                     });
                   }}
-                  className="px-4 py-2 text-sm font-bold text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
+                  className="px-4 py-2 text-sm font-bold text-muted border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors min-h-[44px] disabled:opacity-50"
+                  className="px-4 py-2 bg-button text-secondary rounded-lg font-bold text-sm hover:opacity-90 transition-opacity min-h-[44px] disabled:opacity-50"
                 >
                   {isSaving ? "Saving..." : "Save Changes"}
                 </button>
@@ -281,7 +305,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-colors min-h-[44px]"
+                className="px-4 py-2 bg-button text-secondary rounded-lg font-bold text-sm hover:opacity-90 transition-opacity min-h-[44px]"
               >
                 Edit Settings
               </button>
@@ -306,7 +330,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Company Name */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-primary flex items-center gap-2">
               <Building className="w-4 h-4" />
               Company Name
             </label>
@@ -315,14 +339,14 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               value={recruiterInfo.companyName}
               onChange={(e) => handleChange("companyName", e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
+              className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 min-h-[44px]"
               placeholder="e.g., Google, Atlassian"
             />
           </div>
 
           {/* Salary Expectation */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-primary flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
               Salary Expectation
             </label>
@@ -333,14 +357,14 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                 handleChange("salaryExpectation", e.target.value)
               }
               disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
+              className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 min-h-[44px]"
               placeholder="e.g., $120,000 - $150,000"
             />
           </div>
 
           {/* Phone Number */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-primary flex items-center gap-2">
               <Phone className="w-4 h-4" />
               Phone Number
             </label>
@@ -349,14 +373,14 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               value={recruiterInfo.phoneNumber}
               onChange={(e) => handleChange("phoneNumber", e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
+              className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 min-h-[44px]"
               placeholder="e.g., +61 412 345 678"
             />
           </div>
 
           {/* Location */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-primary flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               Current Location
             </label>
@@ -365,14 +389,14 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               value={recruiterInfo.currentLocation}
               onChange={(e) => handleChange("currentLocation", e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
+              className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 min-h-[44px]"
               placeholder="e.g., Sydney, Australia"
             />
           </div>
 
           {/* Availability */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-bold text-primary flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Availability
             </label>
@@ -381,7 +405,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               value={recruiterInfo.availability}
               onChange={(e) => handleChange("availability", e.target.value)}
               disabled={!isEditing}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 min-h-[44px]"
+              className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 min-h-[44px]"
               placeholder="e.g., Immediate, 2 weeks notice"
             />
           </div>
@@ -389,7 +413,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
         {/* Personal Note */}
         <div className="mt-4 space-y-2">
-          <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+          <label className="text-sm font-bold text-primary flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
             Personal Note for Recruiters
           </label>
@@ -398,35 +422,35 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             onChange={(e) => handleChange("personalNote", e.target.value)}
             disabled={!isEditing}
             rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-500 resize-none min-h-[44px]"
+            className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none disabled:opacity-60 resize-none min-h-[44px]"
             placeholder="Tell recruiters about what you're looking for in your next role..."
           />
         </div>
       </section>
 
       {/* Access Code Section */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-7">
-        <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-2">
+      <section className="bg-surface-fill border border-line rounded-2xl p-7">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-2">
           <Shield size={22} />
           Recruiter Access Code
         </h2>
 
-        <p className="text-gray-500 mb-8">
+        <p className="text-muted mb-8">
           Generate and manage access codes for recruiters to view your private
           portfolio information!
         </p>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          {isEditing && (
-            <button
-              onClick={handleGenerateCode}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors min-h-[44px] disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
-              Generate New Code
-            </button>
-          )}
+          <button
+            onClick={handleGenerateCode}
+            disabled={isSaving}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`}
+            />
+            Generate New Code
+          </button>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -435,11 +459,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               type={showAccessCode ? "text" : "password"}
               value={recruiterInfo.accessCode || "No access code generated yet"}
               readOnly
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-mono min-h-[44px]"
+              className="w-full px-4 py-3 bg-background border border-line rounded-lg text-primary font-mono min-h-[44px]"
             />
             <button
               onClick={() => setShowAccessCode(!showAccessCode)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent1 transition-colors"
             >
               {showAccessCode ? (
                 <EyeOff className="w-4 h-4" />
@@ -451,7 +475,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           <button
             onClick={copyAccessCode}
             disabled={!recruiterInfo.accessCode}
-            className="w-full sm:w-auto px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-3 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {copied ? (
               <Check className="w-4 h-4 text-green-600" />
@@ -462,15 +486,31 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </div>
 
         {recruiterInfo.accessCode && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 font-medium flex items-center gap-2">
+          <div className="mt-4 p-4 bg-selected border border-line rounded-lg">
+            <p className="text-sm text-primary font-medium flex items-center gap-2">
               <Globe className="w-4 h-4" />
               Share this link with recruiters:
             </p>
-            <code className="block mt-2 p-2 bg-white rounded border border-blue-200 text-sm text-blue-700 break-all">
+            <code className="block mt-2 p-2 bg-background rounded border border-line text-sm text-primary break-all">
               {recruiterLink}
             </code>
-            <p className="text-xs text-blue-600 mt-2">
+            <button
+              onClick={copyLink}
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px]"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="w-4 h-4 text-green-600" />
+                  Link copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy link
+                </>
+              )}
+            </button>
+            <p className="text-xs text-muted mt-2">
               Recruiters will need the access code to view your private
               portfolio information.
             </p>
@@ -484,9 +524,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               checked={recruiterInfo.allowAccess}
               onChange={(e) => handleChange("allowAccess", e.target.checked)}
               disabled={!isEditing}
-              className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="w-5 h-5 rounded border-line text-accent1 focus:ring-accent1"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-primary">
               Allow recruiters to access my private portfolio information
             </span>
           </label>
@@ -494,13 +534,13 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       </section>
 
       {/* CV/Resume Management Section */}
-      <section className="bg-white border border-gray-200 rounded-2xl p-7">
-        <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900 mb-2">
+      <section className="bg-surface-fill border border-line rounded-2xl p-7">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-2">
           <Download size={22} />
           CV/Resume Management
         </h2>
 
-        <p className="text-gray-500 mb-8">
+        <p className="text-muted mb-8">
           Upload and manage your resumes. Recruiters will have access to
           download these files. The top file in the list is chosen for the "View
           Resume" button in the recruiter view.
@@ -510,16 +550,18 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           {resumes.map((resume, index) => (
             <div
               key={index}
-              className="flex justify-between items-center px-5 py-3.5 border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] shadow-sm"
+              className="flex justify-between items-center px-5 py-3.5 border border-line rounded-lg bg-background shadow-sm"
             >
-              <span className="text-sm font-medium">{resume.name}</span>
+              <span className="text-sm font-medium text-primary">
+                {resume.name}
+              </span>
 
               <div className="flex items-center gap-2">
                 <a
                   href={resume.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2 rounded-md hover:bg-slate-100 transition"
+                  className="p-2 rounded-md hover:bg-selected transition"
                 >
                   <Eye className="w-4 h-4" />
                 </a>
@@ -535,10 +577,10 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           ))}
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[#F1F5F9]">
+        <div className="mt-5 pt-4 border-t border-line">
           <button
             onClick={handleClick}
-            className="inline-flex items-center gap-2 px-5.5 py-3 bg-transparent hover:bg-slate-50 text-sm font-semibold rounded-xl border border-slate-300 hover:border-[#5b3df5] transition-colors duration-150 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5.5 py-3 bg-transparent hover:bg-selected text-sm font-semibold rounded-xl border border-line hover:border-accent1 transition-colors duration-150 cursor-pointer text-primary"
           >
             <Plus size={16} />
             Upload New Resume
