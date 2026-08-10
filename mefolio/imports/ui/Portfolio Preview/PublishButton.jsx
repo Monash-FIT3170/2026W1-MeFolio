@@ -254,15 +254,6 @@ const PublishButton = ({ portfolio }) => {
   return (
     <>
       <div className="flex items-center gap-3">
-        {portfolio?.isPublished && (
-          <span
-            data-testid="publish-live-badge"
-            className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-green-600"
-          >
-            Published
-          </span>
-        )}
-
         {status === "published" && (
           <span
             data-testid="publish-success-message"

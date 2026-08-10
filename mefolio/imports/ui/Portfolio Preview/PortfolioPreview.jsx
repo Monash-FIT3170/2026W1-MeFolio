@@ -144,11 +144,6 @@ export const PortfolioPreview = ({
                 Private staging view
               </span>
             )}
-            {isPublishedView && (
-              <span className="rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-green-600">
-                Published version
-              </span>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
