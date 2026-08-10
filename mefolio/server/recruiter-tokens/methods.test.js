@@ -1,6 +1,12 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
+import { PortfolioCollection } from "/imports/api/portfolio";
+import { RecruiterTokens } from "./collection";
 import { expect } from "chai";
+
+// Register the methods under test. Without this, plain `meteor test` (which
+// does not load server/main.js) leaves Meteor.server.method_handlers empty.
+import "./methods";
 
 if (Meteor.isServer) {
   describe("Recruiter token methods", function () {
@@ -15,7 +21,12 @@ if (Meteor.isServer) {
         profile: { name: "Token Tester" },
       });
 
-      mockPortfolioId = "Token Tester portfolio id";
+      // A real portfolio owned by the mock user, so the ownership check passes.
+      mockPortfolioId = await PortfolioCollection.insertAsync({
+        userId: mockUserId,
+        title: "Token Tester Portfolio",
+        createdAt: new Date(),
+      });
       mockRecruiterName = "Token Tester Recruiter";
     });
 
@@ -54,12 +65,47 @@ if (Meteor.isServer) {
           {
             portfolioId: mockPortfolioId,
             recruiterName: mockRecruiterName,
-            expireAt: testDate,
+            expiresAt: testDate,
           },
         );
 
         expect(token).to.exist;
         expect(token).to.be.a("string");
+      });
+
+      it("throws when the caller is not logged in", async function () {
+        const handler = Meteor.server.method_handlers["tokens.generate"];
+
+        try {
+          await handler.call(
+            { userId: null, isSimulation: false, unblock() {} },
+            {
+              portfolioId: mockPortfolioId,
+              recruiterName: mockRecruiterName,
+            },
+          );
+          expect.fail("Expected tokens.generate to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+        }
+      });
+
+      it("rejects generating a token for a portfolio the user does not own", async function () {
+        const handler = Meteor.server.method_handlers["tokens.generate"];
+
+        try {
+          await handler.call(
+            { userId: mockUserId, isSimulation: false, unblock() {} },
+            {
+              portfolioId: "a-portfolio-that-does-not-belong-to-this-user",
+              recruiterName: mockRecruiterName,
+            },
+          );
+          expect.fail("Expected tokens.generate to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
       });
     });
 
@@ -129,6 +175,35 @@ if (Meteor.isServer) {
 
         try {
           await verifyPromise;
+          expect.fail("Expected verifyAccess to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-access");
+        }
+      });
+
+      it("rejects an expired token", async function () {
+        const verifyHandler =
+          Meteor.server.method_handlers["recruiter.verifyAccess"];
+
+        const expiredCode = `expired-${Date.now()}`;
+        const past = new Date();
+        past.setDate(past.getDate() - 1);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: mockRecruiterName,
+          token: expiredCode,
+          createdAt: new Date(),
+          expiresAt: past,
+        });
+
+        try {
+          await verifyHandler.call(
+            { userId: null, isSimulation: false, unblock() {} },
+            { portfolioId: mockPortfolioId, accessCode: expiredCode },
+          );
           expect.fail("Expected verifyAccess to throw");
         } catch (error) {
           expect(error).to.be.instanceOf(Meteor.Error);

@@ -1,3 +1,6 @@
 documents/
 node_modules/
 **/node_modules/
+docs/
+.DS_Store
+**/.DS_Store

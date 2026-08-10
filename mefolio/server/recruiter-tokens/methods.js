@@ -2,6 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import { check } from "meteor/check";
 import { RecruiterTokens } from "./collection";
+import { PortfolioCollection } from "/imports/api/portfolio";
 
 Meteor.methods({
   /**
@@ -21,6 +22,18 @@ Meteor.methods({
     const DEFAULT_TOKEN_LENGTH = 10;
 
     if (!this.userId) throw new Meteor.Error("Not authorized");
+
+    check(portfolioId, String);
+    check(recruiterName, String);
+
+    // Only the portfolio owner may issue access tokens for it.
+    const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
+    if (!portfolio || portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You may only generate access codes for your own portfolio.",
+      );
+    }
 
     const token = Random.secret(DEFAULT_TOKEN_LENGTH);
 

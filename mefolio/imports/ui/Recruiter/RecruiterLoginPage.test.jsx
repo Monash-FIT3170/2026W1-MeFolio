@@ -7,7 +7,6 @@
  * mocking style used in LoginPage.test.jsx.
  */
 
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { expect } from "chai";
 import { describe, it, beforeEach, afterEach } from "mocha";

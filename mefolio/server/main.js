@@ -4,7 +4,7 @@ import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { ResumeFiles } from "/imports/api/files/resumeFiles";
+import "/imports/api/files/resumeFiles";
 
 // oauth login
 import "./oauth-login/oauth.js";
@@ -12,7 +12,7 @@ import "./oauth-login/oauth.js";
 // recruiter access token
 import "./recruiter-tokens/collection.js";
 import "./recruiter-tokens/methods.js";
-import "./recruiter-tokens/verifytokenss.js";
+import "./recruiter-tokens/verifytokens.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
