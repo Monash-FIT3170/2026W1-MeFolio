@@ -1,5 +1,3 @@
-import "./styles.css";
-
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
@@ -15,7 +13,7 @@ export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
   const { portfolio } = useTracker(() => {
-    Meteor.subscribe("portfolios.all");
+    const _handle = Meteor.subscribe("portfolios.all");
     return {
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };

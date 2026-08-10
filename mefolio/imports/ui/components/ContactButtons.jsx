@@ -1,4 +1,3 @@
-
 const ContactButtons = ({ portfolio }) => {
   const resumeLink = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
     ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""

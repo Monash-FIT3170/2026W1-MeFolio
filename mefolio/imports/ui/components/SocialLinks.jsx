@@ -1,4 +1,3 @@
-
 const SocialLinks = () => {
   return (
     <div className="flex items-center gap-6">

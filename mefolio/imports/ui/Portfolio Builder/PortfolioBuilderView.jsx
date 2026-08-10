@@ -22,6 +22,9 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import LogoutButton from "../Login/LogoutButton";
+import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
+import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
+import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -121,6 +124,7 @@ const DashboardLayout = () => {
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const {
     isLoading,
@@ -229,6 +233,10 @@ const DashboardLayout = () => {
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
+  const draftStatus = getDraftStatus({
+    portfolio: selectedPortfolio,
+    projects: orderedProjects,
+  });
 
   if (viewModelLoading) {
     return <p className="p-8 text-lg">Loading...</p>;
@@ -239,7 +247,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
@@ -251,11 +259,15 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto b">
-        <header className="bg-surface-fill border-b border-line px-8 py-6 flex items-center justify-between">
+        <header className="bg-surface-fill sticky z-99 top-0 border-b border-line px-8 py-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
           <div className="flex items-center gap-3">
+            <DraftStatusIndicator
+              status={draftStatus}
+              onReview={() => setIsComparisonOpen(true)}
+            />
             {activeTab === "settings" && <LogoutButton />}
             {activeTab === "projects" && (
               <button
@@ -332,6 +344,11 @@ const DashboardLayout = () => {
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
+      />
+      <DraftComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        status={draftStatus}
       />
     </div>
   );
