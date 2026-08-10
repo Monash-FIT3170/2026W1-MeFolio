@@ -382,6 +382,20 @@ const OwnerPreviewRoute = () => {
   );
 };
 
+// Theme ids that have a matching [data-theme] rule in styles.css. A value
+// outside this list matches no rule at all, so the subtree would silently
+// inherit the draft theme instead of falling back to a readable one. Older
+// records store "minimal", which was never a defined theme.
+const PUBLISHED_THEMES = [
+  "default",
+  "minimalist",
+  "terminal-retro",
+  "modern-saas",
+];
+
+const getPublishedTheme = (theme) =>
+  PUBLISHED_THEMES.includes(theme) ? theme : "default";
+
 // Renders the snapshot taken at publish time rather than the live draft, so
 // the owner can see exactly what was published.
 const PublishedPortfolioRoute = () => {
@@ -411,12 +425,24 @@ const PublishedPortfolioRoute = () => {
     );
   }
 
+  // The app applies the draft's theme globally, so the snapshot's own theme is
+  // re-applied here. Theme variables are plain CSS custom properties, so this
+  // nested data-theme overrides the outer one for everything inside it.
+  //
+  // The background and font utilities have to be repeated rather than
+  // inherited: they are declared once on the app shell, where the draft theme
+  // is in scope, and an inherited font-family arrives already resolved.
   return (
-    <PortfolioPreview
-      portfolio={publishedContent}
-      projects={publishedContent.projects || []}
-      isPublishedView
-    />
+    <div
+      data-theme={getPublishedTheme(publishedContent.theme)}
+      className="min-h-screen bg-background font-main"
+    >
+      <PortfolioPreview
+        portfolio={publishedContent}
+        projects={publishedContent.projects || []}
+        isPublishedView
+      />
+    </div>
   );
 };
 
