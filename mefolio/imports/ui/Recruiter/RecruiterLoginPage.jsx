@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { KeyRound, Lock, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
@@ -111,7 +111,9 @@ export function RecruiterLoginPage() {
                   type="button"
                   onClick={() => setShowCode((v) => !v)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
-                  aria-label={showCode ? "Hide access code" : "Show access code"}
+                  aria-label={
+                    showCode ? "Hide access code" : "Show access code"
+                  }
                 >
                   {showCode ? (
                     <EyeOff className="w-5 h-5" />

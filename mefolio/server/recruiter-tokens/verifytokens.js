@@ -1,4 +1,4 @@
-// imports/api/portfolios/server/publications.js
+// Publishes a portfolio's full recruiter-only view, gated on a valid token.
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { RecruiterTokens } from "./collection";
@@ -18,7 +18,7 @@ Meteor.publish("portfolio.recruiterView", async function (portfolioId, token) {
   // Return nothing if token is invalid
   if (!validToken) {
     return this.ready();
-  }ßßß
+  }
 
   return [
     PortfolioCollection.find({ _id: portfolioId }), // Return the full hidden recruiter portfolio

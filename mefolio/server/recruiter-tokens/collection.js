@@ -5,8 +5,10 @@ export const RecruiterTokens = new Mongo.Collection("recruiter_tokens");
 
 // Delete tokens when they pass their 'expiresAt' date
 if (Meteor.isServer) {
-  RecruiterTokens.rawCollection().createIndex(
-    { expiresAt: 1 },
-    { expireAfterSeconds: 0 },
-  );
+  Meteor.startup(async () => {
+    await RecruiterTokens.rawCollection().createIndex(
+      { expiresAt: 1 },
+      { expireAfterSeconds: 0 },
+    );
+  });
 }
