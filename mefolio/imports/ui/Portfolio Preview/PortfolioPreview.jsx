@@ -128,7 +128,7 @@ export const PortfolioPreview = ({
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
       {/* Dashboard chrome — full-width border, padded content */}
-      <div className="border-b border-line bg-surface-fill/95">
+      <div className="border-b border-line bg-surface-fill">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-base font-bold text-primary m-0">
@@ -178,7 +178,7 @@ export const PortfolioPreview = ({
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary hover:text-background"
+              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-background"
             >
               Back to Dashboard
             </button>
@@ -199,7 +199,7 @@ export const PortfolioPreview = ({
         <Navbar portfolio={portfolio} viewportMode={viewportMode} />
 
         {/* Hero section — about + profile card */}
-        <section className="bg-background border-b border-muted">
+        <section className="bg-background border-b border-line">
           <div
             className={`grid items-center mx-auto w-full ${
               viewportMode === "mobile"

@@ -64,7 +64,7 @@ const MissingContentDialog = ({ missingFields, onClose, onGoToDashboard }) => {
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-5 backdrop-blur-sm"
     >
       <div className="w-full max-w-md rounded-2xl bg-surface-fill shadow-2xl">
         <div className="border-b border-line px-6 py-5">
@@ -88,7 +88,7 @@ const MissingContentDialog = ({ missingFields, onClose, onGoToDashboard }) => {
                 key={field}
                 className="flex items-start gap-2 text-sm font-medium text-primary"
               >
-                <span aria-hidden="true" className="text-red-500">
+                <span aria-hidden="true" className="text-accent1">
                   •
                 </span>
                 {REQUIRED_FIELD_LABELS[field] || field}
@@ -155,7 +155,7 @@ const ConfirmPublishDialog = ({
       onClick={(e) => {
         if (e.target === overlayRef.current) onCancel();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-5 backdrop-blur-sm"
     >
       <div className="w-full max-w-md rounded-2xl bg-surface-fill shadow-2xl">
         <div className="border-b border-line px-6 py-5">
@@ -268,7 +268,7 @@ const PublishButton = ({ portfolio }) => {
             type="button"
             data-testid="view-published-link"
             onClick={() => navigate("/published")}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-50 text-[#5b3df5] text-xs font-semibold rounded-lg border border-[#5b3df5] transition-colors duration-150 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-surface-fill text-alt text-xs font-semibold rounded-lg border border-alt transition-colors duration-150 cursor-pointer"
           >
             View published portfolio
           </button>
@@ -277,7 +277,7 @@ const PublishButton = ({ portfolio }) => {
         {status === "error" && (
           <span
             data-testid="publish-error-message"
-            className="text-xs font-medium text-red-500"
+            className="text-xs font-medium text-accent1"
           >
             {errorMessage}
           </span>

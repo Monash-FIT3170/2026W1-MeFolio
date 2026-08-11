@@ -76,13 +76,13 @@ const DraftComparisonModal = ({ isOpen, onClose, status }) => {
                   {projectChanges.added.map((p) => (
                     <li
                       key={`added-${p._id || p.id}`}
-                      className="text-green-600"
+                      className="text-accent1"
                     >
                       + Added &quot;{p.title}&quot;
                     </li>
                   ))}
                   {projectChanges.removed.map((p) => (
-                    <li key={`removed-${p._id}`} className="text-red-500">
+                    <li key={`removed-${p._id}`} className="text-secondary">
                       - Removed &quot;{p.title}&quot;
                     </li>
                   ))}

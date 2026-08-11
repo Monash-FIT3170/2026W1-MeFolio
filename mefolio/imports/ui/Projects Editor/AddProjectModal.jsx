@@ -39,7 +39,7 @@ const MediaUpload = ({ file, onChange }) => {
           type="button"
           onClick={() => onChange(null)}
           aria-label="Remove file"
-          className="text-muted hover:text-red-500 text-lg leading-none transition"
+          className="text-muted hover:text-accent2 text-lg leading-none transition"
         >
           x
         </button>
@@ -178,7 +178,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
   const fieldClass = (key) =>
     `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition
       focus:border-accent2 focus:ring-2 focus:ring-selected
-      ${errors[key] ? "border-red-400 bg-red-50" : "border-line"}`;
+      ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
 
   return (
     <div
@@ -190,7 +190,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       onClick={(e) => {
         if (e.target === overlayRef.current) handleCancel();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-primary/50 backdrop-blur-sm"
     >
       {/* Panel */}
       <div
@@ -225,7 +225,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               htmlFor="mf-title"
               className="block text-sm font-semibold text-primary mb-1.5"
             >
-              Project Title <span className="text-red-500">*</span>
+              Project Title <span className="text-accent2">*</span>
             </label>
             <input
               id="mf-title"
@@ -240,7 +240,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             {errors.title && (
               <p
                 data-testid="error-title"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.title}
               </p>
@@ -253,7 +253,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               htmlFor="mf-desc"
               className="block text-sm font-semibold text-primary mb-1.5"
             >
-              Description <span className="text-red-500">*</span>
+              Description <span className="text-accent2">*</span>
             </label>
             <textarea
               id="mf-desc"
@@ -267,7 +267,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             {errors.description && (
               <p
                 data-testid="error-description"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.description}
               </p>
@@ -335,7 +335,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               {errors.githubLink && (
                 <p
                   data-testid="error-githubLink"
-                  className="text-xs text-red-500 mt-1"
+                  className="text-xs text-accent2 mt-1"
                 >
                   {errors.githubLink}
                 </p>
@@ -360,7 +360,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               {errors.liveDemoLink && (
                 <p
                   data-testid="error-liveDemoLink"
-                  className="text-xs text-red-500 mt-1"
+                  className="text-xs text-accent2 mt-1"
                 >
                   {errors.liveDemoLink}
                 </p>
@@ -392,7 +392,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             {errors.media && (
               <p
                 data-testid="error-media"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.media}
               </p>
@@ -403,7 +403,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-line bg-background rounded-b-2xl sticky bottom-0">
           <p className="text-xs text-muted">
-            <span className="text-red-500">*</span> Required fields
+            <span className="text-accent2">*</span> Required fields
           </p>
           <div className="flex gap-2.5">
             <button
