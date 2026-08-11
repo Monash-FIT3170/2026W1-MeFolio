@@ -74,10 +74,7 @@ const DraftComparisonModal = ({ isOpen, onClose, status }) => {
                 </h3>
                 <ul className="space-y-1 text-sm">
                   {projectChanges.added.map((p) => (
-                    <li
-                      key={`added-${p._id || p.id}`}
-                      className="text-accent1"
-                    >
+                    <li key={`added-${p._id || p.id}`} className="text-accent1">
                       + Added &quot;{p.title}&quot;
                     </li>
                   ))}
