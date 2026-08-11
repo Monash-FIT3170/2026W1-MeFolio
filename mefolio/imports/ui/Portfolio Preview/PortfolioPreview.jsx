@@ -138,12 +138,6 @@ export const PortfolioPreview = ({
                   ? "Draft preview"
                   : "Project preview"}
             </p>
-
-            {isStaging && (
-              <span className="rounded-full border border-alt/30 bg-alt/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-alt">
-                Private staging view
-              </span>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
