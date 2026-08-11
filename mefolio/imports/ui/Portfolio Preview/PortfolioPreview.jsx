@@ -10,6 +10,7 @@ import { ProjectCollection } from "../../api/projects.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import PublishButton from "./PublishButton.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -22,6 +23,7 @@ export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
   projects: draftProjects = null,
   isStaging = false,
+  isPublishedView = false,
 }) => {
   const { portfolio: loadedPortfolio, projects: loadedProjects } =
     useTracker(() => {
@@ -130,7 +132,11 @@ export const PortfolioPreview = ({
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-base font-bold text-primary m-0">
-              {isStaging ? "Draft preview" : "Project preview"}
+              {isPublishedView
+                ? "Published portfolio"
+                : isStaging
+                  ? "Draft preview"
+                  : "Project preview"}
             </p>
 
             {isStaging && (
@@ -182,6 +188,8 @@ export const PortfolioPreview = ({
             >
               Back to Dashboard
             </button>
+
+            {isStaging && <PublishButton portfolio={portfolio} />}
           </div>
         </div>
       </div>
@@ -308,4 +316,5 @@ PortfolioPreview.propTypes = {
   portfolio: PropTypes.object,
   projects: PropTypes.arrayOf(PropTypes.object),
   isStaging: PropTypes.bool,
+  isPublishedView: PropTypes.bool,
 };

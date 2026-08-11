@@ -382,6 +382,70 @@ const OwnerPreviewRoute = () => {
   );
 };
 
+// Theme ids that have a matching [data-theme] rule in styles.css. A value
+// outside this list matches no rule at all, so the subtree would silently
+// inherit the draft theme instead of falling back to a readable one. Older
+// records store "minimal", which was never a defined theme.
+const PUBLISHED_THEMES = [
+  "default",
+  "minimalist",
+  "terminal-retro",
+  "modern-saas",
+];
+
+const getPublishedTheme = (theme) =>
+  PUBLISHED_THEMES.includes(theme) ? theme : "default";
+
+// Renders the snapshot taken at publish time rather than the live draft, so
+// the owner can see exactly what was published.
+const PublishedPortfolioRoute = () => {
+  const { isLoading, portfolios, user } = useDashboardData();
+  const navigate = useNavigate();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const publishedContent = selectedPortfolio?.publishedContent;
+
+  if (isLoading) {
+    return <p className="p-8 text-lg">Loading published portfolio...</p>;
+  }
+
+  if (!publishedContent) {
+    return (
+      <div className="flex flex-col items-start gap-4 p-8">
+        <p className="text-lg text-primary">
+          This portfolio has not been published yet.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/preview")}
+          className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+        >
+          Back to draft preview
+        </button>
+      </div>
+    );
+  }
+
+  // The app applies the draft's theme globally, so the snapshot's own theme is
+  // re-applied here. Theme variables are plain CSS custom properties, so this
+  // nested data-theme overrides the outer one for everything inside it.
+  //
+  // The background and font utilities have to be repeated rather than
+  // inherited: they are declared once on the app shell, where the draft theme
+  // is in scope, and an inherited font-family arrives already resolved.
+  return (
+    <div
+      data-theme={getPublishedTheme(publishedContent.theme)}
+      className="min-h-screen bg-background font-main"
+    >
+      <PortfolioPreview
+        portfolio={publishedContent}
+        projects={publishedContent.projects || []}
+        isPublishedView
+      />
+    </div>
+  );
+};
+
 export const PortfolioBuilderView = () => {
   const { portfolio, ready } = useTracker(() => {
     const portfoliosSub = Meteor.subscribe("portfolios.all");
@@ -415,6 +479,7 @@ export const PortfolioBuilderView = () => {
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
       <Route path="/preview" element={<OwnerPreviewRoute />} />
+      <Route path="/published" element={<PublishedPortfolioRoute />} />
     </Routes>
   );
 };
