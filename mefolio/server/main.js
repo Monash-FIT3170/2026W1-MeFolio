@@ -4,9 +4,15 @@ import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-// Imported for its side effect: registers the ResumeFiles FilesCollection on the server.
 import "/imports/api/files/resumeFiles";
+
+// oauth login
 import "./oauth-login/oauth.js";
+
+// recruiter access token
+import "./recruiter-tokens/collection.js";
+import "./recruiter-tokens/methods.js";
+import "./recruiter-tokens/verifytokens.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -181,13 +187,12 @@ Meteor.startup(async () => {
       },
 
       cta: {
-        resumeUrl: "https://example.com/resume.pdf",
         contactEnabled: true,
       },
 
       createdAt: new Date(),
       projects: projectIds,
-      theme: "minimal",
+      theme: "minimalist",
       username: "me",
       badges: [
         {
@@ -204,7 +209,6 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-        resumeLink: "https://example.com/resume.pdf",
         allowAccess: true,
       },
     });
