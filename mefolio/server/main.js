@@ -504,7 +504,7 @@ Meteor.methods({
 
   // Project enagagement methods  
 
-  async "projectEnagement.incrementClick"({projectId}){ const startOfDay = new Date();
+  async "projectEngagement.incrementClick"({projectId}){ const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
   const endOfDay = new Date(startOfDay);
