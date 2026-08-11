@@ -268,7 +268,7 @@ const PublishButton = ({ portfolio }) => {
             type="button"
             data-testid="view-published-link"
             onClick={() => navigate("/published")}
-            className="text-xs font-semibold text-alt underline transition hover:no-underline"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-50 text-[#5b3df5] text-xs font-semibold rounded-lg border border-[#5b3df5] transition-colors duration-150 cursor-pointer"
           >
             View published portfolio
           </button>
