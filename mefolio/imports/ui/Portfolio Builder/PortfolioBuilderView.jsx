@@ -22,11 +22,11 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import LogoutButton from "../Login/LogoutButton";
+import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
+import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
+import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 
 const getProjectId = (project) => project?._id || project?.id;
-
-const getProjectOrderKey = (projects = []) =>
-  projects.map((project) => getProjectId(project)).join("|");
 
 const getProjectDataKey = (projects = []) =>
   projects
@@ -120,11 +120,11 @@ const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
-  const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const {
     isLoading,
@@ -158,51 +158,13 @@ const DashboardLayout = () => {
   useEffect(() => {
     const nextProjects = databaseProjects;
     const nextProjectDataKey = getProjectDataKey(nextProjects);
-    const nextProjectOrderKey = getProjectOrderKey(nextProjects);
 
     if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
       setOrderedProjects(nextProjects);
       setDataProjectKey(nextProjectDataKey);
-      setSourceProjectOrderKey(nextProjectOrderKey);
       setSaveStatus("idle");
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
-
-  const handleProjectsReorder = (nextProjects) => {
-    setOrderedProjects(nextProjects);
-    setSaveStatus(
-      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
-        ? "idle"
-        : "unsaved",
-    );
-  };
-
-  const handleSaveProjectOrder = () => {
-    if (!selectedPortfolio?._id) {
-      setSaveStatus("error");
-      return;
-    }
-
-    const projectIds = orderedProjects.map((project) => getProjectId(project));
-
-    setSaveStatus("saving");
-    Meteor.call(
-      "portfolioProjects.reorder",
-      {
-        portfolioId: selectedPortfolio._id,
-        projectIds,
-      },
-      (error) => {
-        if (error) {
-          setSaveStatus("error");
-          return;
-        }
-
-        setSourceProjectOrderKey(projectIds.join("|"));
-        setSaveStatus("saved");
-      },
-    );
-  };
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
   const handleProjectDragOver = (event) => event.preventDefault();
@@ -271,6 +233,10 @@ const DashboardLayout = () => {
 
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
+  const draftStatus = getDraftStatus({
+    portfolio: selectedPortfolio,
+    projects: orderedProjects,
+  });
 
   if (viewModelLoading) {
     return <p className="p-8 text-lg">Loading...</p>;
@@ -298,6 +264,10 @@ const DashboardLayout = () => {
             {currentTab.label}
           </h1>
           <div className="flex items-center gap-3">
+            <DraftStatusIndicator
+              status={draftStatus}
+              onReview={() => setIsComparisonOpen(true)}
+            />
             {activeTab === "settings" && <LogoutButton />}
             {activeTab === "projects" && (
               <button
@@ -375,6 +345,103 @@ const DashboardLayout = () => {
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
       />
+      <DraftComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        status={draftStatus}
+      />
+    </div>
+  );
+};
+
+const OwnerPreviewRoute = () => {
+  const {
+    isLoading,
+    portfolios,
+    projectDocuments,
+    projectOrderDocuments,
+    user,
+  } = useDashboardData();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    projectDocuments,
+    projectOrderDocuments,
+  );
+
+  if (isLoading) {
+    return <p className="p-8 text-lg">Loading draft preview...</p>;
+  }
+
+  return (
+    <PortfolioPreview
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      isStaging
+    />
+  );
+};
+
+// Theme ids that have a matching [data-theme] rule in styles.css. A value
+// outside this list matches no rule at all, so the subtree would silently
+// inherit the draft theme instead of falling back to a readable one. Older
+// records store "minimal", which was never a defined theme.
+const PUBLISHED_THEMES = [
+  "default",
+  "minimalist",
+  "terminal-retro",
+  "modern-saas",
+];
+
+const getPublishedTheme = (theme) =>
+  PUBLISHED_THEMES.includes(theme) ? theme : "default";
+
+// Renders the snapshot taken at publish time rather than the live draft, so
+// the owner can see exactly what was published.
+const PublishedPortfolioRoute = () => {
+  const { isLoading, portfolios, user } = useDashboardData();
+  const navigate = useNavigate();
+  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const publishedContent = selectedPortfolio?.publishedContent;
+
+  if (isLoading) {
+    return <p className="p-8 text-lg">Loading published portfolio...</p>;
+  }
+
+  if (!publishedContent) {
+    return (
+      <div className="flex flex-col items-start gap-4 p-8">
+        <p className="text-lg text-primary">
+          This portfolio has not been published yet.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/preview")}
+          className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+        >
+          Back to draft preview
+        </button>
+      </div>
+    );
+  }
+
+  // The app applies the draft's theme globally, so the snapshot's own theme is
+  // re-applied here. Theme variables are plain CSS custom properties, so this
+  // nested data-theme overrides the outer one for everything inside it.
+  //
+  // The background and font utilities have to be repeated rather than
+  // inherited: they are declared once on the app shell, where the draft theme
+  // is in scope, and an inherited font-family arrives already resolved.
+  return (
+    <div
+      data-theme={getPublishedTheme(publishedContent.theme)}
+      className="min-h-screen bg-background font-main"
+    >
+      <PortfolioPreview
+        portfolio={publishedContent}
+        projects={publishedContent.projects || []}
+        isPublishedView
+      />
     </div>
   );
 };
@@ -406,18 +473,13 @@ export const PortfolioBuilderView = () => {
     }
   }, [ready, portfolio]);
 
-  const activeTheme = (newTheme) => {
-    if (portfolio?._id) {
-      Meteor.call("portfolios.update", portfolio._id, { theme: newTheme });
-    }
-  };
-
   if (!ready) return null;
 
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<PortfolioPreview />} />
+      <Route path="/preview" element={<OwnerPreviewRoute />} />
+      <Route path="/published" element={<PublishedPortfolioRoute />} />
     </Routes>
   );
 };

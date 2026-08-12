@@ -92,7 +92,7 @@ const AboutMeSection = ({
         </button>
 
         {saveMessage ? (
-          <span style={{ color: "#4b5563", fontSize: "14px" }}>
+          <span className="text-muted" style={{ fontSize: "14px" }}>
             {saveMessage}
           </span>
         ) : null}
