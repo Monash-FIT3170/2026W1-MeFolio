@@ -321,7 +321,7 @@ const DashboardLayout = () => {
               onDragEnd={handleProjectDragEnd}
             />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={selectedPortfolio} />
+            <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (
             <ThemeSection
               portfolioId={selectedPortfolio?._id}

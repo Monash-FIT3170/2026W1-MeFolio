@@ -1,7 +1,14 @@
 const ContactButtons = ({ portfolio }) => {
-  const resumeLink = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
-    ? portfolio.recruiterInfo.resumeLinks[0]?.url || ""
-    : portfolio?.recruiterInfo?.resumeLink || "";
+  // Resolve the resume link across all known fields: an uploaded resume
+  // (recruiterInfo.resumeLinks), a single recruiterInfo.resumeLink, or the
+  // older profile resume (cta.resumeUrl) so the preview keeps working for
+  // portfolios created before the FEAT-05 resume-storage change.
+  const resumeLink =
+    (Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
+      ? portfolio.recruiterInfo.resumeLinks[0]?.url
+      : portfolio?.recruiterInfo?.resumeLink) ||
+    portfolio?.cta?.resumeUrl ||
+    "";
 
   const email =
     portfolio?.bio?.email ||

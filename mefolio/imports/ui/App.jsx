@@ -8,12 +8,14 @@ import { TermsOfServicePage } from "./Terms & Conditions/TermsOfServicePage.jsx"
 import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
 import { PortfolioCollection } from "../api/portfolio.js";
+import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
+import { RecruiterView } from "./Recruiter/RecruiterView.jsx";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
   const isLoggingIn = useTracker(() => Meteor.loggingIn());
   const { portfolio } = useTracker(() => {
-    const _handle = Meteor.subscribe("portfolios.all");
+    Meteor.subscribe("portfolios.all");
     return {
       portfolio: PortfolioCollection.findOne({ userId: Meteor.userId() }),
     };
@@ -73,6 +75,16 @@ export const App = () => {
         <Route
           path="/privacy"
           element={<PrivacyPolicyPage onBack={() => navigate("/signup")} />}
+        />
+        {/* FEAT-14: unauthenticated recruiter access gate (public route). */}
+        <Route
+          path="/recruiter/:portfolioId"
+          element={<RecruiterLoginPage />}
+        />
+        {/* FEAT-14: recruiter-only view (placeholder until FEAT-15). */}
+        <Route
+          path="/recruiter/:portfolioId/view"
+          element={<RecruiterView />}
         />
         <Route
           path="/*"
