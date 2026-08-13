@@ -55,14 +55,14 @@ export const PortfolioPreview = ({
     const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
     const currentUserSub = Meteor.subscribe("currentUser.profile");
 
-    if (
-      !portfolioSub.ready() ||
-      !projectsSub.ready() ||
-      !portfolioProjectsSub.ready() ||
-      !currentUserSub.ready()
-    ) {
-      return { portfolio: null, projects: [], portfolio: null, ready: false, portfolioId: null };
-    }
+      if (
+        !portfolioSub.ready() ||
+        !projectsSub.ready() ||
+        !portfolioProjectsSub.ready() ||
+        !currentUserSub.ready()
+      ) {
+        return { portfolio: null, projects: [], portfolio: null, portfolio: null, ready: false, portfolioId: null };
+      }
 
     const currentUser = Meteor.user();
     const portfolio =
