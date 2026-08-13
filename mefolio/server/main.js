@@ -284,6 +284,74 @@ Meteor.publish("projects.all", function () {
 // owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
 // publication instead.
 const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+const activeViewerConnections = new Map();
+
+const getViewerData = async (publication) => {
+  const connectionId = publication.connection?.id;
+  if (!connectionId) return null;
+
+  const user = publication.userId
+    ? await Meteor.users.findOneAsync(publication.userId, {
+        fields: {
+          emails: 1,
+          profile: 1,
+          "services.google.email": 1,
+          "services.google.name": 1,
+          "services.github.email": 1,
+          "services.github.username": 1,
+        },
+      })
+    : null;
+
+  const email =
+    user?.emails?.[0]?.address ||
+    user?.services?.google?.email ||
+    user?.services?.github?.email ||
+    "";
+  const name =
+    user?.profile?.name ||
+    user?.services?.google?.name ||
+    user?.services?.github?.username ||
+    publication.userId ||
+    "Guest";
+
+  return {
+    connectionId,
+    userId: publication.userId,
+    name,
+    email,
+    connectedAt: new Date(),
+    lastSeenAt: new Date(),
+  };
+};
+
+const addPortfolioViewer = async (portfolioId, viewer) => {
+  if (!viewer) return;
+
+  activeViewerConnections.set(viewer.connectionId, {
+    portfolioId,
+    viewer,
+  });
+
+  await PortfolioCollection.updateAsync(portfolioId, {
+    $pull: { viewers: { connectionId: viewer.connectionId } },
+  });
+
+  await PortfolioCollection.updateAsync(portfolioId, {
+    $addToSet: { viewers: viewer },
+  });
+};
+
+const removePortfolioViewer = async (connectionId) => {
+  const entry = activeViewerConnections.get(connectionId);
+  if (!entry) return;
+
+  await PortfolioCollection.updateAsync(entry.portfolioId, {
+    $pull: { viewers: { connectionId } },
+  });
+
+  activeViewerConnections.delete(connectionId);
+};
 
 Meteor.publish("portfolios.all", function () {
   const sort = { createdAt: -1 };
@@ -301,6 +369,32 @@ Meteor.publish("portfolios.all", function () {
   // same collection. The recruiter view reads its portfolio from the
   // token-gated `portfolio.recruiterView` publication instead.
   return PortfolioCollection.find({ userId: this.userId }, { sort });
+});
+
+Meteor.publish("portfolios.viewer", function (portfolioId) {
+  check(portfolioId, String);
+
+  const publication = this;
+  const connectionId = publication.connection?.id;
+
+  PortfolioCollection.findOneAsync(portfolioId)
+    .then((portfolio) => {
+      if (!portfolio) return null;
+      return getViewerData(publication);
+    })
+    .then((viewer) => {
+      if (!viewer) return null;
+      return addPortfolioViewer(portfolioId, viewer);
+    })
+    .catch(console.error);
+
+  this.onStop(() => {
+    if (connectionId) {
+      removePortfolioViewer(connectionId).catch(console.error);
+    }
+  });
+
+  return PortfolioCollection.find({ _id: portfolioId });
 });
 
 Meteor.publish("users.current", function () {
@@ -348,6 +442,28 @@ Meteor.publish("portfolios.byUsername", function (username) {
       { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
     ),
   ];
+
+  const publication = this;
+  const connectionId = publication.connection?.id;
+
+  PortfolioCollection.findOneAsync({ username })
+    .then((portfolio) => {
+      if (!portfolio) return null;
+      return getViewerData(publication).then((viewer) => ({ viewer, portfolioId: portfolio._id }));
+    })
+    .then((result) => {
+      if (!result?.viewer) return null;
+      return addPortfolioViewer(result.portfolioId, result.viewer);
+    })
+    .catch(console.error);
+
+  this.onStop(() => {
+    if (connectionId) {
+      removePortfolioViewer(connectionId).catch(console.error);
+    }
+  });
+
+  return PortfolioCollection.find({ username });
 });
 
 Meteor.methods({

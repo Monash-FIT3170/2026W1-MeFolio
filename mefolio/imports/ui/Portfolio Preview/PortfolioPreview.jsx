@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
@@ -23,15 +24,27 @@ export const PortfolioPreview = ({
   isPublishedView = false,
   isRecruiterView = false,
 }) => {
-  const {
-    portfolio: trackedPortfolio,
-    projects: trackedProjects,
-    // portfolioId,
-  } = useTracker(() => {
+  const { portfolioId } = useParams();
+  const isPublicView = Boolean(portfolioId);
+
+  const { portfolio: trackedPortfolio, projects: trackedProjects, ready } =
+    useTracker(() => {
+      if (draftPortfolio || draftProjects) {
+        return {
+          portfolio: draftPortfolio,
+          projects: draftProjects || [],
+        };
+      }
+
+      if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
     const portfolioSub = Meteor.subscribe("portfolios.all");
-    const projectsSub = Meteor.subscribe("projects.all");
-    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-    const currentUserSub = Meteor.subscribe("currentUser.profile");
+      const projectsSub = Meteor.subscribe("projects.all");
+      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+      const currentUserSub = Meteor.subscribe("currentUser.profile");
 
     if (
       !portfolioSub.ready() ||
@@ -39,23 +52,29 @@ export const PortfolioPreview = ({
       !portfolioProjectsSub.ready() ||
       !currentUserSub.ready()
     ) {
-      return { portfolio: null, projects: [], portfolioId: null };
+      return { portfolio: null, projects: [], portfolio: null, ready: false, portfolioId: null };
     }
 
     const currentUser = Meteor.user();
     const portfolio =
       propPortfolio ||
+      PortfolioCollection.findOne({ _id: portfolioId }) ||
       PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
       (getUserEmail(currentUser) === "test@example.com"
         ? PortfolioCollection.findOne()
         : null);
+        
 
     if (!portfolio?._id) {
       return {
         portfolio: propPortfolio,
         projects: propProjects,
-        portfolioId: propPortfolio?._id || null,
-      };
+        portfolioId: propPortfolio?._id || null, portfolio, ready: true };
+
+    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    if (!viewerSub.ready()) {
+      return { projects: [], portfolio, ready: false };
+    }
     }
 
     const projectOrderDocuments = PortfolioProjectsCollection.find(
@@ -67,7 +86,7 @@ export const PortfolioPreview = ({
       : portfolio.projects || [];
 
     if (!orderedProjectIds.length) {
-      return { portfolio, projects: [], portfolioId: portfolio._id };
+      return { portfolio, projects: [], portfolio, ready: true, portfolioId: portfolio._id };
     }
 
     const projectMap = new Map(
@@ -79,7 +98,7 @@ export const PortfolioPreview = ({
       .map((projectId) => projectMap.get(projectId))
       .filter(Boolean);
 
-    return { portfolio, projects, portfolioId: portfolio._id };
+    return { portfolio, projects, portfolio, ready: true, portfolioId: portfolio._id };
   }, [propPortfolio, propProjects]);
 
   const portfolio = propPortfolio || trackedPortfolio;
@@ -88,6 +107,49 @@ export const PortfolioPreview = ({
 
   const navigate = useNavigate();
   const [viewportMode, setViewportMode] = useState("desktop");
+
+  if (isPublicView) {
+    return null;
+  }
+
+  // Skill filter state
+  const [selectedSkill, setSelectedSkill] = useState("All");
+
+  // Compute unique skills from the loaded projects
+  const availableSkills = useMemo(() => {
+    const set = new Set();
+    projects.forEach((p) => {
+      (p.technologies || []).forEach((t) => set.add(t));
+    });
+    return Array.from(set).sort();
+  }, [projects]);
+
+  const displayedProjects =
+    selectedSkill && selectedSkill !== "All"
+      ? projects.filter((p) => (p.technologies || []).includes(selectedSkill))
+      : projects;
+
+  const [isDown, setIsDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e) => {
+    if (!scrollRef.current) return;
+    setIsDown(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => setIsDown(false);
+  const handleMouseUp = () => setIsDown(false);
+
+  const handleMouseMove = (e) => {
+    if (!isDown || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
