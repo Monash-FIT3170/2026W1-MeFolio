@@ -109,11 +109,12 @@ export const PortfolioPreview = ({
       if (!selectedPortfolio?._id) {
         return { portfolio: selectedPortfolio, projects: [], ready: true };
       }
+    if (!portfolio?._id) return { projects: [], portfolio, ready: true };
 
-      const viewerSub = Meteor.subscribe("portfolios.viewer", selectedPortfolio._id);
-      if (!viewerSub.ready()) {
-        return { portfolio: selectedPortfolio, projects: [], ready: false };
-      }
+    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    if (!viewerSub.ready()) {
+      return { projects: [], portfolio: selectedPortfolio , ready: false };
+    }
 
       const projectOrderDocuments = PortfolioProjectsCollection.find(
         { portfolioId: selectedPortfolio._id },
@@ -185,6 +186,10 @@ export const PortfolioPreview = ({
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
+
+  if (isPublicView) {
+    return null;
+  }
 
   if (isPublicView) {
     return null;
