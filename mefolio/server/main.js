@@ -271,8 +271,32 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
+// Private portfolio fields that must never reach a client that does not own
+// the portfolio. `recruiterInfo` holds private recruiter details (salary,
+// phone, personal note) and the access code itself, so it is only sent to the
+// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
+// publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+
 Meteor.publish("portfolios.all", function () {
-  return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  // Not logged in: nobody owns these, so strip private fields from all.
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      {},
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  // Logged in: full data for your own portfolios, stripped for everyone else.
+  return [
+    PortfolioCollection.find({ userId: this.userId }, { sort }),
+    PortfolioCollection.find(
+      { userId: { $ne: this.userId } },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    ),
+  ];
 });
 
 Meteor.publish("users.current", function () {
@@ -304,7 +328,22 @@ Meteor.publish("portfolioProjects.all", function () {
 
 Meteor.publish("portfolios.byUsername", function (username) {
   check(username, String);
-  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      { username },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  return [
+    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
+    PortfolioCollection.find(
+      { username, userId: { $ne: this.userId } },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    ),
+  ];
 });
 
 Meteor.methods({
