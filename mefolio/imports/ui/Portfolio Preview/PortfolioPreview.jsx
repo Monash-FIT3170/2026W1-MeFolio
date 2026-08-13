@@ -28,72 +28,78 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { portfolio: loadedPortfolio, projects: loadedProjects, portfolio, ready } =
-    useTracker(() => {
-      if (draftPortfolio || draftProjects) {
-        return {
-          portfolio: draftPortfolio,
-          projects: draftProjects || [],
-        };
-      }
+  const { projects: loadedProjects, portfolio, ready } = useTracker(() => {
+    if (draftPortfolio || draftProjects) {
+      return {
+        portfolio: draftPortfolio,
+        projects: draftProjects || [],
+        ready: true,
+      };
+    }
 
-      if (isPublicView) {
+    if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
     const portfolioSub = Meteor.subscribe("portfolios.all");
-      const projectsSub = Meteor.subscribe("projects.all");
-      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-      const currentUserSub = Meteor.subscribe("currentUser.profile");
+    const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
-      if (
-        !portfolioSub.ready() ||
-        !projectsSub.ready() ||
-        !portfolioProjectsSub.ready() ||
-        !currentUserSub.ready()
-      ) {
-        return { portfolio: null, projects: [], portfolio: null, ready: false };
-      }
-
-      const currentUser = Meteor.user();
-      const portfolio =
-        PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-        PortfolioCollection.findOne({ _id: portfolioId }) ||
-      (getUserEmail(currentUser) === "test@example.com"
-          ? PortfolioCollection.findOne()
-          : null);
-
-      if (!portfolio?._id) return { portfolio: null, projects: [], portfolio, ready: true };
-
-    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
-    if (!viewerSub.ready()) {
-      return { projects: [], portfolio, ready: false };
+    if (
+      !portfolioSub.ready() ||
+      !projectsSub.ready() ||
+      !portfolioProjectsSub.ready() ||
+      !currentUserSub.ready()
+    ) {
+      return { portfolio: null, projects: [], ready: false };
     }
 
-      const projectOrderDocuments = PortfolioProjectsCollection.find(
-        { portfolioId: portfolio._id },
-        { sort: { orderIndex: 1 } },
-      ).fetch();
-      const orderedProjectIds = projectOrderDocuments.length
-        ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
-        : portfolio.projects || [];
+    const currentUser = Meteor.user();
+    const selectedPortfolio =
+      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
+      PortfolioCollection.findOne({ _id: portfolioId }) ||
+      (getUserEmail(currentUser) === "test@example.com"
+        ? PortfolioCollection.findOne()
+        : null);
 
-      if (!orderedProjectIds.length) return { portfolio, projects: [], portfolio, ready: true };
+    if (!selectedPortfolio?._id) {
+      return { projects: [], portfolio: selectedPortfolio, ready: true };
+    }
 
-      const projectMap = new Map(
-        ProjectCollection.find({ _id: { $in: orderedProjectIds } })
-          .fetch()
-          .map((project) => [project._id, project]),
-      );
-      const projects = orderedProjectIds
-        .map((projectId) => projectMap.get(projectId))
-        .filter(Boolean);
+    const viewerSub = Meteor.subscribe(
+      "portfolios.viewer",
+      selectedPortfolio._id,
+    );
+    if (!viewerSub.ready()) {
+      return { projects: [], portfolio: selectedPortfolio, ready: false };
+    }
 
-      return { portfolio, projects, portfolio, ready: true };
-    }, [draftPortfolio, draftProjects]);
+    const projectOrderDocuments = PortfolioProjectsCollection.find(
+      { portfolioId: selectedPortfolio._id },
+      { sort: { orderIndex: 1 } },
+    ).fetch();
+    const orderedProjectIds = projectOrderDocuments.length
+      ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+      : selectedPortfolio.projects || [];
+    if (!orderedProjectIds.length) {
+      return { portfolio: selectedPortfolio, projects: [], ready: true };
+    }
 
-  const projects = draftProjects || loadedProjects;
+    const projectMap = new Map(
+      ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+        .fetch()
+        .map((project) => [project._id, project]),
+    );
+    const projects = orderedProjectIds
+      .map((projectId) => projectMap.get(projectId))
+      .filter(Boolean);
+
+    return { portfolio: selectedPortfolio, projects, ready: true };
+  }, [draftPortfolio, draftProjects, isPublicView, portfolioId]);
+
+  const projects = draftProjects || loadedProjects || [];
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
