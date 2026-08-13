@@ -27,24 +27,24 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { portfolio: trackedPortfolio, projects: trackedProjects, ready } =
-    useTracker(() => {
-      if (draftPortfolio || draftProjects) {
-        return {
-          portfolio: draftPortfolio,
-          projects: draftProjects || [],
-        };
-      }
+  const { projects: trackedProjects, portfolio: trackedPortfolio, ready } = useTracker(() => {
+    if (draftPortfolio || draftProjects) {
+      return {
+        portfolio: draftPortfolio,
+        projects: draftProjects || [],
+        ready: true,
+      };
+    }
 
-      if (isPublicView) {
+    if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
     const portfolioSub = Meteor.subscribe("portfolios.all");
-      const projectsSub = Meteor.subscribe("projects.all");
-      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-      const currentUserSub = Meteor.subscribe("currentUser.profile");
+    const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
     if (
       !portfolioSub.ready() ||
@@ -56,10 +56,9 @@ export const PortfolioPreview = ({
     }
 
     const currentUser = Meteor.user();
-    const portfolio =
-      propPortfolio ||
-      PortfolioCollection.findOne({ _id: portfolioId }) ||
+    const selectedPortfolio =
       PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
+      PortfolioCollection.findOne({ _id: portfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
         ? PortfolioCollection.findOne()
         : null);
@@ -71,9 +70,12 @@ export const PortfolioPreview = ({
         projects: propProjects,
         portfolioId: propPortfolio?._id || null, portfolio, ready: true };
 
-    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    const viewerSub = Meteor.subscribe(
+      "portfolios.viewer",
+      selectedPortfolio._id,
+    );
     if (!viewerSub.ready()) {
-      return { projects: [], portfolio, ready: false };
+      return { projects: [], portfolio: selectedPortfolio, ready: false };
     }
     }
 
@@ -99,10 +101,10 @@ export const PortfolioPreview = ({
       .filter(Boolean);
 
     return { portfolio, projects, portfolio, ready: true, portfolioId: portfolio._id };
-  }, [propPortfolio, propProjects]);
+  }, [propPortfolio, propProjects, isPublicView, portfolioId]);
 
   const portfolio = propPortfolio || trackedPortfolio;
-  const projects = propProjects.length ? propProjects : trackedProjects;
+  const projects = propProjects.length ? propProjects : trackedProjects || [];
   // const resolvedPortfolioId = portfolioId || portfolio?._id;
 
   const navigate = useNavigate();
