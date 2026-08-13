@@ -24,6 +24,7 @@ export const PortfolioPreview = ({
   projects: draftProjects = null,
   isStaging = false,
   isPublishedView = false,
+  isRecruiterView = false,
 }) => {
   const { portfolio: loadedPortfolio, projects: loadedProjects } =
     useTracker(() => {
@@ -127,66 +128,68 @@ export const PortfolioPreview = ({
 
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
-      {/* Dashboard chrome — full-width border, padded content */}
-      <div className="border-b border-line bg-surface-fill">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-base font-bold text-primary m-0">
-              {isPublishedView
-                ? "Published portfolio"
-                : isStaging
-                  ? "Draft preview"
-                  : "Project preview"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className="flex rounded-lg border border-line bg-background p-1"
-              role="group"
-              aria-label="Preview viewport"
-            >
-              <button
-                type="button"
-                onClick={() => setViewportMode("desktop")}
-                aria-pressed={viewportMode === "desktop"}
-                aria-label="Show desktop preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "desktop"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Desktop
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewportMode("mobile")}
-                aria-pressed={viewportMode === "mobile"}
-                aria-label="Show mobile preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "mobile"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Mobile
-              </button>
+      {/* Dashboard chrome — hidden for the recruiter view */}
+      {!isRecruiterView && (
+        <div className="border-b border-line bg-surface-fill">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-base font-bold text-primary m-0">
+                {isPublishedView
+                  ? "Published portfolio"
+                  : isStaging
+                    ? "Draft preview"
+                    : "Project preview"}
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-background"
-            >
-              Back to Dashboard
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div
+                className="flex rounded-lg border border-line bg-background p-1"
+                role="group"
+                aria-label="Preview viewport"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewportMode("desktop")}
+                  aria-pressed={viewportMode === "desktop"}
+                  aria-label="Show desktop preview"
+                  className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                    viewportMode === "desktop"
+                      ? "bg-primary text-background"
+                      : "text-primary hover:bg-surface-fill"
+                  }`}
+                >
+                  Desktop
+                </button>
 
-            {isStaging && <PublishButton portfolio={portfolio} />}
+                <button
+                  type="button"
+                  onClick={() => setViewportMode("mobile")}
+                  aria-pressed={viewportMode === "mobile"}
+                  aria-label="Show mobile preview"
+                  className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
+                    viewportMode === "mobile"
+                      ? "bg-primary text-background"
+                      : "text-primary hover:bg-surface-fill"
+                  }`}
+                >
+                  Mobile
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-background"
+              >
+                Back to Dashboard
+              </button>
+
+              {isStaging && <PublishButton portfolio={portfolio} />}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Full-width navbar */}
       <div
@@ -311,4 +314,5 @@ PortfolioPreview.propTypes = {
   projects: PropTypes.arrayOf(PropTypes.object),
   isStaging: PropTypes.bool,
   isPublishedView: PropTypes.bool,
+  isRecruiterView: PropTypes.bool,
 };
