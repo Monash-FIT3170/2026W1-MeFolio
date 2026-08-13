@@ -81,7 +81,7 @@ export const App = () => {
           path="/recruiter/:portfolioId"
           element={<RecruiterLoginPage />}
         />
-        {/* FEAT-14: recruiter-only view (placeholder until FEAT-15). */}
+        {/* FEAT-15: token-gated read-only recruiter view. */}
         <Route
           path="/recruiter/:portfolioId/view"
           element={<RecruiterView />}

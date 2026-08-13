@@ -1,4 +1,5 @@
-// Publishes a portfolio's full recruiter-only view, gated on a valid token.
+// Publishes a portfolio's published content and recruiter-only details to a
+// recruiter holding a valid, unexpired access token.
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { RecruiterTokens } from "./collection";
@@ -20,7 +21,12 @@ Meteor.publish("portfolio.recruiterView", async function (portfolioId, token) {
     return this.ready();
   }
 
+  // Only expose the published snapshot and the recruiter-only details — never
+  // the unpublished draft content that lives on the top-level portfolio fields.
   return [
-    PortfolioCollection.find({ _id: portfolioId }), // Return the full hidden recruiter portfolio
+    PortfolioCollection.find(
+      { _id: portfolioId },
+      { fields: { publishedContent: 1, recruiterInfo: 1 } },
+    ),
   ];
 });

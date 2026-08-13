@@ -13,6 +13,7 @@ import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
 import "/server/recruiter-tokens/methods.test.js";
 import "/imports/ui/Login/SignUpPage.test.jsx";
+import "/server/recruiter-tokens/verifytokens.test.js";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
