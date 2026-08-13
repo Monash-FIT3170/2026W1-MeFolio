@@ -21,7 +21,26 @@ export const mapOverviewStats = (portfolios) => {
 
 // Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
-  return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
+  if (!portfolios?.length) {
+    return mockLiveVisitors;
+  }
+
+  const viewers = portfolios[0]?.viewers || [];
+  if (!viewers.length) {
+    return mockLiveVisitors;
+  }
+
+  return viewers.map((viewer, index) => ({
+    id: viewer.email
+      ? `viewer-${viewer.email}-${index}`
+      : `viewer-${index}-${Date.now()}`,
+    name: viewer.name || "Anonymous Visitor",
+    email: viewer.email || "",
+    activity: "Viewing portfolio",
+    location: viewer.email ? "Visitor" : "Guest",
+    duration: "Live now",
+    active: true,
+  }));
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.

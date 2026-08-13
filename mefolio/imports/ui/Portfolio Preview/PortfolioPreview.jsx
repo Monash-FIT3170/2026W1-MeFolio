@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import { useRef, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
@@ -25,7 +25,10 @@ export const PortfolioPreview = ({
   isStaging = false,
   isPublishedView = false,
 }) => {
-  const { portfolio: loadedPortfolio, projects: loadedProjects } =
+  const { portfolioId } = useParams();
+  const isPublicView = Boolean(portfolioId);
+
+  const { portfolio: loadedPortfolio, projects: loadedProjects, portfolio, ready } =
     useTracker(() => {
       if (draftPortfolio || draftProjects) {
         return {
@@ -34,7 +37,12 @@ export const PortfolioPreview = ({
         };
       }
 
-      const portfolioSub = Meteor.subscribe("portfolios.all");
+      if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
+    const portfolioSub = Meteor.subscribe("portfolios.all");
       const projectsSub = Meteor.subscribe("projects.all");
       const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
       const currentUserSub = Meteor.subscribe("currentUser.profile");
@@ -45,17 +53,23 @@ export const PortfolioPreview = ({
         !portfolioProjectsSub.ready() ||
         !currentUserSub.ready()
       ) {
-        return { portfolio: null, projects: [] };
+        return { portfolio: null, projects: [], portfolio: null, ready: false };
       }
 
       const currentUser = Meteor.user();
       const portfolio =
         PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-        (getUserEmail(currentUser) === "test@example.com"
+        PortfolioCollection.findOne({ _id: portfolioId }) ||
+      (getUserEmail(currentUser) === "test@example.com"
           ? PortfolioCollection.findOne()
           : null);
 
-      if (!portfolio?._id) return { portfolio: null, projects: [] };
+      if (!portfolio?._id) return { portfolio: null, projects: [], portfolio, ready: true };
+
+    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    if (!viewerSub.ready()) {
+      return { projects: [], portfolio, ready: false };
+    }
 
       const projectOrderDocuments = PortfolioProjectsCollection.find(
         { portfolioId: portfolio._id },
@@ -65,7 +79,7 @@ export const PortfolioPreview = ({
         ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
         : portfolio.projects || [];
 
-      if (!orderedProjectIds.length) return { portfolio, projects: [] };
+      if (!orderedProjectIds.length) return { portfolio, projects: [], portfolio, ready: true };
 
       const projectMap = new Map(
         ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -76,15 +90,18 @@ export const PortfolioPreview = ({
         .map((projectId) => projectMap.get(projectId))
         .filter(Boolean);
 
-      return { portfolio, projects };
+      return { portfolio, projects, portfolio, ready: true };
     }, [draftPortfolio, draftProjects]);
 
-  const portfolio = draftPortfolio || loadedPortfolio;
   const projects = draftProjects || loadedProjects;
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
+
+  if (isPublicView) {
+    return null;
+  }
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
