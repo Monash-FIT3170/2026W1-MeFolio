@@ -28,7 +28,7 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { portfolio: loadedPortfolio, projects: loadedProjects, ready } =
+  const { portfolio: loadedPortfolio, projects: loadedProjects, portfolio, ready } =
     useTracker(() => {
       if (draftPortfolio || draftProjects) {
         return {
@@ -79,7 +79,12 @@ export const PortfolioPreview = ({
         };
       }
 
-      const portfolioSub = Meteor.subscribe("portfolios.all");
+      if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
+    const portfolioSub = Meteor.subscribe("portfolios.all");
       const projectsSub = Meteor.subscribe("projects.all");
       const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
       const currentUserSub = Meteor.subscribe("currentUser.profile");
@@ -90,13 +95,14 @@ export const PortfolioPreview = ({
         !portfolioProjectsSub.ready() ||
         !currentUserSub.ready()
       ) {
-        return { portfolio: null, projects: [], ready: false };
+        return { portfolio: null, projects: [], portfolio: null, ready: false };
       }
 
       const currentUser = Meteor.user();
       const selectedPortfolio =
         PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-        (getUserEmail(currentUser) === "test@example.com"
+        PortfolioCollection.findOne({ _id: portfolioId }) ||
+      (getUserEmail(currentUser) === "test@example.com"
           ? PortfolioCollection.findOne()
           : null);
 
@@ -133,7 +139,6 @@ export const PortfolioPreview = ({
       return { portfolio: selectedPortfolio, projects, ready: true };
     }, [draftPortfolio, draftProjects, isPublicView, portfolioId]);
 
-  const portfolio = draftPortfolio || loadedPortfolio;
   const projects = draftProjects || loadedProjects || [];
 
   useEffect(() => {
@@ -180,6 +185,10 @@ export const PortfolioPreview = ({
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
+
+  if (isPublicView) {
+    return null;
+  }
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
