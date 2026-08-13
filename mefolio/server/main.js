@@ -323,6 +323,26 @@ Meteor.publish("portfolioProjects.all", function () {
   return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
 });
 
+Meteor.publish("portfolios.byUsername", function (username) {
+  check(username, String);
+  const sort = { createdAt: -1 };
+
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      { username },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  return [
+    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
+    PortfolioCollection.find(
+      { username, userId: { $ne: this.userId } },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    ),
+  ];
+});
+
 Meteor.methods({
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
