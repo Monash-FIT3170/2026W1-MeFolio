@@ -40,7 +40,39 @@ export const PortfolioPreview = ({
 
       if (isPublicView) {
         const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
-        return { portfolio: null, projects: [], ready: viewerSub.ready() };
+        const selectedPortfolio = PortfolioCollection.findOne({ _id: portfolioId });
+
+        if (!selectedPortfolio?._id) {
+          return { portfolio: null, projects: [], ready: viewerSub.ready() };
+        }
+
+        const projectOrderDocuments = PortfolioProjectsCollection.find(
+          { portfolioId: selectedPortfolio._id },
+          { sort: { orderIndex: 1 } },
+        ).fetch();
+        const orderedProjectIds = projectOrderDocuments.length
+          ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+          : selectedPortfolio.projects || [];
+
+        if (!orderedProjectIds.length) {
+          return { portfolio: selectedPortfolio, projects: [], ready: viewerSub.ready() };
+        }
+
+        const projectMap = new Map(
+          ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+            .fetch()
+            .map((project) => [project._id, project]),
+        );
+
+        const projects = orderedProjectIds
+          .map((projectId) => projectMap.get(projectId))
+          .filter(Boolean);
+
+        return {
+          portfolio: selectedPortfolio,
+          projects,
+          ready: viewerSub.ready(),
+        };
       }
 
       const portfolioSub = Meteor.subscribe("portfolios.all");
@@ -122,10 +154,6 @@ export const PortfolioPreview = ({
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
-
-  if (isPublicView) {
-    return null;
-  }
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
