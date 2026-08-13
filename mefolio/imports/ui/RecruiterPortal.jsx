@@ -43,6 +43,9 @@ const RecruiterPortal = ({ portfolio }) => {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  // Separate feedback for the access-code section so it shows there, not at
+  // the top of the settings section.
+  const [codeMessage, setCodeMessage] = useState({ type: "", text: "" });
 
   // Load resumes
   useEffect(() => {
@@ -68,12 +71,12 @@ const RecruiterPortal = ({ portfolio }) => {
   // Generates Recruiter Access Token
   const handleGenerateCode = () => {
     if (!portfolio?._id) {
-      setMessage({ type: "error", text: "No portfolio found." });
+      setCodeMessage({ type: "error", text: "No portfolio found." });
       return;
     }
 
     setIsSaving(true);
-    setMessage({ type: "", text: "" });
+    setCodeMessage({ type: "", text: "" });
 
     Meteor.call(
       "tokens.generate",
@@ -81,13 +84,13 @@ const RecruiterPortal = ({ portfolio }) => {
       (err, token) => {
         setIsSaving(false);
         if (err) {
-          setMessage({
+          setCodeMessage({
             type: "error",
             text: `Failed to generate code: ${err.reason || "Unknown error"}`,
           });
         } else {
           handleChange("accessCode", token);
-          setMessage({
+          setCodeMessage({
             type: "success",
             text: "New access code generated! Remember to click 'Save Changes'.",
           });
@@ -226,7 +229,7 @@ const RecruiterPortal = ({ portfolio }) => {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Clipboard copy failed:", err);
-      setMessage({
+      setCodeMessage({
         type: "error",
         text: "Could not copy the code. Please copy it manually.",
       });
@@ -246,7 +249,7 @@ const RecruiterPortal = ({ portfolio }) => {
       setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
       console.error("Clipboard copy failed:", err);
-      setMessage({
+      setCodeMessage({
         type: "error",
         text: "Could not copy the link. Please copy it manually.",
       });
@@ -439,6 +442,20 @@ const RecruiterPortal = ({ portfolio }) => {
           Generate and manage access codes for recruiters to view your private
           portfolio information!
         </p>
+
+        {codeMessage.text && (
+          <div
+            className={`mb-6 p-4 rounded-lg text-sm font-bold ${
+              codeMessage.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : codeMessage.type === "error"
+                  ? "bg-red-50 text-red-700 border border-red-200"
+                  : ""
+            }`}
+          >
+            {codeMessage.text}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <button
