@@ -19,11 +19,14 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
+        working-directory: ./mefolio
         run: npm ci
 
       - name: Run formatter check
+        working-directory: ./mefolio
         run: npx prettier --check .
 
       - name: Run linter check
+        working-directory: ./mefolio
         run: npm run lint
 
