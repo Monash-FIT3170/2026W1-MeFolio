@@ -9,7 +9,13 @@ import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.j
 import { PortfolioCollection } from "../api/portfolio.js";
 import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
 import { RecruiterView } from "./Recruiter/RecruiterView.jsx";
-import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 // TODO: swap for the real public portfolio page component
 const PublicPortfolioPlaceholder = () => {
@@ -98,7 +104,10 @@ export const App = () => {
           path="/recruiter/:portfolioId/view"
           element={<RecruiterView />}
         />
-        <Route path="/:portfolioId/view" element={<PublicPortfolioPlaceholder />} />
+        <Route
+          path="/:portfolioId/view"
+          element={<PublicPortfolioPlaceholder />}
+        />
         <Route
           path="/*"
           element={
