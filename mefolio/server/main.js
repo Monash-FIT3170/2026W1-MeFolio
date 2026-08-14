@@ -348,6 +348,14 @@ Meteor.publish("portfolios.byUsername", function (username) {
   ];
 });
 
+Meteor.publish("portfolios.publicView", function (portfolioId) {
+  check(portfolioId, String);
+  return PortfolioCollection.find(
+    { _id: portfolioId, isPublished: true },
+    { fields: { publishedContent: 1, isPublished: 1, username: 1 } },
+  );
+});
+
 Meteor.methods({
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
