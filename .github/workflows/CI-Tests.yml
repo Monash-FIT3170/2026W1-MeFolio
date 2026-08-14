@@ -1,0 +1,33 @@
+name: CI-Test-Runner
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  test-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Meteor
+        run: |
+            curl https://install.meteor.com/ | sh
+            echo "$HOME/.meteor" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        working-directory: ./mefolio
+        run: npm ci
+
+      - name: Run test suite
+        working-directory: ./mefolio
+        run: npm run test-ci
+
