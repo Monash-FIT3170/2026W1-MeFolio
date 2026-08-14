@@ -1,6 +1,5 @@
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { LoginPage } from "./Login/LoginPage.jsx";
 import { SignUpPage } from "./Login/SignUpPage.jsx";
 import { ForgotPasswordPage } from "./Login/ForgotPasswordPage.jsx";
@@ -10,6 +9,19 @@ import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.j
 import { PortfolioCollection } from "../api/portfolio.js";
 import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
 import { RecruiterView } from "./Recruiter/RecruiterView.jsx";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+
+// TODO: swap for the real public portfolio page component
+const PublicPortfolioPlaceholder = () => {
+  const { portfolioId } = useParams();
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <p className="text-lg font-semibold text-primary text-center">
+        Public view placeholder for portfolio: {portfolioId}
+      </p>
+    </div>
+  );
+};
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
@@ -85,6 +97,19 @@ export const App = () => {
         <Route
           path="/recruiter/:portfolioId/view"
           element={<RecruiterView />}
+        />
+        <Route path="/:portfolioId/view" element={<PublicPortfolioPlaceholder />} />
+        <Route
+          path="/*"
+          element={
+            userId ? (
+              <div className="page">
+                <PortfolioBuilderView />
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
         />
         <Route
           path="/*"
