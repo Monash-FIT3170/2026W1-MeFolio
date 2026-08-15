@@ -198,7 +198,6 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimalist",
-      username: "me",
       badges: [
         {
           title: "Sample Badge",
@@ -300,11 +299,6 @@ Meteor.publish("currentUser.profile", function () {
 
 Meteor.publish("portfolioProjects.all", function () {
   return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
-});
-
-Meteor.publish("portfolios.byUsername", function (username) {
-  check(username, String);
-  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
 });
 
 Meteor.methods({
@@ -556,7 +550,6 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-      username: portfolio.username || "",
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
