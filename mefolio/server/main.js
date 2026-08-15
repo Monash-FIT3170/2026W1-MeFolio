@@ -198,7 +198,6 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimalist",
-      username: "me",
       badges: [
         {
           title: "Sample Badge",
@@ -572,7 +571,6 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-      username: portfolio.username || "",
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
