@@ -7,7 +7,7 @@ import { KeyRound, Lock, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
  * FEAT-14: Recruiter Access Portal
  *
  * Dedicated, unauthenticated screen that gates a recruiter portal behind an
- * access code. A recruiter reaches this via a shared link (/recruiter/:username),
+ * access code. A recruiter reaches this via a shared link (/recruiter/:portfolioId),
  * enters the code the portfolio owner gave them, and on success is taken to the
  * recruiter-only view.
  *
