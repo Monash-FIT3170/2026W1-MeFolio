@@ -211,5 +211,123 @@ if (Meteor.isServer) {
         }
       });
     });
+
+    describe("recruiterLinks.revoke", function () {
+      it("revokes an active token and invalidates it immediately", async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        const verifyHandler =
+          Meteor.server.method_handlers["recruiter.verifyAccess"];
+        const revokeHandler =
+          Meteor.server.method_handlers["recruiterLinks.revoke"];
+
+        const accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: mockRecruiterName,
+          },
+        );
+
+        const initialVerification = await verifyHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode,
+          },
+        );
+        expect(initialVerification).to.equal(true);
+
+        const revokeResult = await revokeHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { token: accessCode },
+        );
+        expect(revokeResult).to.equal(true);
+
+        try {
+          await verifyHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode,
+            },
+          );
+          expect.fail("Expected verifyAccess to throw after token revocation");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-access");
+        }
+      });
+
+      it("throws when the caller is not logged in", async function () {
+        const revokeHandler =
+          Meteor.server.method_handlers["recruiterLinks.revoke"];
+
+        try {
+          await revokeHandler.call(
+            { userId: null, isSimulation: false, unblock() {} },
+            { token: "some-token" },
+          );
+          expect.fail(
+            "Expected recruiterLinks.revoke to throw for unauthenticated user",
+          );
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("rejects revoking a token that belongs to another user", async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        const revokeHandler =
+          Meteor.server.method_handlers["recruiterLinks.revoke"];
+
+        const accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: mockRecruiterName,
+          },
+        );
+
+        try {
+          await revokeHandler.call(
+            {
+              userId: "unauthorized-user-id",
+              isSimulation: false,
+              unblock() {},
+            },
+            { token: accessCode },
+          );
+          expect.fail(
+            "Expected recruiterLinks.revoke to throw when trying to revoke another user's token",
+          );
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-found");
+        }
+      });
+    });
   });
 }
