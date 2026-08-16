@@ -84,4 +84,46 @@ Meteor.methods({
     // Valid token found
     return true;
   },
+
+    /**
+     * Immediately revokes and invalidates a recruiter access token.
+     * Accepts either { tokenId } or { token }.
+     */
+    async "recruiterLinks.revoke"({ tokenId, token } = {}) {
+      if (!this.userId) {
+        throw new Meteor.Error("not-authorized", "You must be logged in to revoke a link.");
+      }
+
+      const query = { userId: this.userId };
+      if (tokenId) {
+        check(tokenId, String);
+        query._id = tokenId;
+      } else if (token) {
+        check(token, String);
+        query.token = token;
+      } else {
+        throw new Meteor.Error(
+          "invalid-arguments",
+          "Either tokenId or token must be provided.",
+        );
+      }
+
+      const existingToken = await RecruiterTokens.findOneAsync(query);
+      if (!existingToken) {
+        throw new Meteor.Error(
+          "not-found",
+          "Token not found or you do not have permission to revoke it.",
+        );
+      }
+
+      // Invalidate immediately by setting expiresAt to the past
+      await RecruiterTokens.updateAsync(existingToken._id, {
+        $set: {
+          expiresAt: new Date(0),
+          isRevoked: true,
+        },
+      });
+
+      return true;
+    },
 });
