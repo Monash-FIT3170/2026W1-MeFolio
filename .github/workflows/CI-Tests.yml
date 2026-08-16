@@ -41,6 +41,20 @@ jobs:
       - name: Add Meteor to PATH
         run: echo "$HOME/.meteor" >> $GITHUB_PATH
 
+      - name: Debug Meteor cache
+        run: |
+          echo "cache-hit=${{ steps.meteor-cache.outputs.cache-hit }}"
+          echo "cache-key=${{ steps.meteor-cache.outputs.cache-key }}"
+          if [ -d "$HOME/.meteor" ]; then
+            echo ".meteor directory contents:" 
+            ls -la "$HOME/.meteor" || true
+          else
+            echo ".meteor directory is missing"
+          fi
+          echo "meteor binary location:"
+          which meteor || true
+        shell: bash
+
       - name: Install dependencies
         working-directory: ./mefolio
         run: npm ci
