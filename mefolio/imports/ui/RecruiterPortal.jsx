@@ -18,6 +18,7 @@ import {
   Download,
   Plus,
   Trash2,
+  Ban,
 } from "lucide-react";
 
 const RecruiterPortal = ({ portfolio }) => {
@@ -39,12 +40,11 @@ const RecruiterPortal = ({ portfolio }) => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
-  // Separate feedback for the access-code section so it shows there, not at
-  // the top of the settings section.
   const [codeMessage, setCodeMessage] = useState({ type: "", text: "" });
 
   // Load resumes
@@ -93,6 +93,39 @@ const RecruiterPortal = ({ portfolio }) => {
           setCodeMessage({
             type: "success",
             text: "New access code generated! Remember to click 'Save Changes'.",
+          });
+        }
+      },
+    );
+  };
+
+  // Revokes the current recruiter access token
+  const handleRevokeCode = () => {
+    if (!recruiterInfo.accessCode) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to revoke this recruiter access link? Anyone using this code will immediately lose access.",
+    );
+    if (!confirmed) return;
+
+    setIsRevoking(true);
+    setCodeMessage({ type: "", text: "" });
+
+    Meteor.call(
+      "recruiterLinks.revoke",
+      { token: recruiterInfo.accessCode },
+      (err) => {
+        setIsRevoking(false);
+        if (err) {
+          setCodeMessage({
+            type: "error",
+            text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
+          });
+        } else {
+          handleChange("accessCode", "");
+          setCodeMessage({
+            type: "success",
+            text: "Recruiter access link has been revoked. Remember to click 'Save Changes'.",
           });
         }
       },
@@ -218,9 +251,6 @@ const RecruiterPortal = ({ portfolio }) => {
     );
   };
 
-  // Copy the access code to the clipboard. Wrapped in try/catch because
-  // navigator.clipboard.writeText rejects (e.g. "Document is not focused")
-  // in some browser states, which otherwise surfaces as an uncaught error.
   const copyAccessCode = async () => {
     if (!recruiterInfo.accessCode) return;
     try {
@@ -240,7 +270,6 @@ const RecruiterPortal = ({ portfolio }) => {
     ? `${window.location.origin}/recruiter/${portfolio._id}`
     : "";
 
-  // Copy the shareable recruiter link. Same try/catch guard as the code copy.
   const copyLink = async () => {
     if (!recruiterLink) return;
     try {
@@ -457,16 +486,26 @@ const RecruiterPortal = ({ portfolio }) => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* Action Buttons: Generate & Revoke */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
           <button
             onClick={handleGenerateCode}
-            disabled={isSaving}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] disabled:opacity-50"
+            disabled={isSaving || isRevoking}
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw
               className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`}
             />
             Generate New Code
+          </button>
+
+          <button
+            onClick={handleRevokeCode}
+            disabled={!recruiterInfo.accessCode || isSaving || isRevoking}
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <Ban className={`w-4 h-4 ${isRevoking ? "animate-spin" : ""}`} />
+            {isRevoking ? "Revoking..." : "Revoke Access Link"}
           </button>
         </div>
 
