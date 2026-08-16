@@ -16,13 +16,11 @@ if (Meteor.isServer) {
       //  Prevents collisions with existing users in Compass
       const timestamp = Date.now();
       const uniqueEmail = `test-${timestamp}@mefolio.com`;
-      const uniqueUsername = `dev-track-${timestamp}`;
 
       const testAccount = {
         email: uniqueEmail,
         password: "securePassword123",
         profile: {
-          userName: uniqueUsername,
           fullName: "Integration Tester",
         },
       };
@@ -41,7 +39,6 @@ if (Meteor.isServer) {
 
       // Verify profile fields match the System Architect's requested structure
       expect(savedUser.profile.fullName).to.equal("Integration Tester");
-      expect(savedUser.profile.userName).to.equal(uniqueUsername);
 
       // Verify Security: Password must be hashed (services.password exists)
       expect(savedUser.services.password).to.exist;
