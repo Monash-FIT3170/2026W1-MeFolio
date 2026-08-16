@@ -125,7 +125,7 @@ const RecruiterPortal = ({ portfolio }) => {
           handleChange("accessCode", "");
           setCodeMessage({
             type: "success",
-            text: "Recruiter access link has been revoked. Remember to click 'Save Changes'.",
+            text: "Recruiter access link has been revoked.",
           });
         }
       },
