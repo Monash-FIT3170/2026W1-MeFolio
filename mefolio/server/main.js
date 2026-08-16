@@ -289,14 +289,11 @@ Meteor.publish("portfolios.all", function () {
     );
   }
 
-  // Logged in: full data for your own portfolios, stripped for everyone else.
-  return [
-    PortfolioCollection.find({ userId: this.userId }, { sort }),
-    PortfolioCollection.find(
-      { userId: { $ne: this.userId } },
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    ),
-  ];
+  // Logged in: only your own portfolios. Nothing on the dashboard needs other
+  // users' portfolios, and a publish function cannot return two cursors for the
+  // same collection. The recruiter view reads its portfolio from the
+  // token-gated `portfolio.recruiterView` publication instead.
+  return PortfolioCollection.find({ userId: this.userId }, { sort });
 });
 
 Meteor.publish("users.current", function () {
@@ -324,26 +321,6 @@ Meteor.publish("currentUser.profile", function () {
 
 Meteor.publish("portfolioProjects.all", function () {
   return PortfolioProjectsCollection.find({}, { sort: { orderIndex: 1 } });
-});
-
-Meteor.publish("portfolios.byUsername", function (username) {
-  check(username, String);
-  const sort = { createdAt: -1 };
-
-  if (!this.userId) {
-    return PortfolioCollection.find(
-      { username },
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    );
-  }
-
-  return [
-    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
-    PortfolioCollection.find(
-      { username, userId: { $ne: this.userId } },
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    ),
-  ];
 });
 
 Meteor.methods({
