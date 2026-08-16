@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-suite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
@@ -18,10 +18,23 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Cache Meteor
+        id: meteor-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            $HOME/.meteor
+          key: ${{ runner.os }}-meteor-${{ hashFiles('mefolio/.meteor/release') }}
+          restore-keys: |
+            ${{ runner.os }}-meteor-
+
       - name: Install Meteor
+        if: steps.meteor-cache.outputs.cache-hit != 'true'
         run: |
             curl https://install.meteor.com/ | sh
-            echo "$HOME/.meteor" >> $GITHUB_PATH
+
+      - name: Add Meteor to PATH
+        run: echo "$HOME/.meteor" >> $GITHUB_PATH
 
       - name: Install dependencies
         working-directory: ./mefolio
