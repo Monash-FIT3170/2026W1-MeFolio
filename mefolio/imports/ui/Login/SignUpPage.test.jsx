@@ -17,7 +17,7 @@ if (Meteor.isClient) {
           onSwitchToSignIn={() => {}}
           onShowTerms={() => {}}
           onShowPrivacy={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByText("Terms")).to.exist;
@@ -31,7 +31,7 @@ if (Meteor.isClient) {
           onSwitchToSignIn={() => {}}
           onShowTerms={() => {}}
           onShowPrivacy={() => {}}
-        />
+        />,
       );
 
       // Fill all required fields with mismatched passwords
@@ -51,22 +51,17 @@ if (Meteor.isClient) {
         screen.getByPlaceholderText("Create a strong password"),
         {
           target: { value: "password123" },
-        }
+        },
       );
 
-      fireEvent.change(
-        screen.getByPlaceholderText("Confirm your password"),
-        {
-          target: { value: "password456" },
-        }
-      );
+      fireEvent.change(screen.getByPlaceholderText("Confirm your password"), {
+        target: { value: "password456" },
+      });
 
       fireEvent.click(screen.getByRole("checkbox"));
 
       // Submit form
-      fireEvent.click(
-        screen.getByRole("button", { name: /create account/i })
-      );
+      fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
       // Expect error
       const errorDiv = await screen.findByText("Passwords do not match!");
