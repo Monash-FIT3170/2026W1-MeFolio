@@ -33,7 +33,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   const [resumes, setResumes] = useState([]);
 
   // Link management states
-  const [selectedPortolioId, setSelectedPortfolioId] = useState(
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(
     portfolio?._id || "",
   );
   const [showLinkMenu, setShowLinkMenu] = useState(false);
@@ -96,8 +96,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     if (!selectedPortfolioId) return;
 
     setIsLoadingLinks(true);
-    Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links)
-  => {
+    Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) => {
       setIsLoadingLinks(false);
       if (err) {
         console.error("Failed to load recruiter links:", err);
@@ -113,8 +112,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
   // Generates Recruiter Access Token
   const handleGenerateCode = () => {
-    if (!portfolio?._id) {
-      setCodeMessage({ type: "error", text: "No portfolio found." });
+    if (!selectedPortfolioId) {
+      setCodeMessage({ type: "error", text: "No portfolio selected." });
       return;
     }
 
@@ -123,7 +122,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "tokens.generate",
-      { portfolioId: portfolio._id, recruiterName: "General Recruiter" },
+      { portfolioId: selectedPortfolioId, recruiterName: "General Recruiter" },
       (err, token) => {
         setIsSaving(false);
         if (err) {
@@ -135,23 +134,32 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           handleChange("accessCode", token);
           setCodeMessage({
             type: "success",
-            text: "New access code generated! Remember to click 'Save Changes'.",
+            text: "New access code generated!",
           });
+
+          // TODO: Must set expiry backend handling
+          const newLink = {
+            token: token,
+            status: "active",
+            createdAt: new Date(),
+            expiresAt: null,
+          };
+          setRecruiterLinks((prev) => [newLink, ...prev]);
+
           // Refresh
           if (selectedPortfolioId) {
-            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) =>
-            {
-              if (!err) setRecruiterLinks(links || []);
-            })
+            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) => {
+              if (!err && links) setRecruiterLinks(links);
+            });
           }
         }
       },
     );
   };
 
-  // Revokes the current recruiter access token
-  const handleRevokeCode = () => {
-    if (!recruiterInfo.accessCode) return;
+  // Revokes a specific recruiter access token
+  const handleRevokeCode = (token) => {
+    if (!token) return;
 
     const confirmed = window.confirm(
       "Are you sure you want to revoke this recruiter access link? Anyone using this code will immediately lose access.",
@@ -163,7 +171,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "recruiterLinks.revoke",
-      { token: recruiterInfo.accessCode },
+      { token },
       (err) => {
         setIsRevoking(false);
         if (err) {
@@ -172,14 +180,15 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
           });
         } else {
-          handleChange("accessCode", "");
+          if (token === recruiterInfo.accessCode) {
+            handleChange("accessCode", "");
+          }
           setCodeMessage({
             type: "success",
             text: "Recruiter access link has been revoked.",
           });
           if (selectedPortfolioId) {
-            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) =>
-            {
+            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) => {
               if (!err) setRecruiterLinks(links || []);
             });
           }
@@ -353,7 +362,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       pending: { color: "bg-blue-100 text-blue-800", label: "PENDING" },
     };
     return statusMap[status] || statusMap.pending;
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -364,21 +373,21 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           Select Portfolio
         </h2>
         <p className="text-muted text-sm mb-4">
-          Select a portfolio to manage recruiter links
+          Select a portfolio to manage recruiter links.
         </p>
         <div className="relative">
           <select
             value={selectedPortfolioId}
             onChange={(e) => setSelectedPortfolioId(e.target.value)}
             className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none appearance-none min-h-[44px]"
-            >
-              {allPortfolios.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.title || "Untitled Portfolio"}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+          >
+            {allPortfolios.map((p) => (
+              <option key={p._id} value={p._id}>
+                {p.title || "Untitled Portfolio"}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
         </div>
       </section>
 
@@ -558,15 +567,25 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       {/* Access Code Section */}
       <section className="bg-surface-fill border border-line rounded-2xl p-7">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-2">
-          <Shield size={22} />
-          Recruiter Access Links and Codes
+          <Link2 size={22} />
+          Recruiter Access Links
         </h2>
 
-        <p className="text-muted mb-8">
+        <p className="text-muted mb-6">
           Generate and manage access links and codes for recruiters to view your private
           portfolio information!
           Each link has a status and can be revoked at any time.
         </p>
+
+        {/* Generate New Link Button */}
+        <button
+          onClick={handleGenerateCode}
+          disabled={isSaving || isRevoking || !selectedPortfolioId}
+          className="inline-flex items-center gap-2 px-4 py-3 bg-button text-secondary font-bold rounded-lg hover:opacity-90 transition-opacity min-h-[44px] disabled:opacity-50 cursor-pointer mb-6"
+        >
+          <RefreshCw className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} />
+          Generate New Link
+        </button>
 
         {codeMessage.text && (
           <div
@@ -582,90 +601,83 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           </div>
         )}
 
-        {/* Action Buttons: Generate & Revoke */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-          <button
-            onClick={handleGenerateCode}
-            disabled={isSaving || isRevoking}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] disabled:opacity-50 cursor-pointer"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`}
-            />
-            Generate New Code
-          </button>
-
-          <button
-            onClick={handleRevokeCode}
-            disabled={!recruiterInfo.accessCode || isSaving || isRevoking}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <Ban className={`w-4 h-4 ${isRevoking ? "animate-spin" : ""}`} />
-            {isRevoking ? "Revoking..." : "Revoke Access Link"}
-          </button>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="flex-1 w-full relative">
-            <input
-              type={showAccessCode ? "text" : "password"}
-              value={recruiterInfo.accessCode || "No access code generated yet"}
-              readOnly
-              className="w-full px-4 py-3 bg-background border border-line rounded-lg text-primary font-mono min-h-[44px]"
-            />
-            <button
-              onClick={() => setShowAccessCode(!showAccessCode)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-accent1 transition-colors"
-            >
-              {showAccessCode ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
+        {/* Links Table */}
+        {isLoadingLinks ? (
+          <div className="text-center py-8 text-muted">Loading links...</div>
+        ) : recruiterLinks.length === 0 ? (
+          <div className="text-center py-8 text-muted border border-dashed border-line rounded-lg">
+            No recruiter links generated yet. Click "Generate New Link" to create one.
           </div>
-          <button
-            onClick={copyAccessCode}
-            disabled={!recruiterInfo.accessCode}
-            className="w-full sm:w-auto px-4 py-3 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        {recruiterInfo.accessCode && (
-          <div className="mt-4 p-4 bg-selected border border-line rounded-lg">
-            <p className="text-sm text-primary font-medium flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              Share this link with recruiters:
-            </p>
-            <code className="block mt-2 p-2 bg-background rounded border border-line text-sm text-primary break-all">
-              {recruiterLink}
-            </code>
-            <button
-              onClick={copyLink}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px]"
-            >
-              {copiedLink ? (
-                <>
-                  <Check className="w-4 h-4 text-green-600" />
-                  Link copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy link
-                </>
-              )}
-            </button>
-            <p className="text-xs text-muted mt-2">
-              Recruiters will need the access code to view your private
-              portfolio information.
-            </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-line">
+                  <th className="px-4 py-3 text-xs font-bold text-muted uppercase tracking-wider">Code</th>
+                  <th className="px-4 py-3 text-xs font-bold text-muted uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-xs font-bold text-muted uppercase tracking-wider">Created</th>
+                  <th className="px-4 py-3 text-xs font-bold text-muted uppercase tracking-wider">Expires</th>
+                  <th className="px-4 py-3 text-xs font-bold text-muted uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recruiterLinks.map((link) => {
+                  const statusBadge = getLinkStatus(link.status);
+                  return (
+                    <tr key={link.token} className="border-b border-line hover:bg-selected/30 transition-colors">
+                      <td className="px-4 py-3 font-mono text-sm text-primary">
+                        {link.token.substring(0, 8)}...
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge.color}`}>
+                          {statusBadge.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted">
+                        {link.createdAt ? new Date(link.createdAt).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted">
+                        {link.expiresAt ? new Date(link.expiresAt).toLocaleDateString() : "Never"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {link.status === "active" && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${window.location.origin}/recruiter/${selectedPortfolioId}`);
+                                  setCopied(true);
+                                  setTimeout(() => setCopied(false), 2000);
+                                }}
+                                className="p-2 text-muted hover:text-accent1 transition-colors min-h-[44px] min-w-[44px]"
+                                title="Copy link"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => window.open(`${window.location.origin}/recruiter/${selectedPortfolioId}`, "_blank")}
+                                className="p-2 text-muted hover:text-accent1 transition-colors min-h-[44px] min-w-[44px]"
+                                title="Open link"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleRevokeCode(link.token)}
+                                disabled={isRevoking}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] disabled:opacity-50"
+                                title="Revoke link"
+                              >
+                                <Ban className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
