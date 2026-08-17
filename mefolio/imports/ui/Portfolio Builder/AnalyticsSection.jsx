@@ -43,10 +43,7 @@ const buildDailyAnalytics = (engagements = []) => {
     const dateKey = date.toISOString().split("T")[0];
     const currentClicks = clicksByDate.get(dateKey) || 0;
 
-    clicksByDate.set(
-      dateKey,
-      currentClicks + Number(engagement.clicks || 0),
-    );
+    clicksByDate.set(dateKey, currentClicks + Number(engagement.clicks || 0));
   });
 
   return [...clicksByDate.entries()]
@@ -56,6 +53,34 @@ const buildDailyAnalytics = (engagements = []) => {
     }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 };
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const buildProjectHeatmap = (projects = [], engagements = []) =>
+  projects
+    .map((project) => {
+      const projectId = getProjectId(project);
+      const clicksByDay = Array(7).fill(0);
+
+      engagements.forEach((engagement) => {
+        if (engagement.project_id !== projectId || !engagement.date) return;
+
+        const date = new Date(engagement.date);
+        if (Number.isNaN(date.getTime())) return;
+
+        // Convert JavaScript's Sunday-first index to Monday-first.
+        const dayIndex = (date.getDay() + 6) % 7;
+        clicksByDay[dayIndex] += Number(engagement.clicks || 0);
+      });
+
+      return {
+        id: projectId,
+        title: project.title || "Untitled project",
+        clicksByDay,
+        totalClicks: clicksByDay.reduce((total, clicks) => total + clicks, 0),
+      };
+    })
+    .sort((a, b) => b.totalClicks - a.totalClicks);
 
 const ProjectClicksChart = ({ analytics }) => {
   const highestClickCount = Math.max(
@@ -166,9 +191,7 @@ const ClickActivity = ({ dailyAnalytics }) => {
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6">
-        <h2 className="m-0 text-lg font-bold text-gray-900">
-          Click Activity
-        </h2>
+        <h2 className="m-0 text-lg font-bold text-gray-900">Click Activity</h2>
         <p className="mt-1 text-sm text-gray-500">
           Recorded portfolio project clicks by date.
         </p>
@@ -213,9 +236,75 @@ const ClickActivity = ({ dailyAnalytics }) => {
   );
 };
 
+const ProjectClickHeatmap = ({ analytics }) => {
+  const highestDailyClickCount = Math.max(
+    ...analytics.flatMap((project) => project.clicksByDay),
+    0,
+  );
+
+  const getCellColor = (clicks) => {
+    if (clicks === 0) return "rgb(243 244 246)";
+
+    const intensity = 0.35 + (clicks / highestDailyClickCount) * 0.65;
+    return `rgb(79 70 229 / ${intensity})`;
+  };
+
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-6">
+        <h2 className="m-0 text-lg font-bold text-gray-900">
+          Popular Projects Click Heatmap
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Color intensity shows click frequency by day of the week.
+        </p>
+      </div>
+
+      {analytics.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          No project activity is available yet.
+        </p>
+      ) : (
+        <div className="space-y-7 overflow-x-auto pb-2">
+          {analytics.map((project) => (
+            <div key={project.id} className="min-w-[42rem]">
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <h3 className="m-0 truncate text-sm font-semibold text-gray-800">
+                  {project.title}
+                </h3>
+                <span className="shrink-0 text-xs text-gray-500">
+                  {project.totalClicks}{" "}
+                  {project.totalClicks === 1 ? "click" : "clicks"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {project.clicksByDay.map((clicks, index) => (
+                  <div key={WEEKDAYS[index]}>
+                    <div
+                      className="h-24 rounded transition-transform duration-150 hover:-translate-y-0.5"
+                      style={{ backgroundColor: getCellColor(clicks) }}
+                      title={`${project.title}: ${clicks} ${clicks === 1 ? "click" : "clicks"} on ${WEEKDAYS[index]}`}
+                      aria-label={`${project.title}, ${WEEKDAYS[index]}: ${clicks} clicks`}
+                    />
+                    <span className="mt-2 block text-xs text-gray-400">
+                      {WEEKDAYS[index]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+};
+
 const AnalyticsSection = ({ projects = [], engagements = [] }) => {
   const projectAnalytics = buildProjectAnalytics(projects, engagements);
   const dailyAnalytics = buildDailyAnalytics(engagements);
+  const projectHeatmap = buildProjectHeatmap(projects, engagements);
 
   const totalClicks = projectAnalytics.reduce(
     (total, project) => total + project.totalClicks,
@@ -251,6 +340,8 @@ const AnalyticsSection = ({ projects = [], engagements = [] }) => {
 
       <ClickActivity dailyAnalytics={dailyAnalytics} />
 
+      <ProjectClickHeatmap analytics={projectHeatmap} />
+
       <section className="rounded-xl border border-dashed border-gray-300 bg-white p-6">
         <h2 className="m-0 text-lg font-bold text-gray-900">
           Visitor Locations
@@ -283,6 +374,17 @@ ClickActivity.propTypes = {
     PropTypes.shape({
       date: PropTypes.string,
       clicks: PropTypes.number,
+    }),
+  ).isRequired,
+};
+
+ProjectClickHeatmap.propTypes = {
+  analytics: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      title: PropTypes.string,
+      totalClicks: PropTypes.number,
+      clicksByDay: PropTypes.arrayOf(PropTypes.number),
     }),
   ).isRequired,
 };
