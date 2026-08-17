@@ -12,6 +12,7 @@ import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
 import "/imports/ui/Recruiter/recruiterVisitAlertLogic.test.js";
+import "/imports/ui/Public/PublicPortfolioPage.test.jsx";
 import "/server/recruiter-tokens/methods.test.js";
 import "/imports/ui/Login/SignUpPage.test.jsx";
 import "/server/recruiter-tokens/verifytokens.test.js";
