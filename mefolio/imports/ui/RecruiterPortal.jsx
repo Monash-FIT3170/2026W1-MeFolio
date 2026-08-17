@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
+import { PortfolioCollection } from "/imports/api/portfolio";
 import {
   Building,
   DollarSign,
@@ -19,12 +21,24 @@ import {
   Plus,
   Trash2,
   Ban,
+  Link2,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
+import PropTypes from "prop-types";
 
-const RecruiterPortal = ({ portfolio }) => {
+const RecruiterPortal = ({ portfolio, userId }) => {
   const fileInputRef = useRef(null);
 
   const [resumes, setResumes] = useState([]);
+
+  // Link management states
+  const [selectedPortolioId, setSelectedPortfolioId] = useState(
+    portfolio?._id || "",
+  );
+  const [showLinkMenu, setShowLinkMenu] = useState(false);
+  const [recruiterLinks, setRecruiterLinks] = useState([]);
+  const [isLoadingLinks, setIsLoadingLinks] = useState(false);
 
   // Recruiter settings state
   const [recruiterInfo, setRecruiterInfo] = useState({
@@ -49,6 +63,13 @@ const RecruiterPortal = ({ portfolio }) => {
   // the top of the settings section.
   const [codeMessage, setCodeMessage] = useState({ type: "", text: "" });
 
+  // Get all portfolios for the current user for link-management
+  const { allPortfolios } = useTracker(() => {
+    Meteor.subscribe("portfolios.all");
+    const portfolios = PortfolioCollection.find({ userId }).fetch();
+    return { allPortfolios: portfolios };
+  }, [userId]);
+
   // Load resumes
   useEffect(() => {
     const resumeLinks = Array.isArray(portfolio?.recruiterInfo?.resumeLinks)
@@ -69,6 +90,26 @@ const RecruiterPortal = ({ portfolio }) => {
     portfolio?.recruiterInfo?.resumeLink,
     portfolio?.recruiterInfo?.resumeLinks,
   ]);
+
+  // Load recruiter links
+  useEffect(() => {
+    if (!selectedPortfolioId) return;
+
+    setIsLoadingLinks(true);
+    Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links)
+  => {
+      setIsLoadingLinks(false);
+      if (err) {
+        console.error("Failed to load recruiter links:", err);
+        setRecruiterLinks([]);
+      } else {
+        setRecruiterLinks(links || []);
+      }
+    });
+  }, [selectedPortfolioId]);
+
+  // Get selected portfolio
+  const selectedPortfolio = allPortfolios.find(p => p._id === selectedPortfolioId) || portfolio;
 
   // Generates Recruiter Access Token
   const handleGenerateCode = () => {
@@ -96,6 +137,13 @@ const RecruiterPortal = ({ portfolio }) => {
             type: "success",
             text: "New access code generated! Remember to click 'Save Changes'.",
           });
+          // Refresh
+          if (selectedPortfolioId) {
+            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) =>
+            {
+              if (!err) setRecruiterLinks(links || []);
+            })
+          }
         }
       },
     );
@@ -129,6 +177,12 @@ const RecruiterPortal = ({ portfolio }) => {
             type: "success",
             text: "Recruiter access link has been revoked.",
           });
+          if (selectedPortfolioId) {
+            Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) =>
+            {
+              if (!err) setRecruiterLinks(links || []);
+            });
+          }
         }
       },
     );
@@ -272,7 +326,7 @@ const RecruiterPortal = ({ portfolio }) => {
   };
 
   const recruiterLink = recruiterInfo.accessCode
-    ? `${window.location.origin}/recruiter/${portfolio._id}`
+    ? `${window.location.origin}/recruiter/${portfolio._id || selectedPortfolioId}`
     : "";
 
   // Copy the shareable recruiter link. Same try/catch guard as the code copy.
@@ -291,8 +345,43 @@ const RecruiterPortal = ({ portfolio }) => {
     }
   };
 
+  const getLinkStatus = (status) => {
+    const statusMap = {
+      active: { color: "bg-green-100 text-green-800", label: "ACTIVE" },
+      expired: { color: "bg-yellow-100 text-yellow-800", label: "EXPIRED" },
+      revoked: { color: "bg-red-100 text-red-800", label: "REVOKED" },
+      pending: { color: "bg-blue-100 text-blue-800", label: "PENDING" },
+    };
+    return statusMap[status] || statusMap.pending;
+  }
+
   return (
     <div className="space-y-8">
+      {/* PORTFOLIO SELECTOR */}
+      <section className="bg-surface-fill border border-line rounded-2xl p-7">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-4">
+          <Link2 size={22} />
+          Select Portfolio
+        </h2>
+        <p className="text-muted text-sm mb-4">
+          Select a portfolio to manage recruiter links
+        </p>
+        <div className="relative">
+          <select
+            value={selectedPortfolioId}
+            onChange={(e) => setSelectedPortfolioId(e.target.value)}
+            className="w-full px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none appearance-none min-h-[44px]"
+            >
+              {allPortfolios.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.title || "Untitled Portfolio"}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+        </div>
+      </section>
+
       {/* RECRUITER SETTINGS SECTION */}
       <section className="bg-surface-fill border border-line rounded-2xl p-7">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -470,12 +559,13 @@ const RecruiterPortal = ({ portfolio }) => {
       <section className="bg-surface-fill border border-line rounded-2xl p-7">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-2">
           <Shield size={22} />
-          Recruiter Access Code
+          Recruiter Access Links and Codes
         </h2>
 
         <p className="text-muted mb-8">
-          Generate and manage access codes for recruiters to view your private
+          Generate and manage access links and codes for recruiters to view your private
           portfolio information!
+          Each link has a status and can be revoked at any time.
         </p>
 
         {codeMessage.text && (
@@ -659,6 +749,11 @@ const RecruiterPortal = ({ portfolio }) => {
       </section>
     </div>
   );
+};
+
+RecruiterPortal.propTypes = {
+  portfolio: PropTypes.object,
+  userId: PropTypes.string,
 };
 
 export default RecruiterPortal;
