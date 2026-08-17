@@ -83,6 +83,25 @@ if (Meteor.isServer) {
       expect(cursors).to.not.be.an("array");
     });
 
+    it("publishes nothing for a revoked token even if expiresAt is in the future", async function () {
+      const revokedToken = `revoked-pub-${Date.now()}`;
+      await RecruiterTokens.insertAsync({
+        portfolioId,
+        token: revokedToken,
+        recruiterName: "Pub Tester",
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 60000),
+        isRevoked: true,
+      });
+
+      const { cursors, readyCalled } = await runHandler(
+        portfolioId,
+        revokedToken,
+      );
+      expect(readyCalled).to.equal(true);
+      expect(cursors).to.not.be.an("array");
+    });
+
     it("publishes only published content and recruiter info for a valid token", async function () {
       const { cursors } = await runHandler(portfolioId, validToken);
       expect(cursors).to.be.an("array").with.lengthOf(1);

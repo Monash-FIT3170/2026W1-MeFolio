@@ -253,7 +253,7 @@ const RecruiterPortal = ({ portfolio }) => {
     );
   };
 
-   // Copy the access code to the clipboard. Wrapped in try/catch because
+  // Copy the access code to the clipboard. Wrapped in try/catch because
   // navigator.clipboard.writeText rejects (e.g. "Document is not focused")
   // in some browser states, which otherwise surfaces as an uncaught error.
   const copyAccessCode = async () => {
