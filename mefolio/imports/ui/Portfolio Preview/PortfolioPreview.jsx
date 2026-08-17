@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import { useRef, useState, useMemo, useEffect, useEffect } from "react";
-import { useNavigate, useParams, useParams } from "react-router-dom";
+import { useRef, useState, useMemo, _useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
@@ -28,46 +28,50 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { portfolio: loadedPortfolio, projects: loadedProjects, portfolio, ready } =
-    useTracker(() => {
+  const {
+    portfolio: _loadedPortfolio,
+    projects: loadedProjects,
+    portfolio,
+    ready,
+  } = useTracker(() => {
     if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
-      if (draftPortfolio || draftProjects) {
-        return {
-          portfolio: draftPortfolio,
-          projects: draftProjects || [],
-        };
-      }
+    if (draftPortfolio || draftProjects) {
+      return {
+        portfolio: draftPortfolio,
+        projects: draftProjects || [],
+      };
+    }
 
-      if (isPublicView) {
+    if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
     const portfolioSub = Meteor.subscribe("portfolios.all");
-      const projectsSub = Meteor.subscribe("projects.all");
-      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-      const currentUserSub = Meteor.subscribe("currentUser.profile");
+    const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
-      if (
-        !portfolioSub.ready() ||
-        !projectsSub.ready() ||
-        !portfolioProjectsSub.ready() ||
-        !currentUserSub.ready()
-      ) {
-        return { portfolio: null, projects: [], ready: false, };
-      }
+    if (
+      !portfolioSub.ready() ||
+      !projectsSub.ready() ||
+      !portfolioProjectsSub.ready() ||
+      !currentUserSub.ready()
+    ) {
+      return { portfolio: null, projects: [], ready: false };
+    }
 
-      const currentUser = Meteor.user();
-      const portfolio =
-        PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-        PortfolioCollection.findOne({ _id: portfolioId }) ||
+    const currentUser = Meteor.user();
+    const portfolio =
+      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
+      PortfolioCollection.findOne({ _id: portfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
-          ? PortfolioCollection.findOne()
-          : null);
+        ? PortfolioCollection.findOne()
+        : null);
 
     if (!portfolio?._id) return { projects: [], portfolio, ready: true };
 
@@ -76,27 +80,28 @@ export const PortfolioPreview = ({
       return { projects: [], portfolio, ready: false };
     }
 
-      const projectOrderDocuments = PortfolioProjectsCollection.find(
-        { portfolioId: portfolio._id },
-        { sort: { orderIndex: 1 } },
-      ).fetch();
-      const orderedProjectIds = projectOrderDocuments.length
-        ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
-        : portfolio.projects || [];
+    const projectOrderDocuments = PortfolioProjectsCollection.find(
+      { portfolioId: portfolio._id },
+      { sort: { orderIndex: 1 } },
+    ).fetch();
+    const orderedProjectIds = projectOrderDocuments.length
+      ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+      : portfolio.projects || [];
 
-    if (!orderedProjectIds.length) return { projects: [], portfolio, ready: true };
+    if (!orderedProjectIds.length)
+      return { projects: [], portfolio, ready: true };
 
-      const projectMap = new Map(
-        ProjectCollection.find({ _id: { $in: orderedProjectIds } })
-          .fetch()
-          .map((project) => [project._id, project]),
-      );
-      const projects = orderedProjectIds
-        .map((projectId) => projectMap.get(projectId))
-        .filter(Boolean);
+    const projectMap = new Map(
+      ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+        .fetch()
+        .map((project) => [project._id, project]),
+    );
+    const projects = orderedProjectIds
+      .map((projectId) => projectMap.get(projectId))
+      .filter(Boolean);
 
-      return { portfolio, projects, ready: true };
-    }, [draftPortfolio, draftProjects]);
+    return { portfolio, projects, ready: true };
+  }, [draftPortfolio, draftProjects]);
 
   const projects = draftProjects || loadedProjects;
 
