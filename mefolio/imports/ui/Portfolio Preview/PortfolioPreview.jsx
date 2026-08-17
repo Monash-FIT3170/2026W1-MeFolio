@@ -55,7 +55,11 @@ export const PortfolioPreview = ({
           : selectedPortfolio.projects || [];
 
         if (!orderedProjectIds.length) {
-          return { portfolio: selectedPortfolio, projects: [], ready: viewerSub.ready() };
+          return {
+            portfolio: selectedPortfolio,
+            projects: [],
+            ready: viewerSub.ready(),
+          };
         }
 
         const projectMap = new Map(
