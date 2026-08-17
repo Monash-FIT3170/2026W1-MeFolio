@@ -99,15 +99,19 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     }
 
     setIsLoadingLinks(true);
-    Meteor.call("recruiterLinks.list", { portfolioId: selectedPortfolioId }, (err, links) => {
-      setIsLoadingLinks(false);
-      if (err) {
-        console.error("Failed to load recruiter links:", err);
-        setRecruiterLinks([]);
-      } else {
-        setRecruiterLinks(links || []);
-      }
-    });
+    Meteor.call(
+      "recruiterLinks.list",
+      { portfolioId: selectedPortfolioId },
+      (err, links) => {
+        setIsLoadingLinks(false);
+        if (err) {
+          console.error("Failed to load recruiter links:", err);
+          setRecruiterLinks([]);
+        } else {
+          setRecruiterLinks(links || []);
+        }
+      },
+    );
   }, [selectedPortfolioId]);
 
   // Update selected portfolio when prop changes
@@ -118,7 +122,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   }, [portfolio?._id]);
 
   // Get selected portfolio
-  const selectedPortfolio = allPortfolios.find(p => p._id === selectedPortfolioId) || portfolio;
+  const selectedPortfolio =
+    allPortfolios.find((p) => p._id === selectedPortfolioId) || portfolio;
 
   // Generates Recruiter Access Token
   const handleGenerateCode = () => {
@@ -172,35 +177,29 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     setIsRevoking(true);
     setCodeMessage({ type: "", text: "" });
 
-    Meteor.call(
-      "recruiterLinks.revoke",
-      { token },
-      (err) => {
-        setIsRevoking(false);
-        if (err) {
-          setCodeMessage({
-            type: "error",
-            text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
-          });
-        } else {
-          setRecruiterLinks((prev) =>
-            prev.map((link) =>
-              link.token === token
-                ? { ...link, status: "revoked" }
-                : link
-            )
-          );
-          
-          if (token === recruiterInfo.accessCode) {
-            handleChange("accessCode", "");
-          }
-          setCodeMessage({
-            type: "success",
-            text: "Recruiter access link has been revoked.",
-          });
+    Meteor.call("recruiterLinks.revoke", { token }, (err) => {
+      setIsRevoking(false);
+      if (err) {
+        setCodeMessage({
+          type: "error",
+          text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
+        });
+      } else {
+        setRecruiterLinks((prev) =>
+          prev.map((link) =>
+            link.token === token ? { ...link, status: "revoked" } : link,
+          ),
+        );
+
+        if (token === recruiterInfo.accessCode) {
+          handleChange("accessCode", "");
         }
-      },
-    );
+        setCodeMessage({
+          type: "success",
+          text: "Recruiter access link has been revoked.",
+        });
+      }
+    });
   };
 
   // Revoke the current active code
@@ -588,9 +587,10 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </h2>
 
         <p className="text-muted mb-6">
-          Generate and manage access codes for recruiters to view your private portfolio.
-          Each code can be revoked at any time. The shareable link is the same for all recruiters,
-          but each recruiter needs their own unique access code.
+          Generate and manage access codes for recruiters to view your private
+          portfolio. Each code can be revoked at any time. The shareable link is
+          the same for all recruiters, but each recruiter needs their own unique
+          access code.
         </p>
 
         {/* Base Link */}
@@ -612,7 +612,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             </button>
           </div>
           <p className="text-xs text-blue-600 mt-2">
-            Share this link with recruiters. Each recruiter will need their own access code.
+            Share this link with recruiters. Each recruiter will need their own
+            access code.
           </p>
         </div>
 
@@ -637,29 +638,39 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             disabled={isSaving || isRevoking}
             className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-accent1 border border-line rounded-lg hover:bg-selected transition-colors min-h-[44px] disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isSaving ? "animate-spin" : ""}`}
+            />
             Generate New Code
           </button>
         </div>
 
         {/* Links Table with Expandable Details */}
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-primary mb-4">Generated Access Codes</h3>
-          
+          <h3 className="text-sm font-semibold text-primary mb-4">
+            Generated Access Codes
+          </h3>
+
           {isLoadingLinks ? (
-            <div className="text-center py-8 text-muted">Loading access codes...</div>
+            <div className="text-center py-8 text-muted">
+              Loading access codes...
+            </div>
           ) : recruiterLinks.length === 0 ? (
             <div className="text-center py-8 text-muted border border-dashed border-line rounded-lg">
-              No access codes generated yet. Click "Generate New Code" to create one.
+              No access codes generated yet. Click "Generate New Code" to create
+              one.
             </div>
           ) : (
             <div className="space-y-3">
               {recruiterLinks.map((link) => {
                 const statusBadge = getLinkStatus(link.status);
                 const isExpanded = expandedLink === link.token;
-                
+
                 return (
-                  <div key={link.token} className="border border-line rounded-lg overflow-hidden">
+                  <div
+                    key={link.token}
+                    className="border border-line rounded-lg overflow-hidden"
+                  >
                     {/* Clickable Row */}
                     <div
                       className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-selected/30 transition-colors ${
@@ -671,12 +682,18 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                         <span className="text-sm font-mono text-primary truncate">
                           {link.token}
                         </span>
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${statusBadge.color}`}>
+                        <span
+                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${statusBadge.color}`}
+                        >
                           {statusBadge.label}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-muted" /> : <ChevronRight className="w-4 h-4 text-muted" />}
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-muted" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-muted" />
+                        )}
                       </div>
                     </div>
 
@@ -686,33 +703,46 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <p className="text-xs text-muted">Access Code</p>
-                            <p className="text-sm font-mono text-primary break-all">{link.token}</p>
+                            <p className="text-sm font-mono text-primary break-all">
+                              {link.token}
+                            </p>
                           </div>
                           <div>
                             <p className="text-xs text-muted">Status</p>
-                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge.color}`}>
+                            <span
+                              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge.color}`}
+                            >
                               {statusBadge.label}
                             </span>
                           </div>
                           <div>
                             <p className="text-xs text-muted">Created</p>
                             <p className="text-sm text-primary">
-                              {link.createdAt ? new Date(link.createdAt).toLocaleDateString() : "-"}
+                              {link.createdAt
+                                ? new Date(link.createdAt).toLocaleDateString()
+                                : "-"}
                             </p>
                           </div>
                           <div>
                             <p className="text-xs text-muted">Expires</p>
                             <p className="text-sm text-primary">
-                              {link.expiresAt ? new Date(link.expiresAt).toLocaleDateString() : "Never"}
+                              {link.expiresAt
+                                ? new Date(link.expiresAt).toLocaleDateString()
+                                : "Never"}
                             </p>
                           </div>
                           <div className="sm:col-span-2">
-                            <p className="text-xs text-muted">Full Link for Recruiter</p>
+                            <p className="text-xs text-muted">
+                              Full Link for Recruiter
+                            </p>
                             <code className="block mt-1 text-xs text-primary bg-surface-fill p-2 rounded border border-line break-all">
                               {baseRecruiterLink}
                             </code>
                             <p className="text-xs text-muted mt-1">
-                              Recruiter will need to enter: <span className="font-mono font-bold">{link.token}</span>
+                              Recruiter will need to enter:{" "}
+                              <span className="font-mono font-bold">
+                                {link.token}
+                              </span>
                             </p>
                           </div>
                         </div>
