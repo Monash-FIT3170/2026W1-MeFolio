@@ -210,6 +210,36 @@ if (Meteor.isServer) {
           expect(error.error).to.equal("invalid-access");
         }
       });
+
+      it("rejects a token marked as isRevoked even if expiresAt is in the future", async function () {
+        const verifyHandler =
+          Meteor.server.method_handlers["recruiter.verifyAccess"];
+
+        const revokedCode = `revoked-future-${Date.now()}`;
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: mockRecruiterName,
+          token: revokedCode,
+          createdAt: new Date(),
+          expiresAt: futureDate,
+          isRevoked: true,
+        });
+
+        try {
+          await verifyHandler.call(
+            { userId: null, isSimulation: false, unblock() {} },
+            { portfolioId: mockPortfolioId, accessCode: revokedCode },
+          );
+          expect.fail("Expected verifyAccess to reject a revoked token");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-access");
+        }
+      });
     });
 
     describe("recruiterLinks.revoke", function () {
@@ -272,6 +302,61 @@ if (Meteor.isServer) {
         } catch (error) {
           expect(error).to.be.instanceOf(Meteor.Error);
           expect(error.error).to.equal("invalid-access");
+        }
+      });
+
+      it("successfully revokes an active token using tokenId instead of token string", async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        const revokeHandler =
+          Meteor.server.method_handlers["recruiterLinks.revoke"];
+
+        const accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: mockRecruiterName,
+          },
+        );
+
+        const tokenDoc = await RecruiterTokens.findOneAsync({
+          token: accessCode,
+        });
+        expect(tokenDoc).to.exist;
+
+        const revokeResult = await revokeHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { tokenId: tokenDoc._id },
+        );
+        expect(revokeResult).to.equal(true);
+
+        const updatedDoc = await RecruiterTokens.findOneAsync(tokenDoc._id);
+        expect(updatedDoc.isRevoked).to.equal(true);
+      });
+
+      it("throws invalid-arguments error if neither tokenId nor token is passed", async function () {
+        const revokeHandler =
+          Meteor.server.method_handlers["recruiterLinks.revoke"];
+
+        try {
+          await revokeHandler.call(
+            { userId: mockUserId, isSimulation: false, unblock() {} },
+            {},
+          );
+          expect.fail(
+            "Expected recruiterLinks.revoke to throw invalid-arguments",
+          );
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-arguments");
         }
       });
 
