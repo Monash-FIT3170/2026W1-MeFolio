@@ -79,15 +79,15 @@ export const PortfolioPreview = ({
         };
       }
 
-      if (isPublicView) {
+    if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
     const portfolioSub = Meteor.subscribe("portfolios.all");
-      const projectsSub = Meteor.subscribe("projects.all");
-      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-      const currentUserSub = Meteor.subscribe("currentUser.profile");
+    const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
       if (
         !portfolioSub.ready() ||
@@ -103,8 +103,8 @@ export const PortfolioPreview = ({
         PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
         PortfolioCollection.findOne({ _id: portfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
-          ? PortfolioCollection.findOne()
-          : null);
+        ? PortfolioCollection.findOne()
+        : null);
 
       if (!selectedPortfolio?._id) {
         return { portfolio: selectedPortfolio, projects: [], ready: true };
@@ -128,14 +128,14 @@ export const PortfolioPreview = ({
         return { portfolio: selectedPortfolio, projects: [], ready: true };
       }
 
-      const projectMap = new Map(
-        ProjectCollection.find({ _id: { $in: orderedProjectIds } })
-          .fetch()
-          .map((project) => [project._id, project]),
-      );
-      const projects = orderedProjectIds
-        .map((projectId) => projectMap.get(projectId))
-        .filter(Boolean);
+    const projectMap = new Map(
+      ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+        .fetch()
+        .map((project) => [project._id, project]),
+    );
+    const projects = orderedProjectIds
+      .map((projectId) => projectMap.get(projectId))
+      .filter(Boolean);
 
       return { portfolio: selectedPortfolio, projects, ready: true };
     }, [draftPortfolio, draftProjects, isPublicView, portfolioId]);
