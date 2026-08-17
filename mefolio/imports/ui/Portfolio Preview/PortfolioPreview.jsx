@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import { useRef, useState, useMemo, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRef, useState, useMemo, useEffect, useEffect } from "react";
+import { useNavigate, useParams, useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
@@ -30,6 +30,11 @@ export const PortfolioPreview = ({
 
   const { portfolio: loadedPortfolio, projects: loadedProjects, portfolio, ready } =
     useTracker(() => {
+    if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
       if (draftPortfolio || draftProjects) {
         return {
           portfolio: draftPortfolio,
@@ -53,7 +58,7 @@ export const PortfolioPreview = ({
         !portfolioProjectsSub.ready() ||
         !currentUserSub.ready()
       ) {
-        return { portfolio: null, projects: [], portfolio: null, ready: false };
+        return { portfolio: null, projects: [], ready: false, };
       }
 
       const currentUser = Meteor.user();
@@ -64,7 +69,7 @@ export const PortfolioPreview = ({
           ? PortfolioCollection.findOne()
           : null);
 
-      if (!portfolio?._id) return { portfolio: null, projects: [], portfolio, ready: true };
+    if (!portfolio?._id) return { projects: [], portfolio, ready: true };
 
     const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
     if (!viewerSub.ready()) {
@@ -79,7 +84,7 @@ export const PortfolioPreview = ({
         ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
         : portfolio.projects || [];
 
-      if (!orderedProjectIds.length) return { portfolio, projects: [], portfolio, ready: true };
+    if (!orderedProjectIds.length) return { projects: [], portfolio, ready: true };
 
       const projectMap = new Map(
         ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -90,7 +95,7 @@ export const PortfolioPreview = ({
         .map((projectId) => projectMap.get(projectId))
         .filter(Boolean);
 
-      return { portfolio, projects, portfolio, ready: true };
+      return { portfolio, projects, ready: true };
     }, [draftPortfolio, draftProjects]);
 
   const projects = draftProjects || loadedProjects;
