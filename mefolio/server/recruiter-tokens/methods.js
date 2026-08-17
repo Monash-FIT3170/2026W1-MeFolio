@@ -57,6 +57,7 @@ Meteor.methods({
       token,
       createdAt: new Date(),
       expiresAt,
+      isRevoked: false,
     });
 
     return token;
@@ -70,6 +71,7 @@ Meteor.methods({
     const validToken = await RecruiterTokens.findOneAsync({
       portfolioId: portfolioId,
       token: accessCode,
+      isRevoked: { $ne: true },
       expiresAt: { $gt: new Date() },
     });
 
@@ -122,7 +124,7 @@ Meteor.methods({
     // Invalidate immediately by setting expiresAt to the past
     await RecruiterTokens.updateAsync(existingToken._id, {
       $set: {
-        expiresAt: new Date(0),
+        expiresAt: new Date(),
         isRevoked: true,
       },
     });

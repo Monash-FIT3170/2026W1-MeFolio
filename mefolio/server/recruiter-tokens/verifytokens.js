@@ -13,6 +13,7 @@ Meteor.publish("portfolio.recruiterView", async function (portfolioId, token) {
   const validToken = await RecruiterTokens.findOneAsync({
     portfolioId: portfolioId,
     token: token,
+    isRevoked: { $ne: true },
     expiresAt: { $gt: new Date() }, // Double check it hasn't expired
   });
 

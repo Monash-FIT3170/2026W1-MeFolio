@@ -1,4 +1,5 @@
-import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "/imports/api/portfolio";
@@ -13,18 +14,21 @@ import {
   MessageSquare,
   FileText,
   LogOut,
+  Lock,
 } from "lucide-react";
 
 /**
  * FEAT-15: Recruiter-only view.
  *
- * Reached after a successful access-code entry on RecruiterLoginPage, which
- * stores the token in sessionStorage. The data is fetched exclusively through
- * the token-gated `portfolio.recruiterView` publication, so an absent or
- * expired token yields no portfolio and sends the visitor back to the gate.
- *
- * Renders the owner's *published* portfolio (via PortfolioPreview) plus their
- * recruiter-only details. Read-only: no owner controls are shown.
+ * Access is verified explicitly via `recruiter.verifyAccess` on every mount
+ * (including refresh), rather than inferred from whatever happens to be in
+ * PortfolioCollection locally. This avoids two bugs:
+ *  - Minimongo can already hold this portfolio doc from an unrelated
+ *    subscription (e.g. the owner's own dashboard in the same tab), which
+ *    made an invalid/revoked token look "valid" because *a* doc existed.
+ *  - Passing the error via router `state` doesn't survive a hard refresh.
+ * Invalid/revoked/expired state is rendered inline here instead of via
+ * Navigate, so refreshing re-checks and lands on the same screen.
  */
 export function RecruiterView() {
   const { portfolioId } = useParams();
@@ -34,8 +38,49 @@ export function RecruiterView() {
       ? sessionStorage.getItem(`recruiter_token_${portfolioId}`)
       : null;
 
+  // 'checking' | 'valid' | 'invalid'
+  const [accessState, setAccessState] = useState(token ? "checking" : "invalid");
+  const [invalidReason, setInvalidReason] = useState(
+    token ? "" : "This link is missing an access code.",
+  );
+
+  // Re-verify the token against the server on every mount/refresh and
+  // whenever portfolioId/token change.
+  useEffect(() => {
+    if (!token) {
+      setAccessState("invalid");
+      setInvalidReason("This link is missing an access code.");
+      return;
+    }
+
+    let cancelled = false;
+    setAccessState("checking");
+
+    Meteor.call(
+      "recruiter.verifyAccess",
+      { portfolioId, accessCode: token },
+      (err) => {
+        if (cancelled) return;
+        if (err) {
+          sessionStorage.removeItem(`recruiter_token_${portfolioId}`);
+          setInvalidReason(
+            err.reason || "This link has been revoked or has expired.",
+          );
+          setAccessState("invalid");
+        } else {
+          setAccessState("valid");
+        }
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [portfolioId, token]);
+
+  // Only subscribe once we've confirmed the token is currently valid.
   const { portfolio, isReady } = useTracker(() => {
-    if (!token) return { portfolio: null, isReady: true };
+    if (accessState !== "valid") return { portfolio: null, isReady: false };
     const handle = Meteor.subscribe(
       "portfolio.recruiterView",
       portfolioId,
@@ -45,19 +90,35 @@ export function RecruiterView() {
       portfolio: PortfolioCollection.findOne(portfolioId),
       isReady: handle.ready(),
     };
-  }, [portfolioId, token]);
-
-  // No token at all -> back to the access-code screen.
-  if (!token) {
-    return <Navigate to={`/recruiter/${portfolioId}`} replace />;
-  }
+  }, [portfolioId, token, accessState]);
 
   const handleExit = () => {
     sessionStorage.removeItem(`recruiter_token_${portfolioId}`);
     navigate(`/recruiter/${portfolioId}`);
   };
 
-  if (!isReady) {
+  // --- Invalid / revoked / expired link ---
+  if (accessState === "invalid") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans p-6">
+        <div className="w-full max-w-md text-center bg-white border border-gray-100 rounded-2xl shadow-sm p-8">
+          <div className="p-3 bg-red-50 rounded-2xl mb-4 inline-flex">
+            <Lock className="w-7 h-7 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+            Link no longer valid
+          </h1>
+          <p className="text-gray-500 mt-2">{invalidReason}</p>
+          <p className="text-gray-400 text-sm mt-6">
+            Ask the portfolio owner for a new access link.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Still verifying, or subscription not ready yet ---
+  if (accessState === "checking" || !isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-muted font-main">
         Loading portfolio…
@@ -65,13 +126,8 @@ export function RecruiterView() {
     );
   }
 
-  // Subscription ready but nothing was published to us -> token invalid/expired.
-  if (!portfolio) {
-    return <Navigate to={`/recruiter/${portfolioId}`} replace />;
-  }
-
-  const published = portfolio.publishedContent;
-  const recruiter = portfolio.recruiterInfo || {};
+  const published = portfolio?.publishedContent;
+  const recruiter = portfolio?.recruiterInfo || {};
   const resumeLink =
     (Array.isArray(recruiter.resumeLinks) && recruiter.resumeLinks[0]?.url) ||
     recruiter.resumeLink ||
