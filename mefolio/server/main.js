@@ -17,6 +17,9 @@ import "./recruiter-tokens/collection.js";
 import "./recruiter-tokens/methods.js";
 import "./recruiter-tokens/verifytokens.js";
 
+// public portfolio view
+import "./publications/publicPortfolio.js";
+
 Accounts.config({
   loginExpirationInDays: 1,
 });
@@ -305,14 +308,6 @@ Meteor.publish("portfolioProjects.all", function () {
 Meteor.publish("portfolios.byUsername", function (username) {
   check(username, String);
   return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
-});
-
-Meteor.publish("portfolios.publicView", function (portfolioId) {
-  check(portfolioId, String);
-  return PortfolioCollection.find(
-    { _id: portfolioId, isPublished: true },
-    { fields: { publishedContent: 1, isPublished: 1, username: 1 } },
-  );
 });
 
 Meteor.methods({
