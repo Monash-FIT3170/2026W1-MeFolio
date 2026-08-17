@@ -29,13 +29,16 @@ export const mapLiveVisitors = (portfolios) => {
   if (!viewers.length) return mockLiveVisitors;
 
   return viewers.map((viewer, index) => {
-    const connectedAt = viewer.connectedAt ? new Date(viewer.connectedAt) : null;
+    const connectedAt = viewer.connectedAt
+      ? new Date(viewer.connectedAt)
+      : null;
     const duration = connectedAt
       ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
       : "Live now";
 
     return {
-      id: viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
+      id:
+        viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
       name: viewer.name || "Anonymous Visitor",
       email: viewer.email || "",
       activity: "Viewing portfolio",

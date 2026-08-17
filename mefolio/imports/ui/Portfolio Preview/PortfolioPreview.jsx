@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, _useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
@@ -28,12 +28,21 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { projects: loadedProjects, portfolio, ready } = useTracker(() => {
+  const {
+    portfolio: _loadedPortfolio,
+    projects: loadedProjects,
+    portfolio,
+    ready,
+  } = useTracker(() => {
+    if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
     if (draftPortfolio || draftProjects) {
       return {
         portfolio: draftPortfolio,
         projects: draftProjects || [],
-        ready: true,
       };
     }
 
@@ -57,7 +66,7 @@ export const PortfolioPreview = ({
     }
 
     const currentUser = Meteor.user();
-    const selectedPortfolio =
+    const portfolio =
       PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
       PortfolioCollection.findOne({ _id: portfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
