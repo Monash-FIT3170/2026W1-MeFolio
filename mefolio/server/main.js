@@ -449,7 +449,10 @@ Meteor.publish("portfolios.byUsername", function (username) {
   PortfolioCollection.findOneAsync({ username })
     .then((portfolio) => {
       if (!portfolio) return null;
-      return getViewerData(publication).then((viewer) => ({ viewer, portfolioId: portfolio._id }));
+      return getViewerData(publication).then((viewer) => ({
+        viewer,
+        portfolioId: portfolio._id,
+      }));
     })
     .then((result) => {
       if (!result?.viewer) return null;

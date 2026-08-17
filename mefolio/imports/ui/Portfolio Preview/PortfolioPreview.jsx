@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
-import { useRef, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
@@ -27,12 +27,21 @@ export const PortfolioPreview = ({
   const { portfolioId } = useParams();
   const isPublicView = Boolean(portfolioId);
 
-  const { projects: trackedProjects, portfolio: trackedPortfolio, ready } = useTracker(() => {
+  const {
+    portfolio: _loadedPortfolio,
+    projects: loadedProjects,
+    portfolio,
+    ready,
+  } = useTracker(() => {
+    if (isPublicView) {
+      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      return { projects: [], portfolio: null, ready: viewerSub.ready() };
+    }
+
     if (draftPortfolio || draftProjects) {
       return {
         portfolio: draftPortfolio,
         projects: draftProjects || [],
-        ready: true,
       };
     }
 
@@ -56,7 +65,7 @@ export const PortfolioPreview = ({
     }
 
     const currentUser = Meteor.user();
-    const selectedPortfolio =
+    const portfolio =
       PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
       PortfolioCollection.findOne({ _id: portfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
@@ -103,7 +112,7 @@ export const PortfolioPreview = ({
     return { portfolio, projects, portfolio, ready: true, portfolioId: portfolio._id };
   }, [propPortfolio, propProjects, isPublicView, portfolioId]);
 
-  const portfolio = propPortfolio || trackedPortfolio;
+  
   const projects = propProjects.length ? propProjects : trackedProjects || [];
   // const resolvedPortfolioId = portfolioId || portfolio?._id;
 
