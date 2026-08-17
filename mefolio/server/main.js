@@ -23,6 +23,9 @@ import "./recruiter-tokens/visit-notifications.js";
 // app seed and OAuth config)
 import "./portfolio-methods.js";
 
+// public portfolio view
+import "./publications/publicPortfolio.js";
+
 Accounts.config({
   loginExpirationInDays: 1,
 });
@@ -346,14 +349,6 @@ Meteor.publish("portfolios.byUsername", function (username) {
       { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
     ),
   ];
-});
-
-Meteor.publish("portfolios.publicView", function (portfolioId) {
-  check(portfolioId, String);
-  return PortfolioCollection.find(
-    { _id: portfolioId, isPublished: true },
-    { fields: { publishedContent: 1, isPublished: 1, username: 1 } },
-  );
 });
 
 Meteor.methods({
