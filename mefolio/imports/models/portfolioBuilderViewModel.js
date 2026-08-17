@@ -23,7 +23,27 @@ export const mapOverviewStats = (portfolios) => {
 };
 
 export const mapLiveVisitors = (portfolios) => {
-  return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
+  if (!portfolios?.length) return mockLiveVisitors;
+
+  const viewers = portfolios[0]?.viewers || [];
+  if (!viewers.length) return mockLiveVisitors;
+
+  return viewers.map((viewer, index) => {
+    const connectedAt = viewer.connectedAt ? new Date(viewer.connectedAt) : null;
+    const duration = connectedAt
+      ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
+      : "Live now";
+
+    return {
+      id: viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
+      name: viewer.name || "Anonymous Visitor",
+      email: viewer.email || "",
+      activity: "Viewing portfolio",
+      location: viewer.userId ? "Signed in" : "Guest",
+      duration,
+      active: true,
+    };
+  });
 };
 
 export const mapProjects = (projects) => {
