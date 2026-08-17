@@ -39,7 +39,9 @@ export function RecruiterView() {
       : null;
 
   // 'checking' | 'valid' | 'invalid'
-  const [accessState, setAccessState] = useState(token ? "checking" : "invalid");
+  const [accessState, setAccessState] = useState(
+    token ? "checking" : "invalid",
+  );
   const [invalidReason, setInvalidReason] = useState(
     token ? "" : "This link is missing an access code.",
   );
