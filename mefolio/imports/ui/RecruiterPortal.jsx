@@ -45,6 +45,8 @@ const RecruiterPortal = ({ portfolio }) => {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  // Separate feedback for the access-code section so it shows there, not at
+  // the top of the settings section.
   const [codeMessage, setCodeMessage] = useState({ type: "", text: "" });
 
   // Load resumes
@@ -251,6 +253,9 @@ const RecruiterPortal = ({ portfolio }) => {
     );
   };
 
+   // Copy the access code to the clipboard. Wrapped in try/catch because
+  // navigator.clipboard.writeText rejects (e.g. "Document is not focused")
+  // in some browser states, which otherwise surfaces as an uncaught error.
   const copyAccessCode = async () => {
     if (!recruiterInfo.accessCode) return;
     try {
@@ -270,6 +275,7 @@ const RecruiterPortal = ({ portfolio }) => {
     ? `${window.location.origin}/recruiter/${portfolio._id}`
     : "";
 
+  // Copy the shareable recruiter link. Same try/catch guard as the code copy.
   const copyLink = async () => {
     if (!recruiterLink) return;
     try {
