@@ -30,17 +30,25 @@ export const mapLiveVisitors = (portfolios) => {
     return mockLiveVisitors;
   }
 
-  return viewers.map((viewer, index) => ({
-    id: viewer.email
-      ? `viewer-${viewer.email}-${index}`
-      : `viewer-${index}-${Date.now()}`,
-    name: viewer.name || "Anonymous Visitor",
-    email: viewer.email || "",
-    activity: "Viewing portfolio",
-    location: viewer.email ? "Visitor" : "Guest",
-    duration: "Live now",
-    active: true,
-  }));
+  return viewers.map((viewer, index) => {
+    const connectedAt = viewer.connectedAt
+      ? new Date(viewer.connectedAt)
+      : null;
+    const duration = connectedAt
+      ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
+      : "Live now";
+
+    return {
+      id:
+        viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
+      name: viewer.name || "Anonymous Visitor",
+      email: viewer.email || "",
+      activity: "Viewing portfolio",
+      location: viewer.userId ? "Signed in" : "Guest",
+      duration,
+      active: true,
+    };
+  });
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
