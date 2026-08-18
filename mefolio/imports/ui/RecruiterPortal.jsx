@@ -98,21 +98,15 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       return;
     }
 
-    setIsLoadingLinks(true);
-    Meteor.call(
-      "recruiterLinks.list",
-      { portfolioId: selectedPortfolioId },
-      (err, links) => {
-        setIsLoadingLinks(false);
-        if (err) {
-          console.error("Failed to load recruiter links:", err);
-          setRecruiterLinks([]);
-        } else {
-          setRecruiterLinks(links || []);
-        }
-      },
+    const currentPortfolio = allPortfolios.find(
+      (p) => p._id === selectedPortfolioId,
     );
-  }, [selectedPortfolioId]);
+    if (currentPortfolio?.recruiterInfo?.generatedLinks) {
+      setRecruiterLinks(currentPortfolio.recruiterInfo.generatedLinks);
+    } else {
+      setRecruiterLinks([]);
+    }
+  }, [selectedPortfolioId, allPortfolios]);
 
   // Update selected portfolio when prop changes
   useEffect(() => {
@@ -147,19 +141,44 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           });
         } else {
           handleChange("accessCode", token);
-          setCodeMessage({
-            type: "success",
-            text: "New access code generated!",
-          });
 
-          // TODO: Must set expiry backend handling
+          // TODO: expiry date can be added and saved
           const newLink = {
             token: token,
             status: "active",
             createdAt: new Date(),
             expiresAt: null,
           };
-          setRecruiterLinks((prev) => [newLink, ...prev]);
+
+          // Get existing links from the portfolio
+          const currentPortfolio = allPortfolios.find(
+            (p) => p._id === selectedPortfolioId,
+          );
+          const existingLinks =
+            currentPortfolio?.recruiterInfo?.generatedLinks || [];
+          const updatedLinks = [newLink, ...existingLinks];
+
+          Meteor.call(
+            "portfolios.update",
+            selectedPortfolioId,
+            {
+              "recruiterInfo.generatedLinks": updatedLinks,
+            },
+            (updateErr) => {
+              if (updateErr) {
+                setCodeMessage({
+                  type: "error",
+                  text: `Failed to save link: ${updateErr.reason || "Unknown error"}`,
+                });
+              } else {
+                setRecruiterLinks(updatedLinks);
+                setCodeMessage({
+                  type: "success",
+                  text: "New access code generated and saved!",
+                });
+              }
+            },
+          );
         }
       },
     );
@@ -177,29 +196,36 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     setIsRevoking(true);
     setCodeMessage({ type: "", text: "" });
 
-    Meteor.call("recruiterLinks.revoke", { token }, (err) => {
-      setIsRevoking(false);
-      if (err) {
-        setCodeMessage({
-          type: "error",
-          text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
-        });
-      } else {
-        setRecruiterLinks((prev) =>
-          prev.map((link) =>
-            link.token === token ? { ...link, status: "revoked" } : link,
-          ),
-        );
+    const updatedLinks = recruiterLinks.map((link) =>
+      link.token === token ? { ...link, status: "revoked" } : link,
+    );
+    setRecruiterLinks(updatedLinks);
 
-        if (token === recruiterInfo.accessCode) {
-          handleChange("accessCode", "");
+    Meteor.call(
+      "portfolios.update",
+      selectedPortfolioId,
+      {
+        "recruiterInfo.generatedLinks": updatedLinks,
+      },
+      (err) => {
+        setIsRevoking(false);
+        if (err) {
+          setCodeMessage({
+            type: "error",
+            text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
+          });
+          setRecruiterLinks(recruiterLinks);
+        } else {
+          if (token === recruiterInfo.accessCode) {
+            handleChange("accessCode", "");
+          }
+          setCodeMessage({
+            type: "success",
+            text: "Recruiter access link has been revoked.",
+          });
         }
-        setCodeMessage({
-          type: "success",
-          text: "Recruiter access link has been revoked.",
-        });
-      }
-    });
+      },
+    );
   };
 
   // Revoke the current active code
@@ -579,7 +605,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </div>
       </section>
 
-      {/* Access Code Section */}
+      {/* ACCESS CODE SECTION */}
       <section className="bg-surface-fill border border-line rounded-2xl p-7">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-primary mb-2">
           <Shield size={22} />
@@ -665,7 +691,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               {recruiterLinks.map((link) => {
                 const statusBadge = getLinkStatus(link.status);
                 const isExpanded = expandedLink === link.token;
-
                 return (
                   <div
                     key={link.token}
