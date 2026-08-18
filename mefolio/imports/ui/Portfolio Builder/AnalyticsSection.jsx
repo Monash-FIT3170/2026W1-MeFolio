@@ -2,11 +2,27 @@ import PropTypes from "prop-types";
 
 const getProjectId = (project) => project?._id || project?.id;
 
+const parseAnalyticsDate = (date) => {
+  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date(date);
+};
+
 const formatDate = (date) =>
   new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
     month: "short",
-  }).format(new Date(date));
+  }).format(parseAnalyticsDate(date));
+
+const getLocalDateKey = (date) =>
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    .map((part, index) =>
+      index === 0 ? String(part) : String(part).padStart(2, "0"),
+    )
+    .join("-");
 
 const buildProjectAnalytics = (projects = [], engagements = []) =>
   projects
@@ -40,7 +56,9 @@ const buildDailyAnalytics = (engagements = []) => {
 
     if (Number.isNaN(date.getTime())) return;
 
-    const dateKey = date.toISOString().split("T")[0];
+    // The dashboard consistently groups and labels events in the viewer's
+    // local timezone, including clicks close to midnight.
+    const dateKey = getLocalDateKey(date);
     const currentClicks = clicksByDate.get(dateKey) || 0;
 
     clicksByDate.set(dateKey, currentClicks + Number(engagement.clicks || 0));
@@ -51,7 +69,7 @@ const buildDailyAnalytics = (engagements = []) => {
       date,
       clicks,
     }))
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a, b) => a.date.localeCompare(b.date));
 };
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
