@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Github, ExternalLink, Code, Play, Star, Mic } from "lucide-react";
+import { trackProjectClick } from "../../api/projectClickTracking";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 
-export function ProjectCard({ project }) {
+export function ProjectCard({
+  project,
+  portfolioId,
+  onProjectClick = trackProjectClick,
+}) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
   const [, setImageError] = useState(false);
   const [githubStars, setGithubStars] = useState(null);
@@ -35,6 +40,24 @@ export function ProjectCard({ project }) {
       })
       .catch(() => {});
   }, [data.githubLink]);
+
+  const handleProjectClick = (target) => {
+    const projectId = data._id || data.id;
+    if (!portfolioId || !projectId) return;
+
+    try {
+      const trackingRequest = onProjectClick({
+        portfolioId,
+        projectId,
+        target,
+      });
+
+      // Analytics must never block or cancel the visitor's destination.
+      Promise.resolve(trackingRequest).catch(() => undefined);
+    } catch {
+      // Keep the destination usable if a custom analytics transport fails.
+    }
+  };
 
   return (
     <Card className="overflow-hidden bg-white border-2 border-slate-100 rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
@@ -119,16 +142,47 @@ export function ProjectCard({ project }) {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <button
-            onClick={() => window.open(data.githubLink)}
-            className="flex-1 py-3 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
-          >
-            <Github className="icon-small" />
-            <span className="w-4 h-4">Code</span>
-          </button>
-          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all">
-            <ExternalLink className="w-4 h-4" /> Demo
-          </button>
+          {data.githubLink ? (
+            <a
+              href={data.githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleProjectClick("code")}
+              className="flex-1 py-3 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-500 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+            >
+              <Github className="icon-small" />
+              <span>Code</span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex-1 cursor-not-allowed py-3 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-300 rounded-xl font-bold text-sm"
+            >
+              <Github className="icon-small" />
+              <span>Code</span>
+            </button>
+          )}
+
+          {data.liveDemoLink ? (
+            <a
+              href={data.liveDemoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleProjectClick("demo")}
+              className="flex-1 py-3 flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all"
+            >
+              <ExternalLink className="w-4 h-4" /> Demo
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex-1 cursor-not-allowed py-3 flex items-center justify-center gap-2 bg-indigo-300 text-white rounded-xl font-bold text-sm"
+            >
+              <ExternalLink className="w-4 h-4" /> Demo
+            </button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -145,4 +199,6 @@ ProjectCard.propTypes = {
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
   }),
+  portfolioId: PropTypes.string,
+  onProjectClick: PropTypes.func,
 };

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
@@ -18,7 +18,7 @@ const getUserEmail = (user) =>
   "";
 
 export const PortfolioPreview = () => {
-  const { projects } = useTracker(() => {
+  const { projects, portfolioId } = useTracker(() => {
     const portfolioSub = Meteor.subscribe("portfolios.all");
     const projectsSub = Meteor.subscribe("projects.all");
     const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
@@ -30,7 +30,7 @@ export const PortfolioPreview = () => {
       !portfolioProjectsSub.ready() ||
       !currentUserSub.ready()
     ) {
-      return { projects: [] };
+      return { projects: [], portfolioId: null };
     }
 
     const currentUser = Meteor.user();
@@ -40,7 +40,7 @@ export const PortfolioPreview = () => {
         ? PortfolioCollection.findOne()
         : null);
 
-    if (!portfolio?._id) return { projects: [] };
+    if (!portfolio?._id) return { projects: [], portfolioId: null };
 
     const projectOrderDocuments = PortfolioProjectsCollection.find(
       { portfolioId: portfolio._id },
@@ -50,7 +50,9 @@ export const PortfolioPreview = () => {
       ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
       : portfolio.projects || [];
 
-    if (!orderedProjectIds.length) return { projects: [] };
+    if (!orderedProjectIds.length) {
+      return { projects: [], portfolioId: portfolio._id };
+    }
 
     const projectMap = new Map(
       ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -61,7 +63,7 @@ export const PortfolioPreview = () => {
       .map((projectId) => projectMap.get(projectId))
       .filter(Boolean);
 
-    return { projects };
+    return { projects, portfolioId: portfolio._id };
   });
 
   const navigate = useNavigate();
@@ -89,6 +91,7 @@ export const PortfolioPreview = () => {
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const handleMouseDown = (e) => {
+    if (e.target.closest("a, button, input, select, textarea")) return;
     if (!scrollRef.current) return;
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -185,7 +188,7 @@ export const PortfolioPreview = () => {
           >
             {displayedProjects.map((project) => (
               <div className="shrink-0 w-[380px]" key={project._id}>
-                <ProjectCard project={project} />
+                <ProjectCard project={project} portfolioId={portfolioId} />
               </div>
             ))}
             <div className="flex-none w-8" />
