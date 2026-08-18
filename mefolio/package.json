@@ -5,6 +5,7 @@
     "start": "meteor run --settings server/oauth-login/oauth.settings.json",
     "test": "meteor test --once --driver-package meteortesting:mocha",
     "test-app": "TEST_WATCH=1 meteor test --full-app --settings server/oauth-login/oauth.settings.json --driver-package meteortesting:mocha",
+    "test-ci": "TEST_BROWSER_DRIVER=puppeteer meteor test --once --driver-package meteortesting:mocha",
     "visualize": "meteor --production --extra-packages bundle-visualizer",
     "format": "prettier --write .",
     "lint": "eslint .",
