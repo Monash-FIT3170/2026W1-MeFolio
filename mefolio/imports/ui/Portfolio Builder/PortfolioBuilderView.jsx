@@ -4,7 +4,10 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
-import { ProjectEngagement } from "../../api/projectEngagement";
+import {
+  ProjectEngagement,
+  PROJECT_ENGAGEMENT_PUBLICATION,
+} from "../../api/projectEngagement";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -104,14 +107,20 @@ const useDashboardData = () =>
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     const projectDocuments = ProjectCollection.find({}).fetch();
+    const portfolios = PortfolioCollection.find({}).fetch();
+    const user = Meteor.user();
+    const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+    const engagementHandler = selectedPortfolio?._id
+      ? Meteor.subscribe(PROJECT_ENGAGEMENT_PUBLICATION, selectedPortfolio._id)
+      : null;
+    const engagementsReady = !engagementHandler || engagementHandler.ready();
 
-    const engagementHandlers = projectDocuments.map((project) =>
-      Meteor.subscribe("projectEngagements.byProjectId", project._id),
-    );
-
-    const engagementsReady = engagementHandlers.every((handler) =>
-      handler.ready(),
-    );
+    const engagements = selectedPortfolio?._id
+      ? ProjectEngagement.find(
+          { portfolioId: selectedPortfolio._id },
+          { sort: { date: 1 } },
+        ).fetch()
+      : [];
 
     return {
       isLoading:
@@ -121,7 +130,7 @@ const useDashboardData = () =>
         !currentUserHandler.ready() ||
         !engagementsReady,
 
-      portfolios: PortfolioCollection.find({}).fetch(),
+      portfolios,
 
       projectDocuments,
 
@@ -130,12 +139,9 @@ const useDashboardData = () =>
         { sort: { orderIndex: 1 } },
       ).fetch(),
 
-      engagements: ProjectEngagement.find(
-        {},
-        { sort: { date: 1 } },
-      ).fetch(),
+      engagements,
 
-      user: Meteor.user(),
+      user,
     };
   });
 
@@ -260,10 +266,7 @@ const DashboardLayout = () => {
 
   // New project becomes the first card in the display.
   const handleAddProject = (newProject) => {
-    setOrderedProjects((previousProjects) => [
-      newProject,
-      ...previousProjects,
-    ]);
+    setOrderedProjects((previousProjects) => [newProject, ...previousProjects]);
   };
 
   const handleEditProject = (project) => setEditingProject(project);
