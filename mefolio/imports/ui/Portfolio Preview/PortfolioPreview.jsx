@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
@@ -19,25 +18,12 @@ const getUserEmail = (user) =>
   user?.services?.github?.email ||
   "";
 
-export const PortfolioPreview = ({
-  portfolio: draftPortfolio = null,
-  projects: draftProjects = null,
-  isStaging = false,
-  isPublishedView = false,
-}) => {
-  const { portfolio: loadedPortfolio, projects: loadedProjects } =
-    useTracker(() => {
-      if (draftPortfolio || draftProjects) {
-        return {
-          portfolio: draftPortfolio,
-          projects: draftProjects || [],
-        };
-      }
-
-      const portfolioSub = Meteor.subscribe("portfolios.all");
-      const projectsSub = Meteor.subscribe("projects.all");
-      const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
-      const currentUserSub = Meteor.subscribe("currentUser.profile");
+export const PortfolioPreview = () => {
+  const { projects, portfolioId } = useTracker(() => {
+    const portfolioSub = Meteor.subscribe("portfolios.all");
+    const projectsSub = Meteor.subscribe("projects.all");
+    const portfolioProjectsSub = Meteor.subscribe("portfolioProjects.all");
+    const currentUserSub = Meteor.subscribe("currentUser.profile");
 
       if (
         !portfolioSub.ready() ||
@@ -45,7 +31,7 @@ export const PortfolioPreview = ({
         !portfolioProjectsSub.ready() ||
         !currentUserSub.ready()
       ) {
-        return { portfolio: null, projects: [] };
+        return { portfolio: null, projects: [], portfolioId: null };
       }
 
       const currentUser = Meteor.user();
@@ -55,7 +41,7 @@ export const PortfolioPreview = ({
           ? PortfolioCollection.findOne()
           : null);
 
-      if (!portfolio?._id) return { portfolio: null, projects: [] };
+      if (!portfolio?._id) return { portfolio: null, projects: [], portfolioId: null };
 
       const projectOrderDocuments = PortfolioProjectsCollection.find(
         { portfolioId: portfolio._id },
@@ -65,7 +51,9 @@ export const PortfolioPreview = ({
         ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
         : portfolio.projects || [];
 
-      if (!orderedProjectIds.length) return { portfolio, projects: [] };
+      if (!orderedProjectIds.length) {
+      return { portfolio, projects: [], portfolioId: portfolio._id };
+    }
 
       const projectMap = new Map(
         ProjectCollection.find({ _id: { $in: orderedProjectIds } })
@@ -76,7 +64,7 @@ export const PortfolioPreview = ({
         .map((projectId) => projectMap.get(projectId))
         .filter(Boolean);
 
-      return { portfolio, projects };
+      return { portfolio, projects, portfolioId: portfolio._id };
     }, [draftPortfolio, draftProjects]);
 
   const portfolio = draftPortfolio || loadedPortfolio;
@@ -108,6 +96,7 @@ export const PortfolioPreview = ({
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const handleMouseDown = (e) => {
+    if (e.target.closest("a, button, input, select, textarea")) return;
     if (!scrollRef.current) return;
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -292,7 +281,7 @@ export const PortfolioPreview = ({
                   }`}
                   key={project._id}
                 >
-                  <ProjectCard project={project} />
+                  <ProjectCard project={project} portfolioId={portfolioId} />
                 </div>
               ))}
               <div className="flex-none w-8" />
