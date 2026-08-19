@@ -41,6 +41,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   const [recruiterLinks, setRecruiterLinks] = useState([]);
   const [isLoadingLinks, setIsLoadingLinks] = useState(false);
   const [expandedLink, setExpandedLink] = useState(null);
+  const [expiryDate, setExpiryDate] = useState("");
 
   // Recruiter settings state
   const [recruiterInfo, setRecruiterInfo] = useState({
@@ -98,15 +99,45 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       return;
     }
 
-    const currentPortfolio = allPortfolios.find(
-      (p) => p._id === selectedPortfolioId,
+    setIsLoadingLinks(true);
+    Meteor.call(
+      "recruiterLinks.list",
+      { portfolioId: selectedPortfolioId },
+      (err, links) => {
+        setIsLoadingLinks(false);
+        if (err) {
+          console.error("Failed to load recruiter links:", err);
+          setRecruiterLinks([]);
+        } else {
+          // Map and filter tokens
+          const twoWeeksAgo = new Date();
+          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+          
+          const mappedLinks = links
+            .map(link => ({
+              token: link.token,
+              status: link.isRevoked ? "revoked" : "active",
+              createdAt: link.createdAt,
+              expiresAt: link.expiresAt,
+              _id: link._id,
+              isRevoked: link.isRevoked,
+              revokedAt: link.revokedAt || null,
+            }))
+            // Keep revoked for two weeks max before disappearing
+            .filter(link => {
+              if (!link.isRevoked) return true;
+              if (!link.revokedAt) {
+                // If no revokedAt date, use createdAt as fallback
+                return new Date(link.createdAt) > twoWeeksAgo;
+              }
+              return new Date(link.revokedAt) > twoWeeksAgo;
+            });
+          
+          setRecruiterLinks(mappedLinks);
+        }
+      },
     );
-    if (currentPortfolio?.recruiterInfo?.generatedLinks) {
-      setRecruiterLinks(currentPortfolio.recruiterInfo.generatedLinks);
-    } else {
-      setRecruiterLinks([]);
-    }
-  }, [selectedPortfolioId, allPortfolios]);
+  }, [selectedPortfolioId]);
 
   // Update selected portfolio when prop changes
   useEffect(() => {
@@ -131,7 +162,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "tokens.generate",
-      { portfolioId: selectedPortfolioId, recruiterName: "General Recruiter" },
+      { 
+        portfolioId: selectedPortfolioId, 
+        recruiterName: "General Recruiter",
+        expiresAt: expiryDate ? new Date(expiryDate) : null,
+      },
       (err, token) => {
         setIsSaving(false);
         if (err) {
@@ -141,41 +176,24 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           });
         } else {
           handleChange("accessCode", token);
-
-          // TODO: expiry date can be added and saved
-          const newLink = {
-            token: token,
-            status: "active",
-            createdAt: new Date(),
-            expiresAt: null,
-          };
-
-          // Get existing links from the portfolio
-          const currentPortfolio = allPortfolios.find(
-            (p) => p._id === selectedPortfolioId,
-          );
-          const existingLinks =
-            currentPortfolio?.recruiterInfo?.generatedLinks || [];
-          const updatedLinks = [newLink, ...existingLinks];
+          setCodeMessage({
+            type: "success",
+            text: "New access code generated!",
+          });
 
           Meteor.call(
-            "portfolios.update",
-            selectedPortfolioId,
-            {
-              "recruiterInfo.generatedLinks": updatedLinks,
-            },
-            (updateErr) => {
-              if (updateErr) {
-                setCodeMessage({
-                  type: "error",
-                  text: `Failed to save link: ${updateErr.reason || "Unknown error"}`,
-                });
-              } else {
-                setRecruiterLinks(updatedLinks);
-                setCodeMessage({
-                  type: "success",
-                  text: "New access code generated and saved!",
-                });
+            "recruiterLinks.list",
+            { portfolioId: selectedPortfolioId },
+            (listErr, links) => {
+              if (!listErr && links) {
+                const mappedLinks = links.map(link => ({
+                  token: link.token,
+                  status: link.isRevoked ? "revoked" : "active",
+                  createdAt: link.createdAt,
+                  expiresAt: link.expiresAt,
+                  _id: link._id,
+                }));
+                setRecruiterLinks(mappedLinks);
               }
             },
           );
@@ -196,36 +214,40 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     setIsRevoking(true);
     setCodeMessage({ type: "", text: "" });
 
-    const updatedLinks = recruiterLinks.map((link) =>
-      link.token === token ? { ...link, status: "revoked" } : link,
-    );
-    setRecruiterLinks(updatedLinks);
+    Meteor.call("recruiterLinks.revoke", { token }, (err) => {
+      setIsRevoking(false);
+      if (err) {
+        setCodeMessage({
+          type: "error",
+          text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
+        });
+      } else {
+        Meteor.call(
+          "recruiterLinks.list",
+          { portfolioId: selectedPortfolioId },
+          (listErr, links) => {
+            if (!listErr && links) {
+              const mappedLinks = links.map(link => ({
+                token: link.token,
+                status: link.isRevoked ? "revoked" : "active",
+                createdAt: link.createdAt,
+                expiresAt: link.expiresAt,
+                _id: link._id,
+              }));
+              setRecruiterLinks(mappedLinks);
+            }
+          },
+        );
 
-    Meteor.call(
-      "portfolios.update",
-      selectedPortfolioId,
-      {
-        "recruiterInfo.generatedLinks": updatedLinks,
-      },
-      (err) => {
-        setIsRevoking(false);
-        if (err) {
-          setCodeMessage({
-            type: "error",
-            text: `Failed to revoke access link: ${err.reason || "Unknown error"}`,
-          });
-          setRecruiterLinks(recruiterLinks);
-        } else {
-          if (token === recruiterInfo.accessCode) {
-            handleChange("accessCode", "");
-          }
-          setCodeMessage({
-            type: "success",
-            text: "Recruiter access link has been revoked.",
-          });
+        if (token === recruiterInfo.accessCode) {
+          handleChange("accessCode", "");
         }
-      },
-    );
+        setCodeMessage({
+          type: "success",
+          text: "Recruiter access link has been revoked.",
+        });
+      }
+    });
   };
 
   // Revoke the current active code
@@ -327,11 +349,23 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       return;
     }
 
+    // Only update allowed fields
+    const allowedUpdates = {
+      companyName: recruiterInfo.companyName,
+      salaryExpectation: recruiterInfo.salaryExpectation,
+      phoneNumber: recruiterInfo.phoneNumber,
+      currentLocation: recruiterInfo.currentLocation,
+      availability: recruiterInfo.availability,
+      personalNote: recruiterInfo.personalNote,
+      allowAccess: recruiterInfo.allowAccess,
+      accessCode: recruiterInfo.accessCode,
+    };
+
     Meteor.call(
       "portfolios.update",
       portfolio._id,
       {
-        recruiterInfo: recruiterInfo,
+        recruiterInfo: allowedUpdates,
       },
       (err) => {
         setIsSaving(false);
@@ -391,14 +425,19 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     }
   };
 
-  const getLinkStatus = (status) => {
-    const statusMap = {
-      active: { color: "bg-green-100 text-green-800", label: "ACTIVE" },
-      expired: { color: "bg-yellow-100 text-yellow-800", label: "EXPIRED" },
-      revoked: { color: "bg-red-100 text-red-800", label: "REVOKED" },
-      pending: { color: "bg-blue-100 text-blue-800", label: "PENDING" },
-    };
-    return statusMap[status] || statusMap.pending;
+  const getLinkStatus = (link) => {
+    if (link.status === "revoked") {
+      return { color: "bg-red-100 text-red-800", label: "REVOKED" };
+    }
+    // Check if expired
+    if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+      return { color: "bg-yellow-100 text-yellow-800", label: "EXPIRED" };
+    }
+    // Check if active
+    if (link.status === "active" || (!link.expiresAt || new Date(link.expiresAt) > new Date())) {
+      return { color: "bg-green-100 text-green-800", label: "ACTIVE" };
+    }
+    return { color: "bg-blue-100 text-blue-800", label: "PENDING" };
   };
 
   const toggleExpand = (token) => {
@@ -620,27 +659,44 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         </p>
 
         {/* Base Link */}
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-2">
+        <div className="mb-6 p-4 bg-selected border border-line rounded-lg">
+          <p className="text-sm font-medium text-primary mb-2 flex items-center gap-2">
             <Globe className="w-4 h-4" />
             Shareable Link:
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <code className="flex-1 p-2 bg-white rounded border border-blue-200 text-sm text-blue-700 font-mono break-all min-h-[44px] flex items-center">
+            <code className="flex-1 p-2 bg-background rounded border border-line text-sm text-primary font-mono break-all min-h-[44px] flex items-center">
               {baseRecruiterLink || "Select a portfolio first"}
             </code>
             <button
               onClick={copyLink}
               disabled={!baseRecruiterLink}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors min-h-[44px] disabled:opacity-50 whitespace-nowrap"
+              className="px-4 py-2 bg-button text-secondary rounded-lg font-bold text-sm hover:opacity-90 transition-opacity min-h-[44px] disabled:opacity-50 whitespace-nowrap"
             >
               {copiedLink ? "✓ Copied" : "Copy Link"}
             </button>
           </div>
-          <p className="text-xs text-blue-600 mt-2">
+          <p className="text-xs text-muted mt-2">
             Share this link with recruiters. Each recruiter will need their own
             access code.
           </p>
+        </div>
+
+        {/* Expiry Date UI */}
+        <div className="mb-6 p-4 bg-surface-fill border border-line rounded-lg">
+          <p className="text-sm font-medium text-primary mb-2 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Set Expiry Date (Optional, Set to 3 Months Automatically if Left Blank)
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="flex-1 px-4 py-3 bg-background text-primary border border-line rounded-lg focus:ring-2 focus:ring-accent1 focus:border-transparent outline-none min-h-[44px]"
+              min={new Date().toISOString().split("T")[0]}
+            />
+          </div>
         </div>
 
         {codeMessage.text && (
@@ -689,7 +745,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           ) : (
             <div className="space-y-3">
               {recruiterLinks.map((link) => {
-                const statusBadge = getLinkStatus(link.status);
+                const statusBadge = getLinkStatus(link);
                 const isExpanded = expandedLink === link.token;
                 return (
                   <div
