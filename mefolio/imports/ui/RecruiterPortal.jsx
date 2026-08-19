@@ -9,8 +9,6 @@ import {
   Globe,
   RefreshCw,
   Copy,
-  Check,
-  EyeOff,
   Eye,
   Phone,
   MapPin,
@@ -23,7 +21,6 @@ import {
   Ban,
   Link2,
   ChevronDown,
-  ExternalLink,
   ChevronRight,
   ChevronUp,
 } from "lucide-react";
@@ -58,8 +55,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
-  const [showAccessCode, setShowAccessCode] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [codeMessage, setCodeMessage] = useState({ type: "", text: "" });
@@ -149,6 +144,24 @@ const RecruiterPortal = ({ portfolio, userId }) => {
   // Get selected portfolio
   const selectedPortfolio =
     allPortfolios.find((p) => p._id === selectedPortfolioId) || portfolio;
+
+  // Keep the editable recruiter settings in sync with the portfolio chosen in
+  // the selector above, so switching portfolios shows (and saves) that
+  // portfolio's own recruiter details rather than the prop's.
+  useEffect(() => {
+    const info = selectedPortfolio?.recruiterInfo || {};
+    setRecruiterInfo({
+      companyName: info.companyName || "",
+      salaryExpectation: info.salaryExpectation || "",
+      phoneNumber: info.phoneNumber || "",
+      currentLocation: info.currentLocation || "",
+      availability: info.availability || "",
+      personalNote: info.personalNote || "",
+      allowAccess: info.allowAccess || false,
+      accessCode: info.accessCode || "",
+    });
+    setIsEditing(false);
+  }, [selectedPortfolioId]);
 
   // Generates Recruiter Access Token
   const handleGenerateCode = () => {
@@ -250,12 +263,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     });
   };
 
-  // Revoke the current active code
-  const handleRevokeCurrentCode = () => {
-    if (!recruiterInfo.accessCode) return;
-    handleRevokeCode(recruiterInfo.accessCode);
-  };
-
   const handleClick = () => {
     fileInputRef.current?.click();
   };
@@ -343,8 +350,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
     setIsSaving(true);
     setMessage({ type: "", text: "" });
 
-    if (!portfolio?._id) {
-      setMessage({ type: "error", text: "No portfolio found." });
+    if (!selectedPortfolioId) {
+      setMessage({ type: "error", text: "No portfolio selected." });
       setIsSaving(false);
       return;
     }
@@ -363,7 +370,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "portfolios.update",
-      portfolio._id,
+      selectedPortfolioId,
       {
         recruiterInfo: allowedUpdates,
       },
@@ -385,24 +392,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         }
       },
     );
-  };
-
-  // Copy the access code to the clipboard. Wrapped in try/catch because
-  // navigator.clipboard.writeText rejects (e.g. "Document is not focused")
-  // in some browser states, which otherwise surfaces as an uncaught error.
-  const copyAccessCode = async () => {
-    if (!recruiterInfo.accessCode) return;
-    try {
-      await navigator.clipboard.writeText(recruiterInfo.accessCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
-      setCodeMessage({
-        type: "error",
-        text: "Could not copy the code. Please copy it manually.",
-      });
-    }
   };
 
   const baseRecruiterLink = selectedPortfolioId
@@ -846,8 +835,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigator.clipboard.writeText(baseRecruiterLink);
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 2000);
                             }}
                             className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-accent1 border border-line rounded hover:bg-selected transition-colors min-h-[44px]"
                           >
@@ -858,8 +845,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigator.clipboard.writeText(link.token);
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 2000);
                             }}
                             className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-accent1 border border-line rounded hover:bg-selected transition-colors min-h-[44px]"
                           >
