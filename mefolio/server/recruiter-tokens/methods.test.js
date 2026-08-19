@@ -414,5 +414,216 @@ if (Meteor.isServer) {
         }
       });
     });
+
+    describe("recruiterLinks.list", function () {
+      it("returns all tokens for a portfolio the user owns", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        // Create some test tokens
+        const token1 = await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Recruiter 1",
+          token: "TEST-TOKEN-1",
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000),
+          isRevoked: false,
+        });
+
+        const token2 = await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Recruiter 2",
+          token: "TEST-TOKEN-2",
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000),
+          isRevoked: false,
+        });
+
+        const result = await handler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        expect(result).to.be.an("array");
+        expect(result.length).to.be.at.least(2);
+
+        // Verify the tokens are in the result
+        const tokenStrings = result.map((t) => t.token);
+        expect(tokenStrings).to.include("TEST-TOKEN-1");
+        expect(tokenStrings).to.include("TEST-TOKEN-2");
+      });
+
+      it("returns empty array for a portfolio with no tokens", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        // Create a new portfolio with no tokens
+        const emptyPortfolioId = await PortfolioCollection.insertAsync({
+          userId: mockUserId,
+          title: "Empty Portfolio",
+          createdAt: new Date(),
+        });
+
+        const result = await handler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: emptyPortfolioId },
+        );
+
+        expect(result).to.be.an("array");
+        expect(result.length).to.equal(0);
+      });
+
+      it("includes revoked tokens in the list", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        // Create a revoked token
+        const revokedToken = await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Revoked Recruiter",
+          token: "REVOKED-TOKEN-1",
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000),
+          isRevoked: true,
+          revokedAt: new Date(),
+        });
+
+        const result = await handler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        const revokedTokens = result.filter((t) => t.isRevoked === true);
+        expect(revokedTokens.length).to.be.at.least(1);
+        expect(revokedTokens[0].token).to.equal("REVOKED-TOKEN-1");
+      });
+
+      it("returns tokens sorted by createdAt descending (newest first)", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        // Clear existing tokens for this portfolio
+        await RecruiterTokens.removeAsync({ portfolioId: mockPortfolioId });
+
+        // Create tokens with different dates
+        const oldDate = new Date(Date.now() - 86400000 * 2); // 2 days ago
+        const recentDate = new Date(Date.now() - 3600000); // 1 hour ago
+
+        const oldToken = await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Old Recruiter",
+          token: "OLD-TOKEN",
+          createdAt: oldDate,
+          expiresAt: new Date(Date.now() + 60000),
+          isRevoked: false,
+        });
+
+        const newToken = await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "New Recruiter",
+          token: "NEW-TOKEN",
+          createdAt: recentDate,
+          expiresAt: new Date(Date.now() + 60000),
+          isRevoked: false,
+        });
+
+        const result = await handler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        expect(result).to.be.an("array");
+        expect(result.length).to.be.at.least(2);
+
+        // The first token should be the newest (NEW-TOKEN)
+        expect(result[0].token).to.equal("NEW-TOKEN");
+      });
+
+      it("throws not-authorized error when user is not logged in", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        try {
+          await handler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: mockPortfolioId },
+          );
+          expect.fail("Expected recruiterLinks.list to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-authorized error when user does not own the portfolio", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        // Create a portfolio owned by another user
+        const otherUserId = await Accounts.createUserAsync({
+          email: `other-user-${Date.now()}@mefolio.com`,
+          password: "password123",
+        });
+
+        const otherPortfolioId = await PortfolioCollection.insertAsync({
+          userId: otherUserId,
+          title: "Other User Portfolio",
+          createdAt: new Date(),
+        });
+
+        try {
+          await handler.call(
+            {
+              userId: mockUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: otherPortfolioId },
+          );
+          expect.fail("Expected recruiterLinks.list to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-found error when portfolio does not exist", async function () {
+        const handler = Meteor.server.method_handlers["recruiterLinks.list"];
+
+        try {
+          await handler.call(
+            {
+              userId: mockUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: "non-existent-portfolio-id" },
+          );
+          expect.fail("Expected recruiterLinks.list to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-found");
+        }
+      });
+    });
   });
 }
