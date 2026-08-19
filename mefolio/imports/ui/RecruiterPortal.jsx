@@ -427,25 +427,46 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
   const getLinkStatus = (link) => {
     if (link.status === "revoked") {
-      return { color: "bg-red-100 text-red-800", label: "REVOKED" };
+      return {
+        className: "bg-surface-fill text-muted border-line",
+        label: "REVOKED",
+      };
     }
-    // Check if expired
     if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-      return { color: "bg-yellow-100 text-yellow-800", label: "EXPIRED" };
+      return {
+        className: "bg-surface-fill text-muted border-line",
+        label: "EXPIRED",
+      };
     }
-    // Check if active
     if (
       link.status === "active" ||
       !link.expiresAt ||
       new Date(link.expiresAt) > new Date()
     ) {
-      return { color: "bg-green-100 text-green-800", label: "ACTIVE" };
+      return {
+        className: "bg-accent1/20 text-accent1 border-accent1/30",
+        label: "ACTIVE",
+      };
     }
-    return { color: "bg-blue-100 text-blue-800", label: "PENDING" };
+    return {
+      className: "bg-surface-fill text-muted border-line",
+      label: "PENDING",
+    };
   };
 
   const toggleExpand = (token) => {
     setExpandedLink(expandedLink === token ? null : token);
+  };
+
+  // Helper function for message styling
+  const getMessageClasses = (type) => {
+    if (type === "success") {
+      return "bg-surface-fill text-accent1 border border-accent1/30";
+    }
+    if (type === "error") {
+      return "bg-surface-fill text-muted border border-line";
+    }
+    return "";
   };
 
   return (
@@ -535,13 +556,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
         {message.text && (
           <div
-            className={`mb-6 p-4 rounded-lg text-sm font-bold ${
-              message.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : message.type === "error"
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : ""
-            }`}
+            className={`mb-6 p-4 rounded-lg text-sm font-bold ${getMessageClasses(message.type)}`}
           >
             {message.text}
           </div>
@@ -686,7 +701,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           </p>
         </div>
 
-        {/* Expiry Date UI */}
+        {/* Expiry Date */}
         <div className="mb-6 p-4 bg-surface-fill border border-line rounded-lg">
           <p className="text-sm font-medium text-primary mb-2 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
@@ -706,13 +721,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
         {codeMessage.text && (
           <div
-            className={`mb-6 p-4 rounded-lg text-sm font-bold ${
-              codeMessage.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : codeMessage.type === "error"
-                  ? "bg-red-50 text-red-700 border border-red-200"
-                  : ""
-            }`}
+            className={`mb-6 p-4 rounded-lg text-sm font-bold ${getMessageClasses(codeMessage.type)}`}
           >
             {codeMessage.text}
           </div>
@@ -769,7 +778,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                           {link.token}
                         </span>
                         <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${statusBadge.color}`}
+                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge.className}`}
                         >
                           {statusBadge.label}
                         </span>
@@ -796,7 +805,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                           <div>
                             <p className="text-xs text-muted">Status</p>
                             <span
-                              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge.color}`}
+                              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadge.className}`}
                             >
                               {statusBadge.label}
                             </span>
@@ -864,7 +873,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
                                 handleRevokeCode(link.token);
                               }}
                               disabled={isRevoking}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded transition-colors min-h-[44px] disabled:opacity-50"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary border border-error/50 bg-error/10 hover:bg-error/20 rounded transition-colors min-h-[44px] disabled:opacity-50"
                             >
                               <Ban className="w-3.5 h-3.5" />
                               Revoke
@@ -916,7 +925,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
                 <button
                   onClick={() => handleDelete(resume.url)}
-                  className="p-2 rounded-md hover:bg-red-100 text-red-600 transition"
+                  className="p-2 rounded-md hover:bg-selected transition text-muted"
                 >
                   <Trash2 size={18} />
                 </button>
