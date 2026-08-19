@@ -131,4 +131,41 @@ Meteor.methods({
 
     return true;
   },
+
+  /**
+   * Lists all recruiter access tokens for a given portfolio.
+   * Only the portfolio owner can view the list.
+   */
+  async "recruiterLinks.list"({ portfolioId }) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to view recruiter links."
+      );
+    }
+
+    check(portfolioId, String);
+
+    // Verify the user owns this portfolio
+    const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "not-found",
+        "Portfolio not found."
+      );
+    }
+
+    if (portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can only view recruiter links for your own portfolio."
+      );
+    }
+
+    // Return all tokens for this portfolio, sorted by creation date (newest first)
+    return await RecruiterTokens.find(
+      { portfolioId: portfolioId },
+      { sort: { createdAt: -1 } }
+    ).fetch();
+  },
 });
