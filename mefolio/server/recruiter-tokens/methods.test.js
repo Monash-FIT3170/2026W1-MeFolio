@@ -420,7 +420,7 @@ if (Meteor.isServer) {
         const handler = Meteor.server.method_handlers["recruiterLinks.list"];
 
         // Create some test tokens
-        const token1 = await RecruiterTokens.insertAsync({
+        await RecruiterTokens.insertAsync({
           userId: mockUserId,
           portfolioId: mockPortfolioId,
           recruiterName: "Recruiter 1",
@@ -430,7 +430,7 @@ if (Meteor.isServer) {
           isRevoked: false,
         });
 
-        const token2 = await RecruiterTokens.insertAsync({
+        await RecruiterTokens.insertAsync({
           userId: mockUserId,
           portfolioId: mockPortfolioId,
           recruiterName: "Recruiter 2",
@@ -485,7 +485,7 @@ if (Meteor.isServer) {
         const handler = Meteor.server.method_handlers["recruiterLinks.list"];
 
         // Create a revoked token
-        const revokedToken = await RecruiterTokens.insertAsync({
+        await RecruiterTokens.insertAsync({
           userId: mockUserId,
           portfolioId: mockPortfolioId,
           recruiterName: "Revoked Recruiter",
@@ -520,7 +520,7 @@ if (Meteor.isServer) {
         const oldDate = new Date(Date.now() - 86400000 * 2); // 2 days ago
         const recentDate = new Date(Date.now() - 3600000); // 1 hour ago
 
-        const oldToken = await RecruiterTokens.insertAsync({
+        await RecruiterTokens.insertAsync({
           userId: mockUserId,
           portfolioId: mockPortfolioId,
           recruiterName: "Old Recruiter",
@@ -530,7 +530,7 @@ if (Meteor.isServer) {
           isRevoked: false,
         });
 
-        const newToken = await RecruiterTokens.insertAsync({
+        await RecruiterTokens.insertAsync({
           userId: mockUserId,
           portfolioId: mockPortfolioId,
           recruiterName: "New Recruiter",
