@@ -315,7 +315,8 @@ Meteor.publish("portfolios.byPortfolioId", function (portfolioId) {
 
   return PortfolioCollection.find(
     {
-      _id: portfolioId, isPublished: true 
+      _id: portfolioId,
+      isPublished: true,
     },
     {
       fields: {
