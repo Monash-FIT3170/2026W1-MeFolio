@@ -112,9 +112,9 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           // Map and filter tokens
           const twoWeeksAgo = new Date();
           twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-          
+
           const mappedLinks = links
-            .map(link => ({
+            .map((link) => ({
               token: link.token,
               status: link.isRevoked ? "revoked" : "active",
               createdAt: link.createdAt,
@@ -124,7 +124,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               revokedAt: link.revokedAt || null,
             }))
             // Keep revoked for two weeks max before disappearing
-            .filter(link => {
+            .filter((link) => {
               if (!link.isRevoked) return true;
               if (!link.revokedAt) {
                 // If no revokedAt date, use createdAt as fallback
@@ -132,7 +132,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
               }
               return new Date(link.revokedAt) > twoWeeksAgo;
             });
-          
+
           setRecruiterLinks(mappedLinks);
         }
       },
@@ -162,8 +162,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
 
     Meteor.call(
       "tokens.generate",
-      { 
-        portfolioId: selectedPortfolioId, 
+      {
+        portfolioId: selectedPortfolioId,
         recruiterName: "General Recruiter",
         expiresAt: expiryDate ? new Date(expiryDate) : null,
       },
@@ -186,7 +186,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
             { portfolioId: selectedPortfolioId },
             (listErr, links) => {
               if (!listErr && links) {
-                const mappedLinks = links.map(link => ({
+                const mappedLinks = links.map((link) => ({
                   token: link.token,
                   status: link.isRevoked ? "revoked" : "active",
                   createdAt: link.createdAt,
@@ -227,7 +227,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           { portfolioId: selectedPortfolioId },
           (listErr, links) => {
             if (!listErr && links) {
-              const mappedLinks = links.map(link => ({
+              const mappedLinks = links.map((link) => ({
                 token: link.token,
                 status: link.isRevoked ? "revoked" : "active",
                 createdAt: link.createdAt,
@@ -434,7 +434,11 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       return { color: "bg-yellow-100 text-yellow-800", label: "EXPIRED" };
     }
     // Check if active
-    if (link.status === "active" || (!link.expiresAt || new Date(link.expiresAt) > new Date())) {
+    if (
+      link.status === "active" ||
+      !link.expiresAt ||
+      new Date(link.expiresAt) > new Date()
+    ) {
       return { color: "bg-green-100 text-green-800", label: "ACTIVE" };
     }
     return { color: "bg-blue-100 text-blue-800", label: "PENDING" };
@@ -686,7 +690,8 @@ const RecruiterPortal = ({ portfolio, userId }) => {
         <div className="mb-6 p-4 bg-surface-fill border border-line rounded-lg">
           <p className="text-sm font-medium text-primary mb-2 flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Set Expiry Date (Optional, Set to 3 Months Automatically if Left Blank)
+            Set Expiry Date (Optional, Set to 3 Months Automatically if Left
+            Blank)
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <input
