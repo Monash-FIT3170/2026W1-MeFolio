@@ -140,7 +140,7 @@ Meteor.methods({
     if (!this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You must be logged in to view recruiter links."
+        "You must be logged in to view recruiter links.",
       );
     }
 
@@ -149,23 +149,20 @@ Meteor.methods({
     // Verify the user owns this portfolio
     const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
     if (!portfolio) {
-      throw new Meteor.Error(
-        "not-found",
-        "Portfolio not found."
-      );
+      throw new Meteor.Error("not-found", "Portfolio not found.");
     }
 
     if (portfolio.userId !== this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You can only view recruiter links for your own portfolio."
+        "You can only view recruiter links for your own portfolio.",
       );
     }
 
     // Return all tokens for this portfolio, sorted by creation date (newest first)
     return await RecruiterTokens.find(
       { portfolioId: portfolioId },
-      { sort: { createdAt: -1 } }
+      { sort: { createdAt: -1 } },
     ).fetch();
   },
 });
