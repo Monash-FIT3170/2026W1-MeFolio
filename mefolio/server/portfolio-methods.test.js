@@ -3,10 +3,9 @@ import { Accounts } from "meteor/accounts-base";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { expect } from "chai";
 
-// Register the server methods under test. `portfolios.update` is defined in
-// main.js, so importing it populates Meteor.server.method_handlers under a
-// plain `meteor test` run (which does not load the app's main.js by default).
-import "./main.js";
+// Register the methods under test. Importing this lightweight module populates
+// Meteor.server.method_handlers without pulling in main.js's seed and OAuth
+import "./portfolio-methods.js";
 
 if (Meteor.isServer) {
   describe("portfolios.update method", function () {
