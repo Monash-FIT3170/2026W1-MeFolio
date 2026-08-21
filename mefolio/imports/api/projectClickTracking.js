@@ -30,7 +30,6 @@ export const createProjectClickEventId = () => {
 export const meteorProjectClickTransport = (event) =>
   Meteor.callAsync(PROJECT_CLICK_METHOD, event);
 
-
 // returns track function
 // track function receives click details
 export const createProjectClickTracker =
