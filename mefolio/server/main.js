@@ -351,26 +351,6 @@ Meteor.publish("portfolios.byUsername", function (username) {
   ];
 });
 
-Meteor.publish("portfolios.byPortfolioId", function (portfolioId) {
-  check(portfolioId, String);
-
-  return PortfolioCollection.find(
-    {
-      _id: portfolioId,
-      isPublished: true,
-    },
-    {
-      fields: {
-        username: 1,
-        theme: 1,
-        isPublished: 1,
-        publishedAt: 1,
-        publishedContent: 1,
-      },
-    },
-  );
-});
-
 Meteor.methods({
   async "users.update"(userId, updates) {
     if (this.userId !== userId) {
