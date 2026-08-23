@@ -11,6 +11,6 @@ Meteor.publish("portfolios.publicView", function (portfolioId) {
   check(portfolioId, String);
   return PortfolioCollection.find(
     { _id: portfolioId, isPublished: true },
-    { fields: { publishedContent: 1, isPublished: 1, username: 1 } },
+    { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
   );
 });
