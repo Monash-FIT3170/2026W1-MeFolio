@@ -212,4 +212,29 @@ describe("Project click tracker", function () {
 
     expect(sentEvents[0].eventId).to.not.equal(sentEvents[1].eventId);
   });
+
+it("updates the click counter correctly for concurrent genuine clicks", async function () {
+  const events = Array.from({ length: 10 }, () => createEvent());
+
+  eventIds.push(...events.map((event) => event.eventId));
+
+  const results = await Promise.all(
+    events.map((event) => recordProjectClick(event)),
+  );
+
+  expect(results.filter((result) => result.recorded)).to.have.length(10);
+
+  const savedEvents = await ProjectEngagement.find({
+    portfolioId,
+    project_id: projectId,
+  }).fetchAsync();
+
+  const totalClicks = savedEvents.reduce(
+    (total, event) => total + event.clicks,
+    0,
+  );
+
+  expect(totalClicks).to.equal(10);
+});
+
 });
