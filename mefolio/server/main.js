@@ -723,6 +723,41 @@ Meteor.methods({
     });
   },
 
+  
+  async "portfolios.viewerHeartbeat"(portfolioId) {
+    check(portfolioId, String);
+
+    const connectionId = this.connection?.id;
+
+    if (!connectionId) {
+      return 0;
+    }
+
+    const lastSeenAt = new Date();
+
+    const updatedCount = await PortfolioCollection.updateAsync(
+      {
+        _id: portfolioId,
+        "viewers.connectionId": connectionId,
+      },
+      {
+        $set: {
+          "viewers.$.lastSeenAt": lastSeenAt,
+        },
+      },
+    );
+
+    const activeViewer = activeViewerConnections.get(connectionId);
+
+    if (activeViewer?.portfolioId === portfolioId) {
+      activeViewer.viewer.lastSeenAt = lastSeenAt;
+      activeViewerConnections.set(connectionId, activeViewer);
+    }
+
+    return updatedCount;
+  },
+
+
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);
   },
