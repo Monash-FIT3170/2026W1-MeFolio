@@ -43,10 +43,6 @@ if (Meteor.isClient) {
         target: { value: "john@example.com" },
       });
 
-      fireEvent.change(screen.getByPlaceholderText("yourname"), {
-        target: { value: "john" },
-      });
-
       fireEvent.change(
         screen.getByPlaceholderText("Create a strong password"),
         {
