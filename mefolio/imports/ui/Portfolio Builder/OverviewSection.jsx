@@ -32,14 +32,14 @@ const VisitorCard = ({ visitor }) => {
 
       <div className="min-w-0">
         <h3 className="m-0 text-sm font-semibold text-primary">
-          {visitor.name}
+          {visitor.name ? visitor.name : "Anonymous Visitor"}
         </h3>
         <p className="mt-0.5 truncate text-sm text-primary">{visitor.email}</p>
         <p className="mt-1 text-sm font-medium text-primary">
           {visitor.activity}
         </p>
         <span className="mt-1 block text-xs text-primary">
-          {visitor.location} - 2 min ago
+          {visitor.location}
         </span>
       </div>
 
@@ -69,9 +69,15 @@ const OverviewSection = ({ stats, visitors }) => {
         </div>
 
         <div>
-          {visitors.map((visitor) => (
-            <VisitorCard key={visitor.id} visitor={visitor} />
-          ))}
+          {visitors.length > 0 ? (
+            visitors.map((visitor) => (
+              <VisitorCard key={visitor.id} visitor={visitor} />
+            ))
+          ) : (
+            <div className="py-8 text-center text-sm text-muted">
+              No visitors yet
+            </div>
+          )}
         </div>
       </section>
     </>
