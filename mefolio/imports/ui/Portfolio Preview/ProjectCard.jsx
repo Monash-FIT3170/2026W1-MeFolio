@@ -81,7 +81,7 @@ export function ProjectCard({
         )}
 
         <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
-          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+          <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
           <span className="text-xs font-extrabold text-primary">
             {githubStars ?? data.stars ?? 0}
           </span>
@@ -157,7 +157,7 @@ export function ProjectCard({
             <button
               type="button"
               disabled
-              className="flex-1 cursor-not-allowed py-3 flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-300 rounded-xl font-bold text-sm"
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-line bg-background py-3 text-sm font-bold text-muted opacity-60"
             >
               <Github className="icon-small" />
               <span>Code</span>
@@ -178,7 +178,7 @@ export function ProjectCard({
             <button
               type="button"
               disabled
-              className="flex-1 cursor-not-allowed py-3 flex items-center justify-center gap-2 bg-indigo-300 text-white rounded-xl font-bold text-sm"
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-line bg-background py-3 text-sm font-bold text-muted opacity-60"
             >
               <ExternalLink className="w-4 h-4" /> Demo
             </button>

@@ -297,8 +297,8 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-gray-900">
+        <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
+          <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
 
@@ -313,7 +313,7 @@ const DashboardLayout = () => {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="rounded-lg bg-indigo-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-800"
+                className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
               >
                 Add Project
               </button>
