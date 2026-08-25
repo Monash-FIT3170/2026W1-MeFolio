@@ -23,10 +23,10 @@ export const mapOverviewStats = (portfolios) => {
 };
 
 export const mapLiveVisitors = (portfolios) => {
-  if (!portfolios?.length) return mockLiveVisitors;
+  if (!portfolios?.length) return [];
 
-  const viewers = portfolios[0]?.viewers || [];
-  if (!viewers.length) return mockLiveVisitors;
+  const viewers = portfolios?.[0]?.viewers || [];
+  if (!viewers.length) return [];
 
   return viewers.map((viewer, index) => {
     const connectedAt = viewer.connectedAt
@@ -124,7 +124,7 @@ export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
-  liveVisitors: mockLiveVisitors,
+  liveVisitors: [],
   profile: mapProfile(user),
   aboutMe: mapAboutMe(samplePortfolioProfileData),
   projects: mockProjects,

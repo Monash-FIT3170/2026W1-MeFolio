@@ -1,5 +1,4 @@
 import {
-  mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   sidebarItems,
@@ -21,14 +20,10 @@ export const mapOverviewStats = (portfolios) => {
 
 // Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
-  if (!portfolios?.length) {
-    return mockLiveVisitors;
-  }
+  if (!portfolios?.length) return [];
 
   const viewers = portfolios[0]?.viewers || [];
-  if (!viewers.length) {
-    return mockLiveVisitors;
-  }
+  if (!viewers.length) return [];
 
   return viewers.map((viewer, index) => {
     const connectedAt = viewer.connectedAt
@@ -80,7 +75,7 @@ export const createMockDashboardViewModel = () => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
-  liveVisitors: mockLiveVisitors,
+  liveVisitors: [],
   profile: mockProfile,
 });
 

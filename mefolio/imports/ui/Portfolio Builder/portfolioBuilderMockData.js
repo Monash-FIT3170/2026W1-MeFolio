@@ -42,35 +42,35 @@ export const mockOverviewStats = [
   },
 ];
 
-export const mockLiveVisitors = [
-  {
-    id: "visitor-1",
-    name: "James O'Brien",
-    email: "james.obrien@canva.com",
-    activity: "Viewing Projects",
-    location: "Sydney, AU",
-    duration: "3:24",
-    active: true,
-  },
-  {
-    id: "visitor-2",
-    name: "Emily Zhang",
-    email: "emily.z@atlassian.com",
-    activity: "AI Chat Session",
-    location: "Melbourne, AU",
-    duration: "7:12",
-    active: true,
-  },
-  {
-    id: "visitor-3",
-    name: "Liam Robertson",
-    email: "lrobertson@seek.com.au",
-    activity: "Viewing Skills",
-    location: "Brisbane, AU",
-    duration: "1:45",
-    active: false,
-  },
-];
+// export const mockLiveVisitors = [
+//   {
+//     id: "visitor-1",
+//     name: "James O'Brien",
+//     email: "james.obrien@canva.com",
+//     activity: "Viewing Projects",
+//     location: "Sydney, AU",
+//     duration: "3:24",
+//     active: true,
+//   },
+//   {
+//     id: "visitor-2",
+//     name: "Emily Zhang",
+//     email: "emily.z@atlassian.com",
+//     activity: "AI Chat Session",
+//     location: "Melbourne, AU",
+//     duration: "7:12",
+//     active: true,
+//   },
+//   {
+//     id: "visitor-3",
+//     name: "Liam Robertson",
+//     email: "lrobertson@seek.com.au",
+//     activity: "Viewing Skills",
+//     location: "Brisbane, AU",
+//     duration: "1:45",
+//     active: false,
+//   },
+// ];
 
 export const mockProfile = {
   initials: "JD",
