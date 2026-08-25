@@ -198,44 +198,6 @@ const DashboardLayout = () => {
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
 
-  const handleProjectsReorder = (nextProjects) => {
-    setOrderedProjects(nextProjects);
-
-    setSaveStatus(
-      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
-        ? "idle"
-        : "unsaved",
-    );
-  };
-
-  const handleSaveProjectOrder = () => {
-    if (!selectedPortfolio?._id) {
-      setSaveStatus("error");
-      return;
-    }
-
-    const projectIds = orderedProjects.map((project) => getProjectId(project));
-
-    setSaveStatus("saving");
-
-    Meteor.call(
-      "portfolioProjects.reorder",
-      {
-        portfolioId: selectedPortfolio._id,
-        projectIds,
-      },
-      (error) => {
-        if (error) {
-          setSaveStatus("error");
-          return;
-        }
-
-        setSourceProjectOrderKey(projectIds.join("|"));
-        setSaveStatus("saved");
-      },
-    );
-  };
-
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
 
   const handleProjectDragOver = (event) => event.preventDefault();
