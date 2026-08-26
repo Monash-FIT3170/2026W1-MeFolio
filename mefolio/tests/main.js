@@ -13,6 +13,7 @@ import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
 import "/imports/ui/Public/PublicPortfolioPage.test.jsx";
 import "/server/recruiter-tokens/methods.test.js";
 import "/server/publications/publicPortfolio.test.js";
+import "/server/publications/publicPortfolioMeta.test.js";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
