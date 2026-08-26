@@ -7,7 +7,9 @@ const THEME_PREVIEW_IMAGES = {
 
 const firstHeaderValue = (value) => {
   if (Array.isArray(value)) return value[0] || "";
-  return String(value || "").split(",")[0].trim();
+  return String(value || "")
+    .split(",")[0]
+    .trim();
 };
 
 export const escapeHtmlAttribute = (value = "") =>
@@ -66,7 +68,8 @@ export const getPortfolioMeta = (publishedContent = {}, baseUrl = "") => {
     (project) => project?.media,
   )?.media;
   const themeImage =
-    THEME_PREVIEW_IMAGES[publishedContent.theme] || THEME_PREVIEW_IMAGES.default;
+    THEME_PREVIEW_IMAGES[publishedContent.theme] ||
+    THEME_PREVIEW_IMAGES.default;
   const image = toAbsoluteUrl(
     publishedContent.profile?.avatarUrl || projectImage || themeImage,
     baseUrl,
@@ -79,12 +82,7 @@ export const getPortfolioMeta = (publishedContent = {}, baseUrl = "") => {
   };
 };
 
-export const renderPortfolioMetaTags = ({
-  title,
-  description,
-  image,
-  url,
-}) => {
+export const renderPortfolioMetaTags = ({ title, description, image, url }) => {
   const safeTitle = escapeHtmlAttribute(title);
   const safeDescription = escapeHtmlAttribute(description);
   const safeImage = escapeHtmlAttribute(image);

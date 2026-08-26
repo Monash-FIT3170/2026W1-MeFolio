@@ -4,6 +4,7 @@ import {
   getBaseUrlFromRequest,
   getPortfolioMeta,
   getPublicPortfolioIdFromPath,
+  normalizeDescription,
   renderPortfolioMetaTags,
 } from "./publicPortfolioMetaHelpers.js";
 
@@ -84,6 +85,40 @@ if (Meteor.isServer) {
       expect(html).to.include(
         '<meta property="og:description" content="Design &amp; development" />',
       );
+    });
+
+    it("renders the required Open Graph and Twitter preview tags", function () {
+      const html = renderPortfolioMetaTags({
+        title: "Sample Portfolio",
+        description: "This is a sample portfolio.",
+        image: "https://mefolio.example/default-preview.png",
+        url: "https://mefolio.example/abc123/view",
+      });
+
+      expect(html).to.include("<title>Sample Portfolio</title>");
+      expect(html).to.include(
+        '<meta property="og:title" content="Sample Portfolio" />',
+      );
+      expect(html).to.include(
+        '<meta property="og:image" content="https://mefolio.example/default-preview.png" />',
+      );
+      expect(html).to.include(
+        '<meta name="twitter:card" content="summary_large_image" />',
+      );
+      expect(html).to.include(
+        '<meta name="twitter:image" content="https://mefolio.example/default-preview.png" />',
+      );
+    });
+
+    it("normalizes long descriptions for share previews", function () {
+      const longDescription = `Frontend developer
+        building portfolio tools with a lot of extra whitespace. ${"x".repeat(220)}`;
+
+      const description = normalizeDescription(longDescription);
+
+      expect(description).to.have.lengthOf(180);
+      expect(description).to.not.include("\n");
+      expect(description).to.not.match(/\s{2,}/);
     });
   });
 }
