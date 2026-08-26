@@ -240,6 +240,70 @@ if (Meteor.isServer) {
           expect(error.error).to.equal("invalid-access");
         }
       });
+
+      it("denies access immediately after a token expires", async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        const verifyHandler =
+          Meteor.server.method_handlers["recruiter.verifyAccess"];
+
+        //expire in 200ms
+        const expiresAt = new Date(Date.now() + 200);
+
+        const accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: mockRecruiterName,
+            expiresAt,
+          },
+        );
+
+        // Confirm the token is valid before it expires.
+        const beforeExpiry = await verifyHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode,
+          },
+        );
+
+        expect(beforeExpiry).to.equal(true);
+
+        // Wait until the expiry time has passed.
+        const waitUntil = expiresAt.getTime() - Date.now();
+
+        if (waitUntil > 0) {
+          await new Promise((resolve) => setTimeout(resolve, waitUntil + 20));
+        }
+
+        try {
+          await verifyHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode,
+            },
+          );
+
+          expect.fail("Expected expired token to be rejected");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-access");
+        }
+      });
     });
 
     describe("recruiterLinks.revoke", function () {
