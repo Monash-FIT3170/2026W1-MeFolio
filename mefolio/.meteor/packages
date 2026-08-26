@@ -29,3 +29,4 @@ meteortesting:mocha
 service-configuration
 accounts-google
 accounts-github
+ddp-rate-limiter

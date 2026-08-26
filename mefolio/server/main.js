@@ -11,6 +11,7 @@ import "/imports/api/files/resumeFiles";
 
 // oauth login
 import "./oauth-login/oauth.js";
+import "./projectClickTracking.js";
 
 // recruiter access token
 import "./recruiter-tokens/collection.js";
