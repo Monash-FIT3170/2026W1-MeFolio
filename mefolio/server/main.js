@@ -25,6 +25,7 @@ import "./portfolio-methods.js";
 
 // public portfolio view
 import "./publications/publicPortfolio.js";
+import "./publications/publicPortfolioMeta.js";
 
 Accounts.config({
   loginExpirationInDays: 1,

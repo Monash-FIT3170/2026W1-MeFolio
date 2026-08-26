@@ -20,6 +20,7 @@ import "/server/recruiter-tokens/visit-notifications.test.js";
 import "/server/portfolio-methods.test.js";
 import "/server/portfolios.byUsername.test.js";
 import "/server/publications/publicPortfolio.test.js";
+import "/server/publications/publicPortfolioMeta.test.js";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
