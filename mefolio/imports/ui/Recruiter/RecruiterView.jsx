@@ -4,6 +4,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview.jsx";
+import { getPublishedTheme } from "../publishedTheme";
 import {
   Shield,
   Building,
@@ -151,7 +152,10 @@ export function RecruiterView() {
   const hasRecruiterDetails = details.length > 0 || !!recruiter.personalNote;
 
   return (
-    <div className="min-h-screen bg-background font-main">
+    <div
+      data-theme={getPublishedTheme(published?.theme)}
+      className="min-h-screen bg-background font-main"
+    >
       {/* Slim recruiter header (owner chrome is hidden in PortfolioPreview) */}
       <div className="border-b border-line bg-surface-fill">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">

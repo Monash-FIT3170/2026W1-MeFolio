@@ -4,6 +4,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
+import { getPublishedTheme } from "../publishedTheme";
 import {
   ProjectEngagement,
   PROJECT_ENGAGEMENT_PUBLICATION,
@@ -431,20 +432,6 @@ const OwnerPreviewRoute = () => {
     />
   );
 };
-
-// Theme ids that have a matching [data-theme] rule in styles.css. A value
-// outside this list matches no rule at all, so the subtree would silently
-// inherit the draft theme instead of falling back to a readable one. Older
-// records store "minimal", which was never a defined theme.
-const PUBLISHED_THEMES = [
-  "default",
-  "minimalist",
-  "terminal-retro",
-  "modern-saas",
-];
-
-const getPublishedTheme = (theme) =>
-  PUBLISHED_THEMES.includes(theme) ? theme : "default";
 
 // Renders the snapshot taken at publish time rather than the live draft, so
 // the owner can see exactly what was published.
