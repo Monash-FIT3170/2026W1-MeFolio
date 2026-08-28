@@ -45,7 +45,6 @@ export const mapProfile = (portfolio) => {
     initials,
     name,
     email,
-    username: portfolio.username || "me",
   };
 };
 

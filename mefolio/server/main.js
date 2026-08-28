@@ -11,6 +11,7 @@ import "/imports/api/files/resumeFiles";
 
 // oauth login
 import "./oauth-login/oauth.js";
+import "./projectClickTracking.js";
 
 // recruiter access token
 import "./recruiter-tokens/collection.js";
@@ -20,6 +21,9 @@ import "./recruiter-tokens/verifytokens.js";
 // public portfolio view
 import "./publications/publicPortfolio.js";
 import "./publications/publicPortfolioMeta.js";
+// portfolio methods (in their own module so tests can load them without the
+// app seed and OAuth config)
+import "./portfolio-methods.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -202,7 +206,6 @@ Meteor.startup(async () => {
       createdAt: new Date(),
       projects: projectIds,
       theme: "minimalist",
-      username: "me",
       badges: [
         {
           title: "Sample Badge",
@@ -275,8 +278,29 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
+// Private portfolio fields that must never reach a client that does not own
+// the portfolio. `recruiterInfo` holds private recruiter details (salary,
+// phone, personal note) and the access code itself, so it is only sent to the
+// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
+// publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+
 Meteor.publish("portfolios.all", function () {
-  return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  // Not logged in: nobody owns these, so strip private fields from all.
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      {},
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  // Logged in: only your own portfolios. Nothing on the dashboard needs other
+  // users' portfolios, and a publish function cannot return two cursors for the
+  // same collection. The recruiter view reads its portfolio from the
+  // token-gated `portfolio.recruiterView` publication instead.
+  return PortfolioCollection.find({ userId: this.userId }, { sort });
 });
 
 Meteor.publish("users.current", function () {
@@ -308,7 +332,22 @@ Meteor.publish("portfolioProjects.all", function () {
 
 Meteor.publish("portfolios.byUsername", function (username) {
   check(username, String);
-  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      { username },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  return [
+    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
+    PortfolioCollection.find(
+      { username, userId: { $ne: this.userId } },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    ),
+  ];
 });
 
 Meteor.methods({
@@ -462,12 +501,6 @@ Meteor.methods({
     return await PortfolioCollection.insertAsync(newPortfolio);
   },
 
-  async "portfolios.update"(portfolioId, updates) {
-    return await PortfolioCollection.updateAsync(portfolioId, {
-      $set: updates,
-    });
-  },
-
   async "portfolios.publish"(portfolioId) {
     check(portfolioId, String);
 
@@ -560,7 +593,6 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
-      username: portfolio.username || "",
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {

@@ -57,6 +57,7 @@ Meteor.methods({
       token,
       createdAt: new Date(),
       expiresAt,
+      isRevoked: false,
     });
 
     return token;
@@ -70,6 +71,7 @@ Meteor.methods({
     const validToken = await RecruiterTokens.findOneAsync({
       portfolioId: portfolioId,
       token: accessCode,
+      isRevoked: { $ne: true },
       expiresAt: { $gt: new Date() },
     });
 
@@ -83,5 +85,84 @@ Meteor.methods({
 
     // Valid token found
     return true;
+  },
+
+  /**
+   * Immediately revokes and invalidates a recruiter access token.
+   * Accepts either { tokenId } or { token }.
+   */
+  async "recruiterLinks.revoke"({ tokenId, token } = {}) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to revoke a link.",
+      );
+    }
+
+    const query = { userId: this.userId };
+    if (tokenId) {
+      check(tokenId, String);
+      query._id = tokenId;
+    } else if (token) {
+      check(token, String);
+      query.token = token;
+    } else {
+      throw new Meteor.Error(
+        "invalid-arguments",
+        "Either tokenId or token must be provided.",
+      );
+    }
+
+    const existingToken = await RecruiterTokens.findOneAsync(query);
+    if (!existingToken) {
+      throw new Meteor.Error(
+        "not-found",
+        "Token not found or you do not have permission to revoke it.",
+      );
+    }
+
+    // Invalidate immediately by setting expiresAt to the past
+    await RecruiterTokens.updateAsync(existingToken._id, {
+      $set: {
+        expiresAt: new Date(),
+        isRevoked: true,
+      },
+    });
+
+    return true;
+  },
+
+  /**
+   * Lists all recruiter access tokens for a given portfolio.
+   * Only the portfolio owner can view the list.
+   */
+  async "recruiterLinks.list"({ portfolioId }) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to view recruiter links.",
+      );
+    }
+
+    check(portfolioId, String);
+
+    // Verify the user owns this portfolio
+    const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
+    if (!portfolio) {
+      throw new Meteor.Error("not-found", "Portfolio not found.");
+    }
+
+    if (portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can only view recruiter links for your own portfolio.",
+      );
+    }
+
+    // Return all tokens for this portfolio, sorted by creation date (newest first)
+    return await RecruiterTokens.find(
+      { portfolioId: portfolioId },
+      { sort: { createdAt: -1 } },
+    ).fetch();
   },
 });

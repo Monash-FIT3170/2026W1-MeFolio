@@ -89,5 +89,65 @@ if (Meteor.isClient) {
       expect(imageElement.getAttribute("loading")).to.equal("lazy");
       expect(imageElement.getAttribute("decoding")).to.equal("async");
     });
+
+    it("records Code and Demo destination clicks with portfolio scope", () => {
+      const recordedClicks = [];
+      const mockProject = {
+        _id: "project-123",
+        title: "Tracked Project",
+        technologies: ["Meteor"],
+        githubLink: "https://github.com/example/tracked-project",
+        liveDemoLink: "https://tracked-project.example.com",
+      };
+
+      render(
+        <ProjectCard
+          project={mockProject}
+          portfolioId="portfolio-456"
+          onProjectClick={(click) => recordedClicks.push(click)}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("link", { name: /code/i }));
+      fireEvent.click(screen.getByRole("link", { name: /demo/i }));
+
+      expect(recordedClicks).to.deep.equal([
+        {
+          portfolioId: "portfolio-456",
+          projectId: "project-123",
+          target: "code",
+        },
+        {
+          portfolioId: "portfolio-456",
+          projectId: "project-123",
+          target: "demo",
+        },
+      ]);
+    });
+
+    it("does not record clicks when project destinations are unavailable", () => {
+      const recordedClicks = [];
+
+      render(
+        <ProjectCard
+          project={{
+            _id: "project-without-links",
+            title: "Project without links",
+            technologies: [],
+          }}
+          portfolioId="portfolio-456"
+          onProjectClick={(click) => recordedClicks.push(click)}
+        />,
+      );
+
+      const codeButton = screen.getByRole("button", { name: /code/i });
+      const demoButton = screen.getByRole("button", { name: /demo/i });
+      fireEvent.click(codeButton);
+      fireEvent.click(demoButton);
+
+      expect(codeButton.disabled).to.equal(true);
+      expect(demoButton.disabled).to.equal(true);
+      expect(recordedClicks).to.deep.equal([]);
+    });
   });
 }

@@ -2,7 +2,6 @@ const FIELD_LABELS = {
   title: "Portfolio title",
   bio: "Bio",
   theme: "Theme",
-  username: "Username",
   "profile.fullName": "Full name",
   "profile.headline": "Headline",
   "profile.avatarUrl": "Avatar",

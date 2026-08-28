@@ -7,6 +7,7 @@ import "/imports/ui/Login/LoginPage.test.jsx";
 import "/imports/ui/Login/ForgotPasswordPage.test.jsx";
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
+import "/imports/api/projectClickTracking.test.js";
 import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
@@ -14,6 +15,10 @@ import "/imports/ui/Public/PublicPortfolioPage.test.jsx";
 import "/server/recruiter-tokens/methods.test.js";
 import "/server/publications/publicPortfolio.test.js";
 import "/server/publications/publicPortfolioMeta.test.js";
+import "/imports/ui/Login/SignUpPage.test.jsx";
+import "/server/recruiter-tokens/verifytokens.test.js";
+import "/server/portfolio-methods.test.js";
+import "/server/portfolios.byUsername.test.js";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {

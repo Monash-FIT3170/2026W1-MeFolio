@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Github, ExternalLink, Code, Play, Star, Mic } from "lucide-react";
+import { trackProjectClick } from "../../api/projectClickTracking";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 
-export function ProjectCard({ project }) {
+export function ProjectCard({
+  project,
+  portfolioId,
+  onProjectClick = trackProjectClick,
+}) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
   const [, setImageError] = useState(false);
   const [githubStars, setGithubStars] = useState(null);
@@ -36,6 +41,24 @@ export function ProjectCard({ project }) {
       .catch(() => {});
   }, [data.githubLink]);
 
+  const handleProjectClick = (target) => {
+    const projectId = data._id || data.id;
+    if (!portfolioId || !projectId) return;
+
+    try {
+      const trackingRequest = onProjectClick({
+        portfolioId,
+        projectId,
+        target,
+      });
+
+      // Analytics must never block or cancel the visitor's destination.
+      Promise.resolve(trackingRequest).catch(() => undefined);
+    } catch {
+      // Keep the destination usable if a custom analytics transport fails.
+    }
+  };
+
   return (
     <Card className="overflow-hidden bg-surface-fill border-2 border-line rounded-3xl shadow-sm transition-transform duration-300 hover:shadow-xl hover:-translate-y-2 group">
       {/* Top Image & Star Section */}
@@ -58,7 +81,7 @@ export function ProjectCard({ project }) {
         )}
 
         <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
-          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+          <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
           <span className="text-xs font-extrabold text-primary">
             {githubStars ?? data.stars ?? 0}
           </span>
@@ -119,16 +142,47 @@ export function ProjectCard({ project }) {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          <button
-            onClick={() => window.open(data.githubLink)}
-            className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-line text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
-          >
-            <Github className="icon-small" />
-            <span className="w-4 h-4">Code</span>
-          </button>
-          <button className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-alt text-alt rounded-xl font-bold text-sm hover:bg-alt/50 hover:text-background transition-all">
-            <ExternalLink className="w-4 h-4" /> Demo
-          </button>
+          {data.githubLink ? (
+            <a
+              href={data.githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleProjectClick("code")}
+              className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-line text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-background transition-all"
+            >
+              <Github className="icon-small" />
+              <span>Code</span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-line bg-background py-3 text-sm font-bold text-muted opacity-60"
+            >
+              <Github className="icon-small" />
+              <span>Code</span>
+            </button>
+          )}
+
+          {data.liveDemoLink ? (
+            <a
+              href={data.liveDemoLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => handleProjectClick("demo")}
+              className="flex-1 py-3 flex items-center justify-center gap-2 bg-background border border-alt text-alt rounded-xl font-bold text-sm hover:bg-alt/50 hover:text-background transition-all"
+            >
+              <ExternalLink className="w-4 h-4" /> Demo
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-line bg-background py-3 text-sm font-bold text-muted opacity-60"
+            >
+              <ExternalLink className="w-4 h-4" /> Demo
+            </button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -145,4 +199,6 @@ ProjectCard.propTypes = {
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
   }),
+  portfolioId: PropTypes.string,
+  onProjectClick: PropTypes.func,
 };

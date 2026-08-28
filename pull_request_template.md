@@ -6,8 +6,6 @@
 - List the key updates
 - Include any refactors, fixes, or new features -->
 
-Describe your changes here...
-
 ---
 
 ## Checklist
@@ -16,6 +14,8 @@ Describe your changes here...
 - [ ] I have added tests for this feature (if applicable)
 - [ ] I have run ```npm run format``` to auto-format my files
 - [ ] I have run ```npm run lint``` and fixed any linting issues raised
+- [ ] I have not used any hard-coded values for CSS and have only used the variables available in styles.css 
+- [ ] I have cleaned up any stale code/unecessary comments
 
 ---
 
