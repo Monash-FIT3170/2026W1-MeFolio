@@ -1,8 +1,13 @@
 import { Meteor } from "meteor/meteor";
-import React from "react";
 import { expect } from "chai";
 import sinon from "sinon";
-import { render, screen, waitFor, fireEvent, cleanup, within } from "@testing-library/react";
+import {
+  render,
+  waitFor,
+  fireEvent,
+  cleanup,
+  within,
+} from "@testing-library/react";
 import { VisitHistorySection } from "./VisitHistorySection.jsx";
 
 if (Meteor.isClient) {
@@ -38,7 +43,9 @@ if (Meteor.isClient) {
     it("shows a loading state before data arrives", function () {
       meteorCallStub.callsFake(() => {});
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       expect(within(container).getByText(/Loading visit history/i)).to.exist;
     });
@@ -54,16 +61,21 @@ if (Meteor.isClient) {
           callback(null, { totalVisits: 2, visits: sampleVisits });
         });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
         expect(within(container).getByText("Acme Corp")).to.exist;
       });
 
       expect(within(container).getByText("Globex")).to.exist;
-      expect(within(container).getByText(/2 recorded visits, newest first/i)).to.exist;
-      expect(within(container).getByText(/Link ending in \.\.\.wxyz/i)).to.exist;
-      expect(within(container).getByText(/Link ending in \.\.\.qrst/i)).to.exist;
+      expect(within(container).getByText(/2 recorded visits, newest first/i)).to
+        .exist;
+      expect(within(container).getByText(/Link ending in \.\.\.wxyz/i)).to
+        .exist;
+      expect(within(container).getByText(/Link ending in \.\.\.qrst/i)).to
+        .exist;
     });
 
     it("shows an empty state when there are no visits", async function () {
@@ -71,10 +83,13 @@ if (Meteor.isClient) {
         callback(null, { totalVisits: 0, visits: [] });
       });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
-        expect(within(container).getByText(/No recruiter visits recorded yet/i)).to.exist;
+        expect(within(container).getByText(/No recruiter visits recorded yet/i))
+          .to.exist;
       });
     });
 
@@ -83,7 +98,9 @@ if (Meteor.isClient) {
         callback(new Meteor.Error("not-authorized", "Nope."));
       });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
         expect(within(container).getByText("Nope.")).to.exist;
@@ -97,14 +114,18 @@ if (Meteor.isClient) {
         callback(null, { totalVisits: 2, visits: sampleVisits });
       });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
         expect(within(container).getByText("Acme Corp")).to.exist;
       });
 
       const initialCallCount = callCount;
-      fireEvent.click(within(container).getByRole("button", { name: /refresh/i }));
+      fireEvent.click(
+        within(container).getByRole("button", { name: /refresh/i }),
+      );
 
       await waitFor(() => {
         expect(callCount).to.equal(initialCallCount + 1);
@@ -115,11 +136,7 @@ if (Meteor.isClient) {
       const confirmStub = sinon.stub(window, "confirm").returns(true);
 
       meteorCallStub
-        .withArgs(
-          "recruiterVisits.getStats",
-          sinon.match.any,
-          sinon.match.func,
-        )
+        .withArgs("recruiterVisits.getStats", sinon.match.any, sinon.match.func)
         .callsFake((name, args, callback) => {
           callback(null, { totalVisits: 2, visits: sampleVisits });
         });
@@ -134,18 +151,23 @@ if (Meteor.isClient) {
           callback(null, 2);
         });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
         expect(within(container).getByText("Acme Corp")).to.exist;
       });
 
-      fireEvent.click(within(container).getByRole("button", { name: /clear history/i }));
+      fireEvent.click(
+        within(container).getByRole("button", { name: /clear history/i }),
+      );
 
       expect(confirmStub.calledOnce).to.equal(true);
 
       await waitFor(() => {
-        expect(within(container).getByText(/No recruiter visits recorded yet/i)).to.exist;
+        expect(within(container).getByText(/No recruiter visits recorded yet/i))
+          .to.exist;
       });
     });
 
@@ -153,22 +175,22 @@ if (Meteor.isClient) {
       sinon.stub(window, "confirm").returns(false);
 
       meteorCallStub
-        .withArgs(
-          "recruiterVisits.getStats",
-          sinon.match.any,
-          sinon.match.func,
-        )
+        .withArgs("recruiterVisits.getStats", sinon.match.any, sinon.match.func)
         .callsFake((name, args, callback) => {
           callback(null, { totalVisits: 2, visits: sampleVisits });
         });
 
-      const { container } = render(<VisitHistorySection portfolioId="portfolio-1" />);
+      const { container } = render(
+        <VisitHistorySection portfolioId="portfolio-1" />,
+      );
 
       await waitFor(() => {
         expect(within(container).getByText("Acme Corp")).to.exist;
       });
 
-      fireEvent.click(within(container).getByRole("button", { name: /clear history/i }));
+      fireEvent.click(
+        within(container).getByRole("button", { name: /clear history/i }),
+      );
 
       expect(within(container).getByText("Acme Corp")).to.exist;
       expect(
