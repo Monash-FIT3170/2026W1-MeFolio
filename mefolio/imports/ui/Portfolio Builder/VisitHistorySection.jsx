@@ -16,7 +16,8 @@ const formatRelativeTime = (date) => {
   if (diffMinutes < 60) return `${diffMinutes} min ago`;
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+  if (diffHours < 24)
+    return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
 
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
@@ -71,7 +72,10 @@ VisitLogRow.propTypes = {
     _id: PropTypes.string,
     recruiterCompany: PropTypes.string,
     token: PropTypes.string,
-    createdAt: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.string]),
+    createdAt: PropTypes.oneOfType([
+      PropTypes.instanceOf(Date),
+      PropTypes.string,
+    ]),
     metadata: PropTypes.shape({
       referrer: PropTypes.string,
     }),
@@ -135,9 +139,7 @@ export const VisitHistorySection = ({ portfolioId }) => {
     <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
       <div className="mb-2 flex items-center justify-between gap-4">
         <div>
-          <h2 className="m-0 text-lg font-bold text-primary">
-            Visit History
-          </h2>
+          <h2 className="m-0 text-lg font-bold text-primary">Visit History</h2>
           <p className="mt-1 text-sm text-muted">
             {totalVisits > 0
               ? `${totalVisits} recorded ${totalVisits === 1 ? "visit" : "visits"}, newest first.`
