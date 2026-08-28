@@ -12,3 +12,15 @@ if (Meteor.isServer) {
     );
   });
 }
+
+// New collection for tracking visits
+export const RecruiterVisits = new Mongo.Collection("recruiter_visits");
+
+if (Meteor.isServer) {
+  Meteor.startup(async () => {
+    // Index for querying visits by portfolio
+    await RecruiterVisits.rawCollection().createIndex(
+      { portfolioId: 1, createdAt: -1 }
+    );
+  });
+}
