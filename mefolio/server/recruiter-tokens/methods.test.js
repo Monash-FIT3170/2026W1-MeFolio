@@ -780,6 +780,74 @@ if (Meteor.isServer) {
         expect(visit.metadata.customField).to.equal("custom-value");
       });
 
+      it("records visit with server-side IP from connection", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const mockConnection = {
+          clientAddress: "192.168.1.100",
+          httpHeaders: {
+            "user-agent": "Mozilla/5.0 (Test Browser)",
+            referer: "https://example.com",
+          },
+        };
+
+        // Mock the connection
+        const originalConnection = this.connection;
+        this.connection = mockConnection;
+
+        try {
+          const visitId = await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+              connection: mockConnection,
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: accessCode,
+            },
+          );
+
+          expect(visitId).to.exist;
+
+          const visit = await RecruiterVisits.findOneAsync(visitId);
+          expect(visit.metadata.ip).to.equal("192.168.1.100");
+          expect(visit.metadata.userAgent).to.equal(
+            "Mozilla/5.0 (Test Browser)",
+          );
+          expect(visit.metadata.referrer).to.equal("https://example.com");
+        } finally {
+          // Restore original connection
+          this.connection = originalConnection;
+        }
+      });
+
+      it("uses provided IP when connection is not available", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const visitId = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: null, // No connection
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+            ip: "203.0.113.1",
+          },
+        );
+
+        expect(visitId).to.exist;
+
+        const visit = await RecruiterVisits.findOneAsync(visitId);
+        expect(visit.metadata.ip).to.equal("203.0.113.1");
+      });
+
       it("throws error when token is not found", async function () {
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
@@ -799,7 +867,7 @@ if (Meteor.isServer) {
           expect.fail("Expected recruiterVisits.record to throw");
         } catch (error) {
           expect(error).to.be.instanceOf(Meteor.Error);
-          expect(error.error).to.equal("not-found");
+          expect(error.error).to.equal("invalid-token");
         }
       });
 
@@ -822,8 +890,96 @@ if (Meteor.isServer) {
           expect.fail("Expected recruiterVisits.record to throw");
         } catch (error) {
           expect(error).to.be.instanceOf(Meteor.Error);
-          expect(error.error).to.equal("not-found");
+          expect(error.error).to.equal("invalid-token");
         }
+      });
+
+      it("throws error when token is expired", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Create an expired token
+        const expiredCode = `expired-${Date.now()}`;
+        const past = new Date();
+        past.setDate(past.getDate() - 1);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Expired Recruiter",
+          token: expiredCode,
+          createdAt: new Date(),
+          expiresAt: past,
+          isRevoked: false,
+        });
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: expiredCode,
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+
+        // Verify no visit was recorded
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visits.length).to.equal(0);
+      });
+
+      it("throws error when token is revoked", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Create a revoked token
+        const revokedCode = `revoked-${Date.now()}`;
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Revoked Recruiter",
+          token: revokedCode,
+          createdAt: new Date(),
+          expiresAt: futureDate,
+          isRevoked: true,
+        });
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: revokedCode,
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+
+        // Verify no visit was recorded
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visits.length).to.equal(0);
       });
     });
 
