@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
+import { getPublishedTheme } from "../Portfolio Preview/publishedTheme";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
@@ -155,6 +156,7 @@ const DashboardLayout = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
 
   const {
     isLoading,
@@ -270,6 +272,28 @@ const DashboardLayout = () => {
     });
   };
 
+  const handleCopyLink = async () => {
+    if (!selectedPortfolio?._id || !selectedPortfolio?.isPublished) return;
+
+    const publicUrl = `${window.location.origin}/${selectedPortfolio._id}/view`;
+
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopyLinkStatus("copied");
+
+      window.setTimeout(() => {
+        setCopyLinkStatus("idle");
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy portfolio link:", error);
+      setCopyLinkStatus("error");
+
+      window.setTimeout(() => {
+        setCopyLinkStatus("idle");
+      }, 2000);
+    }
+  };
+
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
   const draftStatus = getDraftStatus({
@@ -308,6 +332,26 @@ const DashboardLayout = () => {
               status={draftStatus}
               onReview={() => setIsComparisonOpen(true)}
             />
+
+            <button
+              type="button"
+              data-testid="copy-public-link-btn"
+              onClick={handleCopyLink}
+              disabled={!selectedPortfolio?._id || !selectedPortfolio?.isPublished}
+              title={
+                selectedPortfolio?.isPublished
+                  ? "Copy public portfolio link"
+                  : "Publish your portfolio before sharing it"
+              }
+              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {copyLinkStatus === "copied"
+                ? "Link Copied!"
+                : copyLinkStatus === "error"
+                  ? "Copy Failed"
+                  : "Copy Link"}
+            </button>
+
             {activeTab === "settings" && <LogoutButton />}
 
             {activeTab === "projects" && (
