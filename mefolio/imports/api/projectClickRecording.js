@@ -1,8 +1,11 @@
 import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
-import { PortfolioCollection } from "./portfolio";
-import { PortfolioProjectsCollection } from "./portfolioProjects";
-import { ProjectEngagement, PROJECT_CLICK_TARGETS } from "./projectEngagement";
+import { PortfolioCollection } from "/imports/api/portfolio";
+import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import {
+  ProjectEngagement,
+  PROJECT_CLICK_TARGETS,
+} from "/imports/api/projectEngagement";
 import { ProjectCollection } from "./projects";
 
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
