@@ -14,37 +14,39 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 // `portfolio.recruiterView` publication instead.
 const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
 
-Meteor.publish("portfolios.all", function () {
-  const sort = { createdAt: -1 };
+if (Meteor.isServer) {
+  Meteor.publish("portfolios.all", function () {
+    const sort = { createdAt: -1 };
 
-  // Not logged in: nobody owns these, so strip private fields from all.
-  if (!this.userId) {
-    return PortfolioCollection.find(
-      {},
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    );
-  }
+    // Not logged in: nobody owns these, so strip private fields from all.
+    if (!this.userId) {
+      return PortfolioCollection.find(
+        {},
+        { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+      );
+    }
 
-  // Logged in: only your own portfolios.
-  return PortfolioCollection.find({ userId: this.userId }, { sort });
-});
+    // Logged in: only your own portfolios.
+    return PortfolioCollection.find({ userId: this.userId }, { sort });
+  });
 
-Meteor.publish("portfolios.byUsername", function (username) {
-  check(username, String);
-  const sort = { createdAt: -1 };
+  Meteor.publish("portfolios.byUsername", function (username) {
+    check(username, String);
+    const sort = { createdAt: -1 };
 
-  if (!this.userId) {
-    return PortfolioCollection.find(
-      { username },
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    );
-  }
+    if (!this.userId) {
+      return PortfolioCollection.find(
+        { username },
+        { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+      );
+    }
 
-  return [
-    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
-    PortfolioCollection.find(
-      { username, userId: { $ne: this.userId } },
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
-    ),
-  ];
-});
+    return [
+      PortfolioCollection.find({ username, userId: this.userId }, { sort }),
+      PortfolioCollection.find(
+        { username, userId: { $ne: this.userId } },
+        { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+      ),
+    ];
+  });
+}

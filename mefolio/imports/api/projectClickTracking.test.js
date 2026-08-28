@@ -1,12 +1,12 @@
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import { expect } from "chai";
-import { PortfolioCollection } from "./portfolio";
-import { PortfolioProjectsCollection } from "./portfolioProjects";
-import { ProjectEngagement } from "./projectEngagement";
-import { recordProjectClick } from "./projectClickRecording";
-import { createProjectClickTracker } from "./projectClickTracking";
-import { ProjectCollection } from "./projects";
+import { PortfolioCollection } from "/imports/api/portfolio";
+import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { ProjectEngagement } from "/imports/api/projectEngagement";
+import { recordProjectClick } from "/imports/api/projectClickRecording";
+import { createProjectClickTracker } from "/imports/api//projectClickTracking";
+import { ProjectCollection } from "/imports/api//projects";
 
 if (Meteor.isServer) {
   describe("Project click recording", function () {
