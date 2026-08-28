@@ -17,6 +17,7 @@ import "./projectClickTracking.js";
 import "./recruiter-tokens/collection.js";
 import "./recruiter-tokens/methods.js";
 import "./recruiter-tokens/verifytokens.js";
+import "./recruiter-tokens/visit-notifications.js";
 
 // public portfolio view
 import "./publications/publicPortfolio.js";
