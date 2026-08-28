@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import { check } from "meteor/check";
-import { RecruiterTokens } from "./collection";
+import { RecruiterTokens, RecruiterVisits } from "./collection";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
 Meteor.methods({
@@ -67,7 +67,7 @@ Meteor.methods({
     check(portfolioId, String);
     check(accessCode, String);
 
-    // Query db collection for an active mathcing token
+    // Query db collection for an active matching token
     const validToken = await RecruiterTokens.findOneAsync({
       portfolioId: portfolioId,
       token: accessCode,
@@ -164,5 +164,188 @@ Meteor.methods({
       { portfolioId: portfolioId },
       { sort: { createdAt: -1 } },
     ).fetch();
+  },
+
+  /**
+   * Records a visit event when a recruiter accesses a portfolio
+   * This method should be called after token validation
+   * @param {string} portfolioId The portfolio being accessed
+   * @param {string} accessCode The token used to access
+   * @param {Object} metadata Additional visit metadata (ip, userAgent, referrer, etc.)
+   * @returns {string} The ID of the created visit record
+   */
+  async "recruiterVisits.record"({ portfolioId, accessCode, metadata = {} }) {
+    check(portfolioId, String);
+    check(accessCode, String);
+    check(metadata, Object);
+
+    // Find the token to get recruiter info
+    const tokenDoc = await RecruiterTokens.findOneAsync({
+      portfolioId: portfolioId,
+      token: accessCode,
+    });
+
+    if (!tokenDoc) {
+      throw new Meteor.Error(
+        "not-found",
+        "Token not found for this portfolio."
+      );
+    }
+
+    // Record the visit
+    const visitId = await RecruiterVisits.insertAsync({
+      portfolioId: portfolioId,
+      token: accessCode,
+      recruiterCompany: tokenDoc.recruiterName || "Unknown Company",
+      tokenId: tokenDoc._id,
+      createdAt: new Date(),
+      // Store metadata to ensure nothing is overwritten, defaults to null
+      // IP address, browser/device user agent, and referrer
+      metadata: {
+        ip: metadata.ip || null,
+        userAgent: metadata.userAgent || null,
+        referrer: metadata.referrer || null,
+        ...metadata,
+      },
+    });
+
+    return visitId;
+  },
+
+  /**
+   * Get visit statistics for a portfolio
+   * Only the portfolio owner can view this
+   * @param {string} portfolioId The portfolio to get stats for
+   * @returns {Object} Statistics including total visits, unique recruiters, etc.
+   */
+  async "recruiterVisits.getStats"({ portfolioId }) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to view visit statistics."
+      );
+    }
+
+    check(portfolioId, String);
+
+    // Verify the user owns this portfolio
+    const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
+    if (!portfolio) {
+      throw new Meteor.Error("not-found", "Portfolio not found.");
+    }
+
+    if (portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can only view statistics for your own portfolio."
+      );
+    }
+
+    // Get all visits for this portfolio
+    const visits = await RecruiterVisits.find(
+      { portfolioId: portfolioId },
+      { sort: { createdAt: -1 } }
+    ).fetch();
+
+    // Calculate statistics
+    const totalVisits = visits.length;
+    const uniqueRecruiters = new Set(visits.map(v => v.token)).size;
+    
+    // OPTIONAL: Get visits in last 7 days (can be removed if unecessary)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentVisits = visits.filter(v => v.createdAt > sevenDaysAgo);
+
+    // Get top companies
+    const companyStats = visits.reduce((acc, visit) => {
+      const company = visit.recruiterCompany || "Unknown";
+      acc[company] = (acc[company] || 0) + 1;
+      return acc;
+    }, {});
+
+    const topCompanies = Object.entries(companyStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([company, count]) => ({ company, count }));
+
+    return {
+      totalVisits,
+      uniqueRecruiters,
+      recentVisits: recentVisits.length,
+      topCompanies,
+      visits: visits.slice(0, 50), // Return last 50 visits for easier viewing
+    };
+  },
+
+  /**
+   * Get visits for a specific token
+   * Only the portfolio owner can view this
+   * @param {string} token The token to get visits for
+   * @returns {Array} Array of visit records
+   */
+  async "recruiterVisits.getTokenVisits"({ token }) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to view visit information."
+      );
+    }
+
+    check(token, String);
+
+    // Find the token to verify ownership
+    const tokenDoc = await RecruiterTokens.findOneAsync({ token });
+    if (!tokenDoc) {
+      throw new Meteor.Error("not-found", "Token not found.");
+    }
+
+    // Verify the user owns the portfolio this token belongs to
+    const portfolio = await PortfolioCollection.findOneAsync(tokenDoc.portfolioId);
+    if (!portfolio || portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can only view visits for your own tokens."
+      );
+    }
+
+    // Get visits for this token
+    return await RecruiterVisits.find(
+      { token: token },
+      { sort: { createdAt: -1 } }
+    ).fetch();
+  },
+
+  /**
+   * Clear all visit history for a portfolio
+   * Only the portfolio owner can do this
+   * OPTIONAL: can be removed if unecessary
+   * @param {string} portfolioId The portfolio to clear history for
+   * @returns {number} Number of records deleted
+   */
+  async "recruiterVisits.clearHistory"({ portfolioId }) {
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to clear visit history."
+      );
+    }
+
+    check(portfolioId, String);
+
+    // Verify the user owns this portfolio
+    const portfolio = await PortfolioCollection.findOneAsync(portfolioId);
+    if (!portfolio) {
+      throw new Meteor.Error("not-found", "Portfolio not found.");
+    }
+
+    if (portfolio.userId !== this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can only clear history for your own portfolio."
+      );
+    }
+
+    const count = await RecruiterVisits.removeAsync({ portfolioId: portfolioId });
+    return count;
   },
 });
