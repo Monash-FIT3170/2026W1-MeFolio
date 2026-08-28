@@ -1,5 +1,6 @@
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { LoginPage } from "./Login/LoginPage.jsx";
 import { SignUpPage } from "./Login/SignUpPage.jsx";
 import { ForgotPasswordPage } from "./Login/ForgotPasswordPage.jsx";
@@ -9,8 +10,6 @@ import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.j
 import { PortfolioCollection } from "../api/portfolio.js";
 import { RecruiterLoginPage } from "./Recruiter/RecruiterLoginPage.jsx";
 import { RecruiterView } from "./Recruiter/RecruiterView.jsx";
-import { PublicPortfolioPage } from "./Public/PublicPortfolioPage.jsx";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 export const App = () => {
   const userId = useTracker(() => Meteor.userId());
@@ -87,8 +86,6 @@ export const App = () => {
           path="/recruiter/:portfolioId/view"
           element={<RecruiterView />}
         />
-        {/* FEAT-12: public portfolio view (no login required). */}
-        <Route path="/:portfolioId/view" element={<PublicPortfolioPage />} />
         <Route
           path="/*"
           element={

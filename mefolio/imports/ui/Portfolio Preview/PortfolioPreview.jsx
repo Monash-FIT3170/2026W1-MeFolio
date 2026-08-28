@@ -1,12 +1,15 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
-import { PortfolioContent } from "./PortfolioContent.jsx";
+import About from "../components/About.jsx";
+import Navbar from "../components/Navbar.jsx";
+import { ProfileCard } from "../components/ProfileCard.jsx";
 import PublishButton from "./PublishButton.jsx";
 
 const getUserEmail = (user) =>
@@ -87,6 +90,7 @@ export const PortfolioPreview = ({
   const resolvedPortfolioId = portfolioId || portfolio?._id;
 
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
 
   // Skill filter state

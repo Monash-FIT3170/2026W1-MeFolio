@@ -19,7 +19,6 @@ hot-module-replacement@0.5.4  # Update client in development without reloading t
 
 
 static-html@1.5.0             # Define static page content in .html files
-server-render                 # Inject route-specific meta tags into initial HTML responses
 react-meteor-data       # React higher-order component for reactively tracking Meteor data
 
 rspack@1.0.0                  # Integrate Rspack into Meteor for client and server app bundling
