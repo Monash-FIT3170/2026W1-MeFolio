@@ -21,6 +21,7 @@ import "/server/portfolio-methods.test.js";
 import "/server/portfolios.byUsername.test.js";
 import "/server/publications/publicPortfolio.test.js";
 import "/server/publications/publicPortfolioMeta.test.js";
+import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
