@@ -88,7 +88,7 @@ if (Meteor.isServer) {
         "_id",
         "isPublished",
         "publishedContent",
-        "username",
+        "publishedAt",
       ]);
       expect(document.title).to.equal(undefined);
       expect(document.bio).to.equal(undefined);
