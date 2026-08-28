@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
-import { check } from "meteor/check";
+import { check, Match } from "meteor/check";
 import { RecruiterTokens, RecruiterVisits } from "./collection";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
@@ -82,6 +82,15 @@ Meteor.methods({
         "Incorrect or expired access code. Please try again.",
       );
     }
+
+    // TODO: Call upon the recruiterVisits.record method
+    // EXAMPLE:
+    // const ip = this.connection?.clientAddress || null;
+    // await Meteor.call('recruiterVisits.record', {
+    //   portfolioId,
+    //   accessCode,
+    //   ip
+    // });
 
     // Valid token found
     return true;
@@ -171,26 +180,40 @@ Meteor.methods({
    * This method should be called after token validation
    * @param {string} portfolioId The portfolio being accessed
    * @param {string} accessCode The token used to access
-   * @param {Object} metadata Additional visit metadata (ip, userAgent, referrer, etc.)
+   * @param {string} ip The server-side IP address (optional, will use connection if not provided)
+   * @param {Object} metadata Additional visit metadata (userAgent, referrer, etc.)
    * @returns {string} The ID of the created visit record
    */
-  async "recruiterVisits.record"({ portfolioId, accessCode, metadata = {} }) {
+  async "recruiterVisits.record"({
+    portfolioId,
+    accessCode,
+    ip = null,
+    metadata = {},
+  }) {
     check(portfolioId, String);
     check(accessCode, String);
+    check(ip, Match.OneOf(String, null));
     check(metadata, Object);
 
-    // Find the token to get recruiter info
+    // Find the token to get recruiter info + ensure valid (not expired, not revoked)
     const tokenDoc = await RecruiterTokens.findOneAsync({
       portfolioId: portfolioId,
       token: accessCode,
+      isRevoked: { $ne: true },
+      expiresAt: { $gt: new Date() },
     });
 
     if (!tokenDoc) {
       throw new Meteor.Error(
-        "not-found",
-        "Token not found for this portfolio.",
+        "invalid-token",
+        "Token not found, expired, or revoked.",
       );
     }
+
+    // Get connection details
+    const clientIp = ip || this.connection?.clientAddress || null;
+    const userAgent = this.connection?.httpHeaders?.["user-agent"] || null;
+    const referrer = this.connection?.httpHeaders?.["referer"] || null;
 
     // Record the visit
     const visitId = await RecruiterVisits.insertAsync({
@@ -202,9 +225,9 @@ Meteor.methods({
       // Store metadata to ensure nothing is overwritten, defaults to null
       // IP address, browser/device user agent, and referrer
       metadata: {
-        ip: metadata.ip || null,
-        userAgent: metadata.userAgent || null,
-        referrer: metadata.referrer || null,
+        ip: clientIp, // Server-side IP (from parameter or connection)
+        userAgent: userAgent || metadata.userAgent || null,
+        referrer: referrer || metadata.referrer || null,
         ...metadata,
       },
     });
