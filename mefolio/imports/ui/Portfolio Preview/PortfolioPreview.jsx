@@ -26,7 +26,7 @@ export const PortfolioPreview = ({
   const {
     portfolio: trackedPortfolio,
     projects: trackedProjects,
-    portfolioId,
+    // portfolioId,
   } = useTracker(() => {
     const portfolioSub = Meteor.subscribe("portfolios.all");
     const projectsSub = Meteor.subscribe("projects.all");
@@ -84,7 +84,7 @@ export const PortfolioPreview = ({
 
   const portfolio = propPortfolio || trackedPortfolio;
   const projects = propProjects.length ? propProjects : trackedProjects;
-  const resolvedPortfolioId = portfolioId || portfolio?._id;
+  // const resolvedPortfolioId = portfolioId || portfolio?._id;
 
   const navigate = useNavigate();
   const [viewportMode, setViewportMode] = useState("desktop");

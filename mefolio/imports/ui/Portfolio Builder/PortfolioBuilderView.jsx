@@ -16,7 +16,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
-import { getPublishedTheme } from "../Portfolio Preview/publishedTheme";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
@@ -337,7 +336,9 @@ const DashboardLayout = () => {
               type="button"
               data-testid="copy-public-link-btn"
               onClick={handleCopyLink}
-              disabled={!selectedPortfolio?._id || !selectedPortfolio?.isPublished}
+              disabled={
+                !selectedPortfolio?._id || !selectedPortfolio?.isPublished
+              }
               title={
                 selectedPortfolio?.isPublished
                   ? "Copy public portfolio link"
