@@ -875,7 +875,7 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           )}
         </div>
       </section>
-      
+
       <VisitHistorySection portfolioId={selectedPortfolioId} />
 
       {/* CV/Resume Management Section */}
