@@ -188,7 +188,7 @@ Meteor.methods({
     if (!tokenDoc) {
       throw new Meteor.Error(
         "not-found",
-        "Token not found for this portfolio."
+        "Token not found for this portfolio.",
       );
     }
 
@@ -222,7 +222,7 @@ Meteor.methods({
     if (!this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You must be logged in to view visit statistics."
+        "You must be logged in to view visit statistics.",
       );
     }
 
@@ -237,24 +237,24 @@ Meteor.methods({
     if (portfolio.userId !== this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You can only view statistics for your own portfolio."
+        "You can only view statistics for your own portfolio.",
       );
     }
 
     // Get all visits for this portfolio
     const visits = await RecruiterVisits.find(
       { portfolioId: portfolioId },
-      { sort: { createdAt: -1 } }
+      { sort: { createdAt: -1 } },
     ).fetch();
 
     // Calculate statistics
     const totalVisits = visits.length;
-    const uniqueRecruiters = new Set(visits.map(v => v.token)).size;
-    
+    const uniqueRecruiters = new Set(visits.map((v) => v.token)).size;
+
     // OPTIONAL: Get visits in last 7 days (can be removed if unecessary)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentVisits = visits.filter(v => v.createdAt > sevenDaysAgo);
+    const recentVisits = visits.filter((v) => v.createdAt > sevenDaysAgo);
 
     // Get top companies
     const companyStats = visits.reduce((acc, visit) => {
@@ -287,7 +287,7 @@ Meteor.methods({
     if (!this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You must be logged in to view visit information."
+        "You must be logged in to view visit information.",
       );
     }
 
@@ -300,18 +300,20 @@ Meteor.methods({
     }
 
     // Verify the user owns the portfolio this token belongs to
-    const portfolio = await PortfolioCollection.findOneAsync(tokenDoc.portfolioId);
+    const portfolio = await PortfolioCollection.findOneAsync(
+      tokenDoc.portfolioId,
+    );
     if (!portfolio || portfolio.userId !== this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You can only view visits for your own tokens."
+        "You can only view visits for your own tokens.",
       );
     }
 
     // Get visits for this token
     return await RecruiterVisits.find(
       { token: token },
-      { sort: { createdAt: -1 } }
+      { sort: { createdAt: -1 } },
     ).fetch();
   },
 
@@ -326,7 +328,7 @@ Meteor.methods({
     if (!this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You must be logged in to clear visit history."
+        "You must be logged in to clear visit history.",
       );
     }
 
@@ -341,11 +343,13 @@ Meteor.methods({
     if (portfolio.userId !== this.userId) {
       throw new Meteor.Error(
         "not-authorized",
-        "You can only clear history for your own portfolio."
+        "You can only clear history for your own portfolio.",
       );
     }
 
-    const count = await RecruiterVisits.removeAsync({ portfolioId: portfolioId });
+    const count = await RecruiterVisits.removeAsync({
+      portfolioId: portfolioId,
+    });
     return count;
   },
 });
