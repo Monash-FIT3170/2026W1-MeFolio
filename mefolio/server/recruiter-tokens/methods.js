@@ -83,9 +83,11 @@ Meteor.methods({
       );
     }
 
+    const ip = this.connection?.clientAddress || null;
     await Meteor.call("recruiterVisits.record", {
       portfolioId,
-      validToken,
+      accessCode,
+      ip,
     });
 
     return true;
@@ -174,33 +176,31 @@ Meteor.methods({
    * Records a visit event when a recruiter accesses a portfolio
    * This method should be called after token validation
    * @param {string} portfolioId The portfolio being accessed
-   * @param {string} accessCode The token used to access
+   * @param {string} token The token used to access
    * @param {string} ip The server-side IP address (optional, will use connection if not provided)
    * @param {Object} metadata Additional visit metadata (userAgent, referrer, etc.)
    * @returns {string} The ID of the created visit record
    */
   async "recruiterVisits.record"({
     portfolioId,
-    validToken,
+    accessCode,
     ip = null,
     metadata = {},
   }) {
     check(portfolioId, String);
+    check(accessCode, String);
     check(ip, Match.OneOf(String, null));
     check(metadata, Object);
 
-    if (!validToken) {
-      throw new Meteor.Error(
-        "not-found",
-        "Token not found for this portfolio.",
-      );
-    }
-
-    const tokenExists = await RecruiterTokens.findOneAsync({
-      _id: validToken._id,
+    // Find the token to get recruiter info + ensure valid (not expired, not revoked)
+    const tokenDoc = await RecruiterTokens.findOneAsync({
+      portfolioId: portfolioId,
+      token: accessCode,
+      isRevoked: { $ne: true },
+      expiresAt: { $gt: new Date() },
     });
 
-    if (!tokenExists) {
+    if (!tokenDoc) {
       throw new Meteor.Error(
         "invalid-token",
         "Token not found, expired, or revoked.",
@@ -215,16 +215,17 @@ Meteor.methods({
     // Record the visit
     const visitId = await RecruiterVisits.insertAsync({
       portfolioId: portfolioId,
-      tokenId: validToken._id,
-      recruiterCompany: validToken.recruiterName || "Unknown Company",
+      token: accessCode,
+      recruiterCompany: tokenDoc.recruiterName || "Unknown Company",
+      tokenId: tokenDoc._id,
       createdAt: new Date(),
       // Store metadata to ensure nothing is overwritten, defaults to null
       // IP address, browser/device user agent, and referrer
       metadata: {
-        ...metadata,
         ip: clientIp, // Server-side IP (from parameter or connection)
         userAgent: userAgent || metadata.userAgent || null,
         referrer: referrer || metadata.referrer || null,
+        ...metadata,
       },
     });
 
@@ -331,7 +332,7 @@ Meteor.methods({
 
     // Get visits for this token
     return await RecruiterVisits.find(
-      { token: token },
+      { tokenId: tokenDoc._id },
       { sort: { createdAt: -1 } },
     ).fetch();
   },
