@@ -26,6 +26,9 @@ import "./publications/publicPortfolioMeta.js";
 // app seed and OAuth config)
 import "./portfolio-methods.js";
 
+// register github methods for sync
+import "./github-methods.js";
+
 Accounts.config({
   loginExpirationInDays: 1,
 });
@@ -543,6 +546,8 @@ Meteor.methods({
       liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
       media: typeof projectData.media === "string" ? projectData.media : "",
       status: projectData.status ?? "live",
+      githubStats: null,
+      lastSyncedAt: null,
       createdAt: projectData.createdAt
         ? new Date(projectData.createdAt)
         : new Date(),
@@ -690,6 +695,8 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        githubStats: project.githubStats || null,
+        lastSyncedAt: project.lastSyncedAt || null,
       }));
 
     if (orderedProjects.length !== projectIds.length) {
