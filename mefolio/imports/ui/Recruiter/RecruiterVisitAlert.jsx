@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { Bell, X } from "lucide-react";
-import { RecruiterVisits } from "../../api/recruiterVisits";
+import { RecruiterVisits } from "/imports/api/recruiterVisits";
+import { selectFreshVisits } from "/imports/ui/Recruiter/recruiterVisitAlertLogic";
 
 const AUTO_DISMISS_MS = 6000;
 
@@ -15,7 +16,12 @@ export default function RecruiterVisitAlert() {
   // already shown so a reactive re-render never re-toasts the same visit.
   const mountedAt = useRef(new Date());
   const seenVisitIds = useRef(new Set());
+  const dismissTimers = useRef([]);
   const [toasts, setToasts] = useState([]);
+
+  // Clear any pending auto-dismiss timers on unmount so they never fire (and
+  // update state) after the component is gone.
+  useEffect(() => () => dismissTimers.current.forEach(clearTimeout), []);
 
   const visits = useTracker(() => {
     if (!Meteor.userId() || !RecruiterVisits) return [];
@@ -28,11 +34,10 @@ export default function RecruiterVisitAlert() {
   }, []);
 
   useEffect(() => {
-    const fresh = visits.filter(
-      (visit) =>
-        visit.createdAt &&
-        new Date(visit.createdAt) > mountedAt.current &&
-        !seenVisitIds.current.has(visit._id),
+    const fresh = selectFreshVisits(
+      visits,
+      mountedAt.current,
+      seenVisitIds.current,
     );
     if (fresh.length === 0) return;
 
@@ -45,14 +50,15 @@ export default function RecruiterVisitAlert() {
       ...prev,
     ]);
 
-    // Auto-dismiss each toast; removal by id is idempotent, so no cleanup is
-    // needed and a later visit never cancels an earlier toast's timer.
-    fresh.forEach((visit) =>
-      setTimeout(
+    // Auto-dismiss each toast; the timer ids are tracked so they can be
+    // cleared on unmount (see the cleanup effect above).
+    fresh.forEach((visit) => {
+      const timer = setTimeout(
         () => setToasts((prev) => prev.filter((t) => t.id !== visit._id)),
         AUTO_DISMISS_MS,
-      ),
-    );
+      );
+      dismissTimers.current.push(timer);
+    });
   }, [visits]);
 
   const dismiss = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
