@@ -81,7 +81,7 @@ if (Meteor.isClient) {
       expect(screen.queryByText("Recruiter View")).to.not.exist;
     });
 
-    it("disables the button and shows Verifying while the request is pending", () => {
+    it("disables the button and shows Verifying while the request is pending", async () => {
       // Never invoke the callback -> request stays pending.
       Meteor.call = () => {};
       renderGate();
@@ -89,7 +89,10 @@ if (Meteor.isClient) {
         target: { value: "secret" },
       });
       fireEvent.submit(screen.getByLabelText("Access code").closest("form"));
-      const button = screen.getByRole("button", { name: /verifying/i });
+
+      const button = await screen.findByRole("button", {
+        name: /verifying/i,
+      });
       expect(button).to.exist;
       expect(button.disabled).to.equal(true);
     });
