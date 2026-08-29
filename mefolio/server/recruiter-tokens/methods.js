@@ -189,6 +189,24 @@ Meteor.methods({
     check(ip, Match.OneOf(String, null));
     check(metadata, Object);
 
+    if (!validToken) {
+      throw new Meteor.Error(
+        "not-found",
+        "Token not found for this portfolio.",
+      );
+    }
+
+    const tokenExists = await RecruiterTokens.findOneAsync({
+      _id: validToken._id,
+    });
+
+    if (!tokenExists) {
+      throw new Meteor.Error(
+        "invalid-token",
+        "Token not found, expired, or revoked.",
+      );
+    }
+
     // Get connection details
     const clientIp = ip || this.connection?.clientAddress || null;
     const userAgent = this.connection?.httpHeaders?.["user-agent"] || null;
