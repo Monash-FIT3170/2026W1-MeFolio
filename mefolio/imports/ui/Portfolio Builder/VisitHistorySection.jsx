@@ -1,10 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { RecruiterVisits } from "/imports/api/recruiterVisits";
 
-// Formats a createdAt Date into a short relative string, matching the
-// "2 min ago" language already used elsewhere on the dashboard (see
-// VisitorCard in OverviewSection.jsx).
 const formatRelativeTime = (date) => {
   if (!date) return "";
 
@@ -29,14 +28,6 @@ const formatRelativeTime = (date) => {
   }).format(timestamp);
 };
 
-// Shows the last 4 characters of a token so an owner can distinguish which
-// link a visit came from without the full access code being displayed.
-const formatTokenSuffix = (token) => {
-  if (!token || token.length < 4) return "";
-  return token.slice(-4);
-};
-
-// Single row in the visit-history log.
 const VisitLogRow = ({ visit }) => {
   return (
     <div className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-line bg-surface-fill px-1 py-4 last:border-b-0">
@@ -44,12 +35,6 @@ const VisitLogRow = ({ visit }) => {
         <h3 className="m-0 truncate text-sm font-semibold text-primary">
           {visit.recruiterCompany || "Unknown company"}
         </h3>
-
-        {formatTokenSuffix(visit.token) && (
-          <p className="mt-0.5 truncate text-xs text-muted">
-            Link ending in ...{formatTokenSuffix(visit.token)}
-          </p>
-        )}
 
         {visit.metadata?.referrer && (
           <p className="mt-0.5 truncate text-xs text-muted">
@@ -71,7 +56,6 @@ VisitLogRow.propTypes = {
   visit: PropTypes.shape({
     _id: PropTypes.string,
     recruiterCompany: PropTypes.string,
-    token: PropTypes.string,
     createdAt: PropTypes.oneOfType([
       PropTypes.instanceOf(Date),
       PropTypes.string,
@@ -82,37 +66,29 @@ VisitLogRow.propTypes = {
   }).isRequired,
 };
 
-// Displays a chronological (newest-first) log of recruiter visits for a
-// portfolio, backed by the recruiterVisits.getStats method.
 export const VisitHistorySection = ({ portfolioId }) => {
-  const [visits, setVisits] = useState([]);
-  const [totalVisits, setTotalVisits] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isClearing, setIsClearing] = useState(false);
 
-  const loadVisits = useCallback(() => {
-    if (!portfolioId) return;
+  // Reactive subscription: live updates arrive instantly without polling
+  const { visits, isLoading } = useTracker(() => {
+    if (!portfolioId || !Meteor.userId() || !RecruiterVisits) {
+      return { visits: [], isLoading: false };
+    }
 
-    setIsLoading(true);
-    setError(null);
+    const sub = Meteor.subscribe("recruiterVisits.forOwner");
+    const ready = sub.ready();
 
-    Meteor.call("recruiterVisits.getStats", { portfolioId }, (err, result) => {
-      setIsLoading(false);
+    const fetchedVisits = RecruiterVisits.find(
+      { portfolioId },
+      { sort: { createdAt: -1 } },
+    ).fetch();
 
-      if (err) {
-        setError(err.reason || "Could not load visit history.");
-        return;
-      }
-
-      setVisits(result?.visits || []);
-      setTotalVisits(result?.totalVisits || 0);
-    });
+    return {
+      visits: fetchedVisits,
+      isLoading: !ready,
+    };
   }, [portfolioId]);
-
-  useEffect(() => {
-    loadVisits();
-  }, [loadVisits]);
 
   const handleClearHistory = () => {
     const confirmed = window.confirm(
@@ -121,19 +97,18 @@ export const VisitHistorySection = ({ portfolioId }) => {
     if (!confirmed) return;
 
     setIsClearing(true);
+    setError(null);
 
     Meteor.call("recruiterVisits.clearHistory", { portfolioId }, (err) => {
       setIsClearing(false);
 
       if (err) {
         setError(err.reason || "Could not clear visit history.");
-        return;
       }
-
-      setVisits([]);
-      setTotalVisits(0);
     });
   };
+
+  const totalVisits = visits.length;
 
   return (
     <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
@@ -147,17 +122,8 @@ export const VisitHistorySection = ({ portfolioId }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={loadVisits}
-            disabled={isLoading}
-            className="rounded-md px-3 py-1.5 text-sm font-semibold text-primary hover:bg-selected disabled:opacity-50"
-          >
-            Refresh
-          </button>
-
-          {visits.length > 0 && (
+        {visits.length > 0 && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleClearHistory}
@@ -166,8 +132,8 @@ export const VisitHistorySection = ({ portfolioId }) => {
             >
               {isClearing ? "Clearing..." : "Clear history"}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -176,18 +142,24 @@ export const VisitHistorySection = ({ portfolioId }) => {
         </div>
       )}
 
-      {isLoading && !error && (
+      {!portfolioId && (
+        <p className="mt-6 text-sm text-muted">
+          Select a portfolio to view its visit history.
+        </p>
+      )}
+
+      {portfolioId && isLoading && !error && (
         <p className="mt-6 text-sm text-muted">Loading visit history...</p>
       )}
 
-      {!isLoading && !error && visits.length === 0 && (
+      {portfolioId && !isLoading && !error && visits.length === 0 && (
         <p className="mt-6 text-sm text-muted">
           No recruiter visits recorded yet. Once a recruiter opens one of your
           access links, it will show up here.
         </p>
       )}
 
-      {!isLoading && !error && visits.length > 0 && (
+      {portfolioId && !isLoading && !error && visits.length > 0 && (
         <div className="mt-4">
           {visits.map((visit) => (
             <VisitLogRow key={visit._id} visit={visit} />
@@ -199,5 +171,5 @@ export const VisitHistorySection = ({ portfolioId }) => {
 };
 
 VisitHistorySection.propTypes = {
-  portfolioId: PropTypes.string.isRequired,
+  portfolioId: PropTypes.string,
 };
