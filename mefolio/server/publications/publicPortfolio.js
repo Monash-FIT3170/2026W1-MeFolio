@@ -7,10 +7,12 @@ import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
-Meteor.publish("portfolios.publicView", function (portfolioId) {
-  check(portfolioId, String);
-  return PortfolioCollection.find(
-    { _id: portfolioId, isPublished: true },
-    { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
-  );
-});
+if (Meteor.isServer) {
+  Meteor.publish("portfolios.publicView", function (portfolioId) {
+    check(portfolioId, String);
+    return PortfolioCollection.find(
+      { _id: portfolioId, isPublished: true },
+      { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
+    );
+  });
+}
