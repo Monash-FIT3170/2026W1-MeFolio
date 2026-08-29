@@ -87,8 +87,8 @@ if (Meteor.isServer) {
       expect(Object.keys(document).sort()).to.deep.equal([
         "_id",
         "isPublished",
-        "publishedContent",
         "publishedAt",
+        "publishedContent",
       ]);
       expect(document.title).to.equal(undefined);
       expect(document.bio).to.equal(undefined);
