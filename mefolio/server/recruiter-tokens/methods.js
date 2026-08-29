@@ -83,11 +83,19 @@ Meteor.methods({
       );
     }
 
+    // Capture the connection details here, where verifyAccess still holds the
+    // recruiter's DDP connection. record() runs via a server-side Meteor.call,
+    // where this.connection is null, so it cannot read these itself.
     const ip = this.connection?.clientAddress || null;
+    const headers = this.connection?.httpHeaders || {};
     await Meteor.call("recruiterVisits.record", {
       portfolioId,
       accessCode,
       ip,
+      metadata: {
+        userAgent: headers["user-agent"] || null,
+        referrer: headers["referer"] || null,
+      },
     });
 
     return true;
