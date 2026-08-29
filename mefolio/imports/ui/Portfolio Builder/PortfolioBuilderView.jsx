@@ -26,6 +26,7 @@ import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
+import RecruiterVisitAlert from "../Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
@@ -287,6 +288,8 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-background">
+      {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
+      <RecruiterVisitAlert />
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
