@@ -83,16 +83,11 @@ Meteor.methods({
       );
     }
 
-    // TODO: Call upon the recruiterVisits.record method
-    // EXAMPLE:
-    // const ip = this.connection?.clientAddress || null;
-    // await Meteor.call('recruiterVisits.record', {
-    //   portfolioId,
-    //   accessCode,
-    //   ip
-    // });
+    await Meteor.call("recruiterVisits.record", {
+      portfolioId,
+      validToken,
+    });
 
-    // Valid token found
     return true;
   },
 
@@ -186,29 +181,13 @@ Meteor.methods({
    */
   async "recruiterVisits.record"({
     portfolioId,
-    accessCode,
+    validToken,
     ip = null,
     metadata = {},
   }) {
     check(portfolioId, String);
-    check(accessCode, String);
     check(ip, Match.OneOf(String, null));
     check(metadata, Object);
-
-    // Find the token to get recruiter info + ensure valid (not expired, not revoked)
-    const tokenDoc = await RecruiterTokens.findOneAsync({
-      portfolioId: portfolioId,
-      token: accessCode,
-      isRevoked: { $ne: true },
-      expiresAt: { $gt: new Date() },
-    });
-
-    if (!tokenDoc) {
-      throw new Meteor.Error(
-        "invalid-token",
-        "Token not found, expired, or revoked.",
-      );
-    }
 
     // Get connection details
     const clientIp = ip || this.connection?.clientAddress || null;
@@ -218,17 +197,16 @@ Meteor.methods({
     // Record the visit
     const visitId = await RecruiterVisits.insertAsync({
       portfolioId: portfolioId,
-      token: accessCode,
-      recruiterCompany: tokenDoc.recruiterName || "Unknown Company",
-      tokenId: tokenDoc._id,
+      tokenId: validToken._id,
+      recruiterCompany: validToken.recruiterName || "Unknown Company",
       createdAt: new Date(),
       // Store metadata to ensure nothing is overwritten, defaults to null
       // IP address, browser/device user agent, and referrer
       metadata: {
+        ...metadata,
         ip: clientIp, // Server-side IP (from parameter or connection)
         userAgent: userAgent || metadata.userAgent || null,
         referrer: referrer || metadata.referrer || null,
-        ...metadata,
       },
     });
 
