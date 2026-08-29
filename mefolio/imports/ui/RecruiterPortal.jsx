@@ -3,7 +3,6 @@ import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { VisitHistorySection } from "./Portfolio Builder/VisitHistorySection.jsx";
 import {
   Building,
   DollarSign,
@@ -875,8 +874,6 @@ const RecruiterPortal = ({ portfolio, userId }) => {
           )}
         </div>
       </section>
-
-      <VisitHistorySection portfolioId={selectedPortfolioId} />
 
       {/* CV/Resume Management Section */}
       <section className="bg-surface-fill border border-line rounded-2xl p-7">
