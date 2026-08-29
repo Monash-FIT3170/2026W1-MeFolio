@@ -824,6 +824,48 @@ if (Meteor.isServer) {
         }
       });
 
+      it("records multiple separate visit entries when the same link is accessed repeatedly", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // First visit via the accessCode generated in beforeEach
+        const visitId1 = await recordHandler.call(
+          { userId: null, isSimulation: false, unblock() {} },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+            ip: "127.0.0.1",
+            metadata: { referrer: "https://linkedin.com" },
+          },
+        );
+
+        // Second visit using the exact same link / accessCode
+        const visitId2 = await recordHandler.call(
+          { userId: null, isSimulation: false, unblock() {} },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+            ip: "127.0.0.1",
+            metadata: { referrer: "https://email.com" },
+          },
+        );
+
+        expect(visitId1).to.exist;
+        expect(visitId2).to.exist;
+        expect(visitId1).to.not.equal(visitId2);
+
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+          token: accessCode,
+        }).fetchAsync();
+
+        expect(visits).to.have.lengthOf(2);
+        expect(visits.map((v) => v._id)).to.include.members([
+          visitId1,
+          visitId2,
+        ]);
+      });
+
       it("uses provided IP when connection is not available", async function () {
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
