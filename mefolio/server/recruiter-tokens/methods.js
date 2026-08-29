@@ -177,7 +177,7 @@ Meteor.methods({
     return await RecruiterTokens.find(
       { portfolioId: portfolioId },
       { sort: { createdAt: -1 } },
-    ).fetch();
+    ).fetchAsync();
   },
 
   /**
@@ -273,7 +273,7 @@ Meteor.methods({
     const visits = await RecruiterVisits.find(
       { portfolioId: portfolioId },
       { sort: { createdAt: -1 } },
-    ).fetch();
+    ).fetchAsync();
 
     // Calculate statistics
     const totalVisits = visits.length;
@@ -342,7 +342,7 @@ Meteor.methods({
     return await RecruiterVisits.find(
       { tokenId: tokenDoc._id },
       { sort: { createdAt: -1 } },
-    ).fetch();
+    ).fetchAsync();
   },
 
   /**
