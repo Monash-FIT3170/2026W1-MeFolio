@@ -3,30 +3,7 @@ import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { RecruiterVisits } from "/imports/api/recruiterVisits";
-
-const formatRelativeTime = (date) => {
-  if (!date) return "";
-
-  const timestamp = date instanceof Date ? date : new Date(date);
-  const diffMs = Date.now() - timestamp.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-
-  if (diffMinutes < 1) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes} min ago`;
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24)
-    return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
-
-  return new Intl.DateTimeFormat("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(timestamp);
-};
+import { formatRelativeTime } from "/imports/ui/Portfolio Builder/visitHistoryFormat";
 
 const VisitLogRow = ({ visit }) => {
   return (
