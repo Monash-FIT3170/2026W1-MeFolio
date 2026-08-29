@@ -26,7 +26,7 @@ import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
-import RecruiterVisitAlert from "../Recruiter/RecruiterVisitAlert.jsx";
+import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
