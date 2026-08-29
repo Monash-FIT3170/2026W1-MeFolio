@@ -1,5 +1,13 @@
 import PropTypes from "prop-types";
-import { Github, ExternalLink, ImageOff, Pencil } from "lucide-react";
+import {
+  Github,
+  ExternalLink,
+  ImageOff,
+  Pencil,
+  Star,
+  GitBranch,
+  Clock3,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -37,7 +45,16 @@ export function ProjectCard({
     githubLink = "",
     liveDemoLink = "",
     media = "",
+    githubStats = null,
   } = project || {};
+
+  const lastUpdated = githubStats?.updatedAt
+    ? new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(new Date(githubStats.updatedAt))
+    : "-";
 
   return (
     <Card
@@ -117,6 +134,20 @@ export function ProjectCard({
         {description && (
           <p className="mt-1 text-sm text-muted line-clamp-3">{description}</p>
         )}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 text-accent2" />
+            {githubStats?.stars ?? "-"} stars
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5 text-accent1" />
+            {githubStats?.commits ?? "-"} commits
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Clock3 className="h-3.5 w-3.5 text-alt" />
+            Updated {lastUpdated}
+          </span>
+        </div>
       </CardHeader>
 
       <CardContent className="px-5 pb-5 pt-3">
@@ -203,6 +234,11 @@ ProjectCard.propTypes = {
     githubLink: PropTypes.string,
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
+    githubStats: PropTypes.shape({
+      stars: PropTypes.number,
+      commits: PropTypes.number,
+      updatedAt: PropTypes.string,
+    }),
   }),
   onEdit: PropTypes.func,
   draggable: PropTypes.bool,
