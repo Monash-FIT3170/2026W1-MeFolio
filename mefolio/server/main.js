@@ -23,13 +23,6 @@ import "./recruiter-tokens/visit-notifications.js";
 // app seed and OAuth config)
 import "./portfolio-methods.js";
 
-// public portfolio view
-import "./publications/publicPortfolio.js";
-import "./publications/publicPortfolioMeta.js";
-// portfolio methods (in their own module so tests can load them without the
-// app seed and OAuth config)
-import "./portfolio-methods.js";
-
 Accounts.config({
   loginExpirationInDays: 1,
 });
