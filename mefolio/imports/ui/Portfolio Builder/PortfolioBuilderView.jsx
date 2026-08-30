@@ -31,6 +31,7 @@ import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
+import LiveVisitorsPage from "./LiveVisitorsSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -374,6 +375,7 @@ const DashboardLayout = () => {
             <OverviewSection
               stats={overviewStats}
               portfolioId={selectedPortfolio?._id}
+              onViewAllVisitors={() => setActiveTab("visitors")}
             />
           ) : activeTab === "about-me" ? (
             <AboutMeLinksEditor
@@ -419,6 +421,8 @@ const DashboardLayout = () => {
               projects={orderedProjects}
               engagements={engagements}
             />
+          ) : activeTab === "visitors" ? (
+              <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (
