@@ -80,6 +80,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: formValues.bio,
       "profile.fullName": formValues.name,
       "profile.location": formValues.location,
+      ...(formValues.slug ? { username: formValues.slug } : {}),
     };
 
     if (portfolioId) {
@@ -132,6 +133,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
             fullName: formValues.name,
             location: formValues.location,
           },
+          ...(formValues.slug ? { username: formValues.slug } : {}),
           projects: [],
           createdAt: new Date(),
         },
