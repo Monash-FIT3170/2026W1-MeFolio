@@ -745,7 +745,6 @@ Meteor.methods({
     });
   },
 
-  
   async "portfolios.viewerHeartbeat"(portfolioId) {
     check(portfolioId, String);
 
@@ -778,7 +777,6 @@ Meteor.methods({
 
     return updatedCount;
   },
-
 
   async "portfolios.delete"(portfolioId) {
     return await PortfolioCollection.removeAsync(portfolioId);

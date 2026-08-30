@@ -108,7 +108,10 @@ const useDashboardData = () =>
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     const projectDocuments = ProjectCollection.find({}).fetch();
-    const portfolios = PortfolioCollection.find({}, { fields: { viewers: 0 } }).fetch();
+    const portfolios = PortfolioCollection.find(
+      {},
+      { fields: { viewers: 0 } },
+    ).fetch();
     const user = Meteor.user();
     const selectedPortfolio = getSelectedPortfolio(portfolios, user);
     const engagementHandler = selectedPortfolio?._id

@@ -41,8 +41,7 @@ export const mapLiveVisitors = (portfolios) => {
       : "Live now";
 
     return {
-      id:
-        viewer.connectionId || viewer.userId || `viewer-${index}`,
+      id: viewer.connectionId || viewer.userId || `viewer-${index}`,
       name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
