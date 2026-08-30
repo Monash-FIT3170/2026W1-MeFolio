@@ -31,6 +31,7 @@ import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
+import LiveVisitorsPage from "./LiveVisitorsSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -108,7 +109,10 @@ const useDashboardData = () =>
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     const projectDocuments = ProjectCollection.find({}).fetch();
-    const portfolios = PortfolioCollection.find({}).fetch();
+    const portfolios = PortfolioCollection.find(
+      {},
+      { fields: { viewers: 0 } },
+    ).fetch();
     const user = Meteor.user();
     const selectedPortfolio = getSelectedPortfolio(portfolios, user);
     const engagementHandler = selectedPortfolio?._id
@@ -179,7 +183,6 @@ const DashboardLayout = () => {
     isLoading: viewModelLoading,
     sidebarItems,
     overviewStats,
-    liveVisitors,
     profile,
     aboutMe,
   } = createDashboardViewModel({
@@ -369,7 +372,11 @@ const DashboardLayout = () => {
 
         <div className="p-8">
           {activeTab === "overview" ? (
-            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+            <OverviewSection
+              stats={overviewStats}
+              portfolioId={selectedPortfolio?._id}
+              onViewAllVisitors={() => setActiveTab("visitors")}
+            />
           ) : activeTab === "about-me" ? (
             <AboutMeLinksEditor
               value={aboutMe}
@@ -414,6 +421,8 @@ const DashboardLayout = () => {
               projects={orderedProjects}
               engagements={engagements}
             />
+          ) : activeTab === "visitors" ? (
+            <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (

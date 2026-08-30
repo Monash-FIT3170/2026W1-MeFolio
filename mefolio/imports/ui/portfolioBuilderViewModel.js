@@ -1,5 +1,4 @@
 import {
-  mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   sidebarItems,
@@ -21,7 +20,34 @@ export const mapOverviewStats = (portfolios) => {
 
 // Maps raw visitor/session data into the visitor list format used by the UI.
 export const mapLiveVisitors = (portfolios) => {
-  return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
+  if (!portfolios?.length) return [];
+
+  const viewers = portfolios[0]?.viewers || [];
+  if (!viewers.length) return [];
+
+  return viewers.map((viewer, index) => {
+    const displayName =
+      viewer.name && viewer.name !== viewer.userId && viewer.name !== "Guest"
+        ? viewer.name
+        : "Anonymous Viewer";
+    const connectedAt = viewer.connectedAt
+      ? new Date(viewer.connectedAt)
+      : null;
+    const duration = connectedAt
+      ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
+      : "Live now";
+
+    return {
+      id:
+        viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
+      name: displayName,
+      email: viewer.email || "",
+      activity: "Viewing portfolio",
+      location: viewer.userId ? "Signed in" : "Guest",
+      duration,
+      active: true,
+    };
+  });
 };
 
 // Maps the current user or portfolio owner into the sidebar profile shape.
@@ -53,7 +79,7 @@ export const createMockDashboardViewModel = () => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
-  liveVisitors: mockLiveVisitors,
+  liveVisitors: [],
   profile: mockProfile,
 });
 

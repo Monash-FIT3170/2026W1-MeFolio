@@ -22,6 +22,7 @@ if (Meteor.isClient) {
   describe("PublicPortfolioPage Component", () => {
     let originalSubscribe;
     let originalFindOne;
+    let subscriptionCalls;
 
     // Shaped like the snapshot portfolios.publish writes. No githubLink on the
     // projects, so ProjectCard does not reach out to the GitHub API.
@@ -49,6 +50,7 @@ if (Meteor.isClient) {
     beforeEach(() => {
       originalSubscribe = Meteor.subscribe;
       originalFindOne = PortfolioCollection.findOne;
+      subscriptionCalls = [];
     });
 
     afterEach(() => {
@@ -59,7 +61,10 @@ if (Meteor.isClient) {
     // Stands in for the portfolios.publicView subscription and whatever it
     // would have put into minimongo.
     const stubSubscription = ({ ready = true, portfolio } = {}) => {
-      Meteor.subscribe = () => ({ ready: () => ready });
+      Meteor.subscribe = (...args) => {
+        subscriptionCalls.push(args);
+        return { ready: () => ready };
+      };
       PortfolioCollection.findOne = () => portfolio;
     };
 
@@ -120,6 +125,22 @@ if (Meteor.isClient) {
       expect(screen.getByText("Project Gallery")).to.exist;
       expect(screen.getByText("Weather Dashboard")).to.exist;
       expect(screen.getByText("Recipe Finder")).to.exist;
+    });
+
+    it("subscribes to live viewer presence for a published portfolio", () => {
+      stubSubscription({
+        portfolio: {
+          _id: "testPortfolioId",
+          isPublished: true,
+          publishedContent,
+        },
+      });
+      renderPage();
+
+      expect(subscriptionCalls).to.deep.include([
+        "portfolios.viewer",
+        "testPortfolioId",
+      ]);
     });
 
     it("does not render the dashboard chrome", () => {

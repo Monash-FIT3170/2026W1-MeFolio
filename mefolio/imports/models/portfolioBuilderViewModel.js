@@ -1,5 +1,4 @@
 import {
-  mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   mockProjects,
@@ -23,7 +22,33 @@ export const mapOverviewStats = (portfolios) => {
 };
 
 export const mapLiveVisitors = (portfolios) => {
-  return portfolios?.length ? mockLiveVisitors : mockLiveVisitors;
+  if (!portfolios?.length) return [];
+
+  const viewers = portfolios?.[0]?.viewers || [];
+  if (!viewers.length) return [];
+
+  return viewers.filter(Boolean).map((viewer, index) => {
+    const displayName =
+      viewer.name && viewer.name !== viewer.userId && viewer.name !== "Guest"
+        ? viewer.name
+        : "Anonymous Viewer";
+    const connectedAt = viewer.connectedAt
+      ? new Date(viewer.connectedAt)
+      : null;
+    const duration = connectedAt
+      ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
+      : "Live now";
+
+    return {
+      id: viewer.connectionId || viewer.userId || `viewer-${index}`,
+      name: displayName,
+      email: viewer.email || "",
+      activity: "Viewing portfolio",
+      location: viewer.userId ? "Signed in" : "Guest",
+      duration,
+      active: true,
+    };
+  });
 };
 
 export const mapProjects = (projects) => {
@@ -101,7 +126,7 @@ export const createMockDashboardViewModel = (user) => ({
   isLoading: false,
   sidebarItems,
   overviewStats: mockOverviewStats,
-  liveVisitors: mockLiveVisitors,
+  liveVisitors: [],
   profile: mapProfile(user),
   aboutMe: mapAboutMe(samplePortfolioProfileData),
   projects: mockProjects,
