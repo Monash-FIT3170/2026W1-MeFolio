@@ -110,17 +110,25 @@ if (Meteor.isClient) {
     it("shows the preview URL when the slug is valid", () => {
       renderComponent();
       const input = screen.getByTestId("field-slug");
+<<<<<<< HEAD
       fireEvent.change(input, {
         target: { name: "slug", value: "sample-name" },
       });
+=======
+      fireEvent.change(input, { target: { name: "slug", value: "sample-name" } });
+>>>>>>> 94bfe5e (test: add test for custom slug)
       expect(screen.getByText("/u/sample-name")).to.exist;
     });
 
     it("blocks save when slug is invalid", () => {
       let callCount = 0;
+<<<<<<< HEAD
       Meteor.call = () => {
         callCount++;
       };
+=======
+      Meteor.call = () => { callCount++; };
+>>>>>>> 94bfe5e (test: add test for custom slug)
 
       renderComponent();
       const input = screen.getByTestId("field-slug");
@@ -137,4 +145,8 @@ if (Meteor.isClient) {
       expect(screen.getByTestId("field-slug").value).to.equal("existing-slug");
     });
   });
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 94bfe5e (test: add test for custom slug)
