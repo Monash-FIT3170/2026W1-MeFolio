@@ -79,6 +79,47 @@ export const PortfolioPreview = ({
         };
       }
 
+      if (isPublicView) {
+        const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+        const selectedPortfolio = PortfolioCollection.findOne({ _id: portfolioId });
+
+        if (!selectedPortfolio?._id) {
+          return { portfolio: null, projects: [], ready: viewerSub.ready() };
+        }
+
+        const projectOrderDocuments = PortfolioProjectsCollection.find(
+          { portfolioId: selectedPortfolio._id },
+          { sort: { orderIndex: 1 } },
+        ).fetch();
+        const orderedProjectIds = projectOrderDocuments.length
+          ? projectOrderDocuments.map((projectOrder) => projectOrder.projectId)
+          : selectedPortfolio.projects || [];
+
+        if (!orderedProjectIds.length) {
+          return {
+            portfolio: selectedPortfolio,
+            projects: [],
+            ready: viewerSub.ready(),
+          };
+        }
+
+        const projectMap = new Map(
+          ProjectCollection.find({ _id: { $in: orderedProjectIds } })
+            .fetch()
+            .map((project) => [project._id, project]),
+        );
+
+        const projects = orderedProjectIds
+          .map((projectId) => projectMap.get(projectId))
+          .filter(Boolean);
+
+        return {
+          portfolio: selectedPortfolio,
+          projects,
+          ready: viewerSub.ready(),
+        };
+      }
+
     if (isPublicView) {
       const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
@@ -95,7 +136,7 @@ export const PortfolioPreview = ({
         !portfolioProjectsSub.ready() ||
         !currentUserSub.ready()
       ) {
-        return { portfolio: null, projects: [], portfolio: null, ready: false };
+        return { portfolio: null, projects: [], ready: false };
       }
 
       const currentUser = Meteor.user();
