@@ -2,6 +2,19 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 
+const SLUG_REGEX = /^[a-z0-9-]+$/;
+
+const validateSlug = (value) => {
+  if (!value) return "";
+  if (!SLUG_REGEX.test(value))
+    return "Only lowercase letters, numbers, and hyphens are allowed.";
+  if (value.startsWith("-") || value.endsWith("-"))
+    return "Slug cannot start or end with a hyphen.";
+  if (value.length < 3) return "Slug must be at least 3 characters.";
+  if (value.length > 40) return "Slug must be 40 characters or fewer.";
+  return "";
+};
+
 const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   const [form, setForm] = useState({
     name: profile.name || "",
@@ -9,7 +22,10 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
     title: aboutMe.title || "",
     bio: aboutMe.bio || "",
     location: aboutMe.profile?.location || "",
+    slug: aboutMe.username || "",
   });
+
+  const [slugError, setSlugError] = useState("");
 
   useEffect(() => {
     setForm({
@@ -18,20 +34,32 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       title: aboutMe.title || "",
       bio: aboutMe.bio || "",
       location: aboutMe.profile?.location || "",
+      slug: aboutMe.username || "",
     });
   }, [
     aboutMe.bio,
     aboutMe.title,
     aboutMe.profile?.location,
+    aboutMe.username,
     profile.email,
     profile.name,
   ]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (name === "slug") {
+      setSlugError(validateSlug(value));
+    }
   };
 
   const handleSave = (formValues) => {
+    const error = validateSlug(formValues.slug);
+    if (formValues.slug && error) {
+      setSlugError(error);
+      return;
+    }
+
     const userUpdates = {};
     if (formValues.email) userUpdates.email = formValues.email;
     const profileUpdates = {};
@@ -52,6 +80,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: formValues.bio,
       "profile.fullName": formValues.name,
       "profile.location": formValues.location,
+      ...(formValues.slug ? { username: formValues.slug } : {}),
     };
 
     if (portfolioId) {
@@ -77,6 +106,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
             fullName: formValues.name,
             location: formValues.location,
           },
+          ...(formValues.slug ? { username: formValues.slug } : {}),
           projects: [],
           createdAt: new Date(),
         },
@@ -152,6 +182,40 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
           />
         </div>
 
+        {/* Custom URL */}
+        <div>
+          <label className="block text-sm font-medium text-primary mb-2">
+            Custom URL
+          </label>
+          <div className="flex items-stretch rounded-lg border border-line overflow-hidden focus-within:ring-2 focus-within:ring-accent2">
+            <span className="px-3 py-2 bg-surface-fill border-r border-line text-sm text-muted select-none whitespace-nowrap flex items-center">
+              /u/
+            </span>
+            <input
+              type="text"
+              name="slug"
+              data-testid="field-slug"
+              className="flex-1 px-3 py-2 outline-none text-sm text-primary bg-background"
+              placeholder="jane-doe"
+              value={form.slug}
+              onChange={handleChange}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+          {slugError && (
+            <p data-testid="slug-error" className="mt-1 text-xs text-accent2">
+              {slugError}
+            </p>
+          )}
+          {!slugError && form.slug && (
+            <p className="mt-1 text-xs text-muted">
+              Your portfolio will be available at{" "}
+              <span className="font-semibold text-primary">/u/{form.slug}</span>
+            </p>
+          )}
+        </div>
+
         <button
           className="px-6 py-2 bg-button border border-line text-secondary rounded-lg hover:bg-alt/50 hover:text-secondary transition"
           onClick={() => handleSave(form)}
@@ -171,6 +235,7 @@ ProfileSettings.propTypes = {
   aboutMe: PropTypes.shape({
     title: PropTypes.string,
     bio: PropTypes.string,
+    username: PropTypes.string,
   }).isRequired,
   portfolioId: PropTypes.string,
 };
