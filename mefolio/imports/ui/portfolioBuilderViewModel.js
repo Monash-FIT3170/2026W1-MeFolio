@@ -26,6 +26,10 @@ export const mapLiveVisitors = (portfolios) => {
   if (!viewers.length) return [];
 
   return viewers.map((viewer, index) => {
+    const displayName =
+      viewer.name && viewer.name !== viewer.userId && viewer.name !== "Guest"
+        ? viewer.name
+        : "Anonymous Viewer";
     const connectedAt = viewer.connectedAt
       ? new Date(viewer.connectedAt)
       : null;
@@ -35,7 +39,7 @@ export const mapLiveVisitors = (portfolios) => {
 
     return {
       id: viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
-      name: viewer.name || "Anonymous Visitor",
+      name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
       location: viewer.userId ? "Signed in" : "Guest",

@@ -1,4 +1,5 @@
 import { Meteor } from "meteor/meteor";
+import { useEffect } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { useParams } from "react-router-dom";
 import { PortfolioCollection } from "../../api/portfolio.js";
@@ -20,19 +21,38 @@ export const PublicPortfolioPage = () => {
   const { portfolioId } = useParams();
 
   const { isLoading, publishedContent } = useTracker(() => {
-    const handle = Meteor.subscribe("portfolios.publicView", portfolioId);
+    const publicViewHandle = Meteor.subscribe(
+      "portfolios.publicView",
+      portfolioId,
+    );
+    const viewerHandle = Meteor.subscribe("portfolios.viewer", portfolioId);
     const portfolio = PortfolioCollection.findOne({ _id: portfolioId });
 
     // The publication withholds unpublished portfolios, but an owner signed in
     // elsewhere in the app has their own draft in minimongo already. Checking
     // isPublished here keeps this route showing the same thing to everyone.
     return {
-      isLoading: !handle.ready(),
+      isLoading: !publicViewHandle.ready() || !viewerHandle.ready(),
       publishedContent: portfolio?.isPublished
         ? portfolio.publishedContent
         : null,
     };
   }, [portfolioId]);
+
+  useEffect(() => {
+    if (isLoading || !publishedContent || !portfolioId) return undefined;
+
+    const sendHeartbeat = () => {
+      Meteor.call("portfolios.viewerHeartbeat", portfolioId, (error) => {
+        if (error) console.error("Failed to send viewer heartbeat:", error);
+      });
+    };
+
+    sendHeartbeat();
+    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
+
+    return () => clearInterval(heartbeatInterval);
+  }, [isLoading, portfolioId, publishedContent]);
 
   if (isLoading) {
     return (

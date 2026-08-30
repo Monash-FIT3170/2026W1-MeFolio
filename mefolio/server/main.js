@@ -310,19 +310,24 @@ const getViewerData = async (publication) => {
     "";
   const name =
     user?.profile?.name ||
+    user?.profile?.username ||
     user?.services?.google?.name ||
     user?.services?.github?.username ||
-    publication.userId ||
-    "Guest";
+    "Anonymous Viewer";
 
-  return {
+  const viewer = {
     connectionId,
-    userId: publication.userId,
     name,
     email,
     connectedAt: new Date(),
     lastSeenAt: new Date(),
   };
+
+  if (publication.userId) {
+    viewer.userId = publication.userId;
+  }
+
+  return viewer;
 };
 
 const addPortfolioViewer = async (portfolioId, viewer) => {
@@ -360,7 +365,7 @@ Meteor.publish("portfolios.all", function () {
   if (!this.userId) {
     return PortfolioCollection.find(
       {},
-      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+      { sort, fields: { ...NON_OWNER_PORTFOLIO_FIELDS, viewers: 0 } },
     );
   }
 
@@ -368,7 +373,21 @@ Meteor.publish("portfolios.all", function () {
   // users' portfolios, and a publish function cannot return two cursors for the
   // same collection. The recruiter view reads its portfolio from the
   // token-gated `portfolio.recruiterView` publication instead.
-  return PortfolioCollection.find({ userId: this.userId }, { sort });
+  return PortfolioCollection.find(
+    { userId: this.userId },
+    { sort, fields: { viewers: 0 } },
+  );
+});
+
+Meteor.publish("portfolios.liveVisitors", function (portfolioId) {
+  check(portfolioId, String);
+
+  if (!this.userId) return this.ready();
+
+  return PortfolioCollection.find(
+    { _id: portfolioId, userId: this.userId },
+    { fields: { _id: 1, viewers: 1 } },
+  );
 });
 
 Meteor.publish("portfolios.viewer", function (portfolioId) {
@@ -377,7 +396,7 @@ Meteor.publish("portfolios.viewer", function (portfolioId) {
   const publication = this;
   const connectionId = publication.connection?.id;
 
-  PortfolioCollection.findOneAsync(portfolioId)
+  PortfolioCollection.findOneAsync({ _id: portfolioId, isPublished: true })
     .then((portfolio) => {
       if (!portfolio) return null;
       return getViewerData(publication);
@@ -394,7 +413,10 @@ Meteor.publish("portfolios.viewer", function (portfolioId) {
     }
   });
 
-  return PortfolioCollection.find({ _id: portfolioId });
+  return PortfolioCollection.find(
+    { _id: portfolioId, isPublished: true },
+    { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
+  );
 });
 
 Meteor.publish("users.current", function () {

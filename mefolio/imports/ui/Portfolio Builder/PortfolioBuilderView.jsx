@@ -108,7 +108,7 @@ const useDashboardData = () =>
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
     const projectDocuments = ProjectCollection.find({}).fetch();
-    const portfolios = PortfolioCollection.find({}).fetch();
+    const portfolios = PortfolioCollection.find({}, { fields: { viewers: 0 } }).fetch();
     const user = Meteor.user();
     const selectedPortfolio = getSelectedPortfolio(portfolios, user);
     const engagementHandler = selectedPortfolio?._id
@@ -179,7 +179,6 @@ const DashboardLayout = () => {
     isLoading: viewModelLoading,
     sidebarItems,
     overviewStats,
-    liveVisitors,
     profile,
     aboutMe,
   } = createDashboardViewModel({
@@ -369,7 +368,10 @@ const DashboardLayout = () => {
 
         <div className="p-8">
           {activeTab === "overview" ? (
-            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+            <OverviewSection
+              stats={overviewStats}
+              portfolioId={selectedPortfolio?._id}
+            />
           ) : activeTab === "about-me" ? (
             <AboutMeLinksEditor
               value={aboutMe}

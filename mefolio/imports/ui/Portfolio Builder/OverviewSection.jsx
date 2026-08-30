@@ -1,4 +1,8 @@
 import PropTypes from "prop-types";
+import { Meteor } from "meteor/meteor";
+import { useTracker } from "meteor/react-meteor-data";
+import { PortfolioCollection } from "../../api/portfolio.js";
+import { mapLiveVisitors } from "../../models/portfolioBuilderViewModel.js";
 
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
@@ -32,7 +36,7 @@ const VisitorCard = ({ visitor }) => {
 
       <div className="min-w-0">
         <h3 className="m-0 text-sm font-semibold text-primary">
-          {visitor.name ? visitor.name : "Anonymous Visitor"}
+          {visitor.name ? visitor.name : "Anonymous Viewer"}
         </h3>
         <p className="mt-0.5 truncate text-sm text-primary">{visitor.email}</p>
         <p className="mt-1 text-sm font-medium text-primary">
@@ -51,7 +55,21 @@ const VisitorCard = ({ visitor }) => {
 };
 
 // Overview tab content that displays summary stats and recent visitor activity.
-const OverviewSection = ({ stats, visitors }) => {
+const OverviewSection = ({ stats, portfolioId }) => {
+  const visitors = useTracker(() => {
+    if (!portfolioId) return [];
+
+    const handle = Meteor.subscribe("portfolios.liveVisitors", portfolioId);
+    if (!handle.ready()) return [];
+
+    const portfolio = PortfolioCollection.findOne(
+      { _id: portfolioId },
+      { fields: { viewers: 1 } },
+    );
+
+    return mapLiveVisitors(portfolio ? [portfolio] : []);
+  }, [portfolioId]);
+
   return (
     <>
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -107,7 +125,7 @@ VisitorCard.propTypes = {
 
 OverviewSection.propTypes = {
   stats: PropTypes.arrayOf(PropTypes.object).isRequired,
-  visitors: PropTypes.arrayOf(PropTypes.object).isRequired,
+  portfolioId: PropTypes.string,
 };
 
 export default OverviewSection;
