@@ -202,50 +202,6 @@ export const PortfolioPreview = ({
     };
   }, [isPublicView, portfolioId, ready]);
 
-  _useEffect(() => {
-    if (!isPublicView || !portfolioId || !ready) return undefined;
-
-    const sendHeartbeat = () => {
-      Meteor.call("portfolios.viewerHeartbeat", portfolioId, (error) => {
-        if (error) {
-          console.error("Failed to send viewer heartbeat:", error);
-        }
-      });
-    };
-
-    // Send one immediately once the viewer subscription is ready.
-    sendHeartbeat();
-
-    // Continue updating lastSeenAt while the portfolio remains open.
-    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
-
-    return () => {
-      clearInterval(heartbeatInterval);
-    };
-  }, [isPublicView, portfolioId, ready]);
-
-  _useEffect(() => {
-    if (!isPublicView || !portfolioId || !ready) return undefined;
-
-    const sendHeartbeat = () => {
-      Meteor.call("portfolios.viewerHeartbeat", portfolioId, (error) => {
-        if (error) {
-          console.error("Failed to send viewer heartbeat:", error);
-        }
-      });
-    };
-
-    // Send one immediately once the viewer subscription is ready.
-    sendHeartbeat();
-
-    // Continue updating lastSeenAt while the portfolio remains open.
-    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
-
-    return () => {
-      clearInterval(heartbeatInterval);
-    };
-  }, [isPublicView, portfolioId, ready]);
-
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [viewportMode, setViewportMode] = useState("desktop");
