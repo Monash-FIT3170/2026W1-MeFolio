@@ -80,7 +80,6 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: formValues.bio,
       "profile.fullName": formValues.name,
       "profile.location": formValues.location,
-      ...(formValues.slug ? { username: formValues.slug } : {}),
     };
 
     if (portfolioId) {
@@ -133,7 +132,6 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
             fullName: formValues.name,
             location: formValues.location,
           },
-          ...(formValues.slug ? { username: formValues.slug } : {}),
           projects: [],
           createdAt: new Date(),
         },
@@ -161,9 +159,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
                     return;
                   }
 
-                  setSlugError(
-                    "Failed to update custom URL. Please try again.",
-                  );
+                  setSlugError("Failed to update custom URL. Please try again.");
                   return;
                 }
 
@@ -174,7 +170,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         },
       );
     }
-  };
+    };
 
   return (
     <div className="bg-surface-fill rounded-xl border border-line p-6">
