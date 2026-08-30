@@ -81,7 +81,7 @@ const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
       <section className="mt-6 rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="m-0 text-lg font-bold text-primary">Live Visitors</h2>
-          
+
           <button
             type="button"
             onClick={onViewAllVisitors}
@@ -90,7 +90,9 @@ const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
             View all
           </button>
         </div>
-        <p className="mt-1 block text-xs text-primary">Showing 3 of {visitors.length}</p>
+        <p className="mt-1 block text-xs text-primary">
+          Showing 3 of {visitors.length}
+        </p>
 
         <div>
           {visitors.length > 0 ? (

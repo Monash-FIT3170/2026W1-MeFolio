@@ -55,7 +55,9 @@ const LiveVisitorsPage = ({ portfolioId }) => {
     <div className="mx-auto max-w-8xl px-6 py-10">
       <section className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="m-0 text-lg font-bold text-primary">Live Visitors ({visitors.length})</h2>
+          <h2 className="m-0 text-lg font-bold text-primary">
+            Live Visitors ({visitors.length})
+          </h2>
         </div>
 
         <div>

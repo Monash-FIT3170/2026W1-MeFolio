@@ -422,7 +422,7 @@ const DashboardLayout = () => {
               engagements={engagements}
             />
           ) : activeTab === "visitors" ? (
-              <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
+            <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
           ) : activeTab === "themes" ? (
