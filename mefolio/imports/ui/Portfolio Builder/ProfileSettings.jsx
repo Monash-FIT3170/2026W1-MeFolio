@@ -80,7 +80,6 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: formValues.bio,
       "profile.fullName": formValues.name,
       "profile.location": formValues.location,
-      ...(formValues.slug ? { username: formValues.slug } : {}),
     };
 
     if (portfolioId) {
@@ -95,8 +94,35 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
           }
         },
       );
+
+      if (formValues.slug) {
+        Meteor.call(
+          "portfolios.setUsername",
+          portfolioId,
+          formValues.slug,
+          (error) => {
+            if (error) {
+              console.error("Error updating custom URL:", error);
+
+              if (
+                error.error === "username-taken" ||
+                error.error === "invalid-username"
+              ) {
+                setSlugError(error.reason);
+                return;
+              }
+
+              setSlugError("Failed to update custom URL. Please try again.");
+              return;
+            }
+
+            setSlugError("");
+          },
+        );
+      }
     } else {
-      // No portfolio yet — create one and include all profile fields.
+      // No portfolio yet — create one first, then set the username
+      // through the dedicated validated method.
       Meteor.call(
         "portfolios.insert",
         {
@@ -106,19 +132,45 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
             fullName: formValues.name,
             location: formValues.location,
           },
-          ...(formValues.slug ? { username: formValues.slug } : {}),
           projects: [],
           createdAt: new Date(),
         },
-        (error) => {
+        (error, newPortfolioId) => {
           if (error) {
             console.error("Error creating portfolio:", error);
             alert("Failed to save changes. Please try again.");
+            return;
+          }
+
+          if (formValues.slug && newPortfolioId) {
+            Meteor.call(
+              "portfolios.setUsername",
+              newPortfolioId,
+              formValues.slug,
+              (usernameError) => {
+                if (usernameError) {
+                  console.error("Error updating custom URL:", usernameError);
+
+                  if (
+                    usernameError.error === "username-taken" ||
+                    usernameError.error === "invalid-username"
+                  ) {
+                    setSlugError(usernameError.reason);
+                    return;
+                  }
+
+                  setSlugError("Failed to update custom URL. Please try again.");
+                  return;
+                }
+
+                setSlugError("");
+              },
+            );
           }
         },
       );
     }
-  };
+    };
 
   return (
     <div className="bg-surface-fill rounded-xl border border-line p-6">
@@ -217,6 +269,8 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         </div>
 
         <button
+          type="button"
+          data-testid="btn-save"
           className="px-6 py-2 bg-button border border-line text-secondary rounded-lg hover:bg-alt/50 hover:text-secondary transition"
           onClick={() => handleSave(form)}
         >
