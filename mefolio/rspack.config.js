@@ -12,6 +12,9 @@ const { defineConfig } = require("@meteorjs/rspack");
  */
 module.exports = defineConfig((_Meteor) => {
   return {
+    ignoreWarnings: [
+      /Critical dependency: the request of a dependency is an expression/,
+    ],
     module: {
       rules: [
         // Add support for importing SVGs as React components
