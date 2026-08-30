@@ -29,7 +29,6 @@ export const PortfolioPreview = ({
   const isPublicView = Boolean(portfolioId);
 
   const {
-    portfolio: loadedPortfolio,
     projects: loadedProjects,
     portfolio,
     ready,

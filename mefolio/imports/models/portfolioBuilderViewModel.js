@@ -1,5 +1,4 @@
 import {
-  mockLiveVisitors,
   mockOverviewStats,
   mockProfile,
   mockProjects,

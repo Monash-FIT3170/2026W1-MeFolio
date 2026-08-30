@@ -464,31 +464,6 @@ Meteor.publish("portfolios.byUsername", function (username) {
       { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
     ),
   ];
-
-  const publication = this;
-  const connectionId = publication.connection?.id;
-
-  PortfolioCollection.findOneAsync({ username })
-    .then((portfolio) => {
-      if (!portfolio) return null;
-      return getViewerData(publication).then((viewer) => ({
-        viewer,
-        portfolioId: portfolio._id,
-      }));
-    })
-    .then((result) => {
-      if (!result?.viewer) return null;
-      return addPortfolioViewer(result.portfolioId, result.viewer);
-    })
-    .catch(console.error);
-
-  this.onStop(() => {
-    if (connectionId) {
-      removePortfolioViewer(connectionId).catch(console.error);
-    }
-  });
-
-  return PortfolioCollection.find({ username });
 });
 
 Meteor.methods({
