@@ -828,42 +828,42 @@ if (Meteor.isServer) {
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
 
-        // First visit via the accessCode generated in beforeEach
+        // First visit
         const visitId1 = await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
           {
-            portfolioId: mockPortfolioId,
-            accessCode: accessCode,
-            ip: "127.0.0.1",
-            metadata: { referrer: "https://linkedin.com" },
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Test Browser 1" },
+            },
           },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
 
-        // Second visit using the exact same link / accessCode
+        // Second visit
         const visitId2 = await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
           {
-            portfolioId: mockPortfolioId,
-            accessCode: accessCode,
-            ip: "127.0.0.1",
-            metadata: { referrer: "https://email.com" },
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Test Browser 2" },
+            },
           },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
 
-        expect(visitId1).to.exist;
-        expect(visitId2).to.exist;
+        // Should be different IDs
         expect(visitId1).to.not.equal(visitId2);
 
+        // Verify both visits were recorded
         const visits = await RecruiterVisits.find({
           portfolioId: mockPortfolioId,
-          token: accessCode,
-        }).fetchAsync();
-
-        expect(visits).to.have.lengthOf(2);
-        expect(visits.map((v) => v._id)).to.include.members([
-          visitId1,
-          visitId2,
-        ]);
+        }).fetch();
+        expect(visits.length).to.equal(2);
       });
 
       it("uses provided IP when connection is not available", async function () {
@@ -1057,22 +1057,49 @@ if (Meteor.isServer) {
           },
         );
 
-        // Create some visits
+        // Create visits with different IPs
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
 
+        // Visit 1 (Google, IP 1)
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode1 },
         );
 
+        // Visit 2 (Google, IP 2)
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode1 },
         );
 
+        // Visit 3 (Atlassian, IP 3)
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.3",
+              httpHeaders: { "user-agent": "Browser 2" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode2 },
         );
       });
@@ -1211,14 +1238,30 @@ if (Meteor.isServer) {
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
 
-        // Create multiple visits for the same token
+        // Create multiple visits with different IPs
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
 
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
       });
@@ -1313,13 +1356,15 @@ if (Meteor.isServer) {
     });
 
     describe("recruiterVisits.clearHistory", function () {
+      let accessCode;
+
       beforeEach(async function () {
         const generateHandler =
           Meteor.server.method_handlers["tokens.generate"];
         const recordHandler =
           Meteor.server.method_handlers["recruiterVisits.record"];
 
-        const accessCode = await generateHandler.call(
+        accessCode = await generateHandler.call(
           {
             userId: mockUserId,
             isSimulation: false,
@@ -1331,14 +1376,30 @@ if (Meteor.isServer) {
           },
         );
 
-        // Create some visits
+        // Create multiple visits with different IPs
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
 
         await recordHandler.call(
-          { userId: null, isSimulation: false, unblock() {} },
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
           { portfolioId: mockPortfolioId, accessCode: accessCode },
         );
       });

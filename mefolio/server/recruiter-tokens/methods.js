@@ -215,23 +215,28 @@ Meteor.methods({
       );
     }
 
-    // Check if a visit was already recorded in the last 2 seconds for this token as buffer
-    // Helps prevent duplicate records from multiple calls
-    const existingVisit = await RecruiterVisits.findOneAsync({
-      portfolioId: portfolioId,
-      token: accessCode,
-      createdAt: { $gt: new Date(Date.now() - 2000) }, // 2 seconds
-    });
+    // Get connection details
+    const clientIp = ip || this.connection?.clientAddress || null;
+    const userAgent = this.connection?.httpHeaders?.["user-agent"] || null;
+    const referrer = this.connection?.httpHeaders?.["referer"] || null;
+
+    // Check for exact duplicate (same token, same IP, same user agent within 2 seconds)
+    // Only check if we have a valid IP
+    let existingVisit = null;
+    if (clientIp) {
+      existingVisit = await RecruiterVisits.findOneAsync({
+        portfolioId: portfolioId,
+        token: accessCode,
+        createdAt: { $gt: new Date(Date.now() - 2000) },
+        "metadata.ip": clientIp,
+        "metadata.userAgent": userAgent,
+      });
+    }
 
     if (existingVisit) {
       // Return the existing visit ID instead of creating a duplicate
       return existingVisit._id;
     }
-
-    // Get connection details
-    const clientIp = ip || this.connection?.clientAddress || null;
-    const userAgent = this.connection?.httpHeaders?.["user-agent"] || null;
-    const referrer = this.connection?.httpHeaders?.["referer"] || null;
 
     // Record the visit
     const visitId = await RecruiterVisits.insertAsync({
