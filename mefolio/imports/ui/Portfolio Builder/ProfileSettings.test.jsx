@@ -110,13 +110,17 @@ if (Meteor.isClient) {
     it("shows the preview URL when the slug is valid", () => {
       renderComponent();
       const input = screen.getByTestId("field-slug");
-      fireEvent.change(input, { target: { name: "slug", value: "sample-name" } });
+      fireEvent.change(input, {
+        target: { name: "slug", value: "sample-name" },
+      });
       expect(screen.getByText("/u/sample-name")).to.exist;
     });
 
     it("blocks save when slug is invalid", () => {
       let callCount = 0;
-      Meteor.call = () => { callCount++; };
+      Meteor.call = () => {
+        callCount++;
+      };
 
       renderComponent();
       const input = screen.getByTestId("field-slug");

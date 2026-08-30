@@ -46,7 +46,6 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   ]);
 
   const handleChange = (e) => {
-  
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
     if (name === "slug") {
@@ -55,7 +54,6 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   };
 
   const handleSave = (formValues) => {
-
     const error = validateSlug(formValues.slug);
     if (formValues.slug && error) {
       setSlugError(error);
