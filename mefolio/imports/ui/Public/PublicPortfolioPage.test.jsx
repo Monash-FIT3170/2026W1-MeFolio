@@ -128,7 +128,6 @@ if (Meteor.isClient) {
       expect(screen.getByText("Recipe Finder")).to.exist;
     });
 
-
     it("subscribes to live viewer presence for a published portfolio", () => {
       stubSubscription({
         portfolio: {

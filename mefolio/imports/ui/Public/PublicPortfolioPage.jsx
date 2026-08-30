@@ -22,7 +22,6 @@ export const PublicPortfolioPage = () => {
   const lookupValue = username || portfolioId;
 
   const { isLoading, publishedContent } = useTracker(() => {
-
     const publicViewHandle = Meteor.subscribe(
       "portfolios.publicView",
       lookupValue,
