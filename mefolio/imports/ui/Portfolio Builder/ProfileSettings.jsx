@@ -46,6 +46,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   ]);
 
   const handleChange = (e) => {
+  
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
     if (name === "slug") {
@@ -54,6 +55,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
   };
 
   const handleSave = (formValues) => {
+
     const error = validateSlug(formValues.slug);
     if (formValues.slug && error) {
       setSlugError(error);
@@ -80,6 +82,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
       bio: formValues.bio,
       "profile.fullName": formValues.name,
       "profile.location": formValues.location,
+      ...(formValues.slug ? { username: formValues.slug } : {}),
     };
 
     if (portfolioId) {
@@ -132,6 +135,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
             fullName: formValues.name,
             location: formValues.location,
           },
+          ...(formValues.slug ? { username: formValues.slug } : {}),
           projects: [],
           createdAt: new Date(),
         },
