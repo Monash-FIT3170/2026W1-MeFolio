@@ -1,5 +1,14 @@
 import PropTypes from "prop-types";
-import { Github, ExternalLink, ImageOff, Pencil } from "lucide-react";
+import {
+  Github,
+  ExternalLink,
+  ImageOff,
+  Pencil,
+  Star,
+  GitBranch,
+  Clock3,
+  RefreshCw,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -23,6 +32,8 @@ export function ProjectCard({
   project,
   index,
   onEdit,
+  onSync,
+  isSyncing = false,
   draggable = false,
   isDragging = false,
   onDragStart,
@@ -37,7 +48,23 @@ export function ProjectCard({
     githubLink = "",
     liveDemoLink = "",
     media = "",
+    githubStats = null,
   } = project || {};
+
+  const lastUpdated = githubStats?.updatedAt
+    ? new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(new Date(githubStats.updatedAt))
+    : "-";
+
+  const canSync = Boolean(onSync && githubLink);
+
+  const handleSync = (e) => {
+    e.stopPropagation();
+    if (!isSyncing) onSync(project);
+  };
 
   return (
     <Card
@@ -92,24 +119,46 @@ export function ProjectCard({
           </span>
         )}
 
-        {/* Edit button */}
-        {onEdit && (
-          <button
-            type="button"
-            data-testid="project-card-edit"
-            aria-label={`Edit ${title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(project);
-            }}
-            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </button>
-        )}
-      </div>
+        {/* Sync / Edit buttons */}
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          {onSync && (
+            <button
+              type="button"
+              data-testid="project-card-sync"
+              aria-label={
+                canSync
+                  ? `Sync ${title} stats now`
+                  : "Add a GitHub link to enable sync"
+              }
+              title={canSync ? "Sync now" : "Add a GitHub link to enable sync"}
+              disabled={!canSync || isSyncing}
+              onClick={handleSync}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface-fill disabled:hover:text-muted"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing…" : "Sync now"}
+            </button>
+          )}
 
+          {onEdit && (
+            <button
+              type="button"
+              data-testid="project-card-edit"
+              aria-label={`Edit ${title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(project);
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
       <CardHeader className="p-5 pb-2">
         <CardTitle className="text-lg font-bold text-primary">
           {title}
@@ -117,6 +166,20 @@ export function ProjectCard({
         {description && (
           <p className="mt-1 text-sm text-muted line-clamp-3">{description}</p>
         )}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 text-accent2" />
+            {githubStats?.stars ?? "-"} stars
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5 text-accent1" />
+            {githubStats?.commits ?? "-"} commits
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Clock3 className="h-3.5 w-3.5 text-alt" />
+            Updated {lastUpdated}
+          </span>
+        </div>
       </CardHeader>
 
       <CardContent className="px-5 pb-5 pt-3">
@@ -203,8 +266,15 @@ ProjectCard.propTypes = {
     githubLink: PropTypes.string,
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
+    githubStats: PropTypes.shape({
+      stars: PropTypes.number,
+      commits: PropTypes.number,
+      updatedAt: PropTypes.string,
+    }),
   }),
   onEdit: PropTypes.func,
+  onSync: PropTypes.func,
+  isSyncing: PropTypes.bool,
   draggable: PropTypes.bool,
   isDragging: PropTypes.bool,
   onDragStart: PropTypes.func,

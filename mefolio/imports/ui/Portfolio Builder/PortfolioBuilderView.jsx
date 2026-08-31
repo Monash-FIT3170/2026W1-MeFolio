@@ -161,6 +161,7 @@ const DashboardLayout = () => {
   const [editingProject, setEditingProject] = useState(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
+  const [syncingProjectId, setSyncingProjectId] = useState(null);
 
   const {
     isLoading,
@@ -272,6 +273,37 @@ const DashboardLayout = () => {
       );
 
       setEditingProject(null);
+    });
+  };
+
+  // Manual "Sync now" trigger. Patches orderedProjects directly (same
+  // pattern as handleSaveProject above) since that's the source the grid
+  // renders from.
+  const handleSyncProject = (project) => {
+    const projectId = project._id || project.id;
+    if (!projectId || syncingProjectId) return;
+
+    setSyncingProjectId(projectId);
+
+    Meteor.call("projects.syncGithubStats", projectId, (error, result) => {
+      setSyncingProjectId(null);
+
+      if (error) {
+        console.error("Failed to sync GitHub stats:", error);
+        return;
+      }
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.map((existingProject) =>
+          (existingProject._id || existingProject.id) === projectId
+            ? {
+                ...existingProject,
+                githubStats: result.githubStats,
+                lastSyncedAt: result.lastSyncedAt,
+              }
+            : existingProject,
+        ),
+      );
     });
   };
 
@@ -413,6 +445,8 @@ const DashboardLayout = () => {
             <ProjectsSection
               projects={orderedProjects}
               onEdit={handleEditProject}
+              syncingProjectId={syncingProjectId}
+              onSync={handleSyncProject}
               draggedProjectIndex={draggedProjectIndex}
               onDragStart={handleProjectDragStart}
               onDragOver={handleProjectDragOver}
