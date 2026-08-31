@@ -10,12 +10,13 @@
  * test, matching the mocking style used in RecruiterLoginPage.test.jsx.
  */
 
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { expect } from "chai";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "../../api/portfolio.js";
+import { PROJECT_CLICK_METHOD } from "../../api/projectEngagement.js";
 import { PublicPortfolioPage } from "./PublicPortfolioPage.jsx";
 
 if (Meteor.isClient) {
@@ -23,7 +24,9 @@ if (Meteor.isClient) {
     let originalSubscribe;
     let originalFindOne;
     let originalCall;
+    let originalCallAsync;
     let subscriptionCalls;
+    let projectClickCalls;
 
     // Shaped like the snapshot portfolios.publish writes. No githubLink on the
     // projects, so ProjectCard does not reach out to the GitHub API.
@@ -52,7 +55,9 @@ if (Meteor.isClient) {
       originalSubscribe = Meteor.subscribe;
       originalFindOne = PortfolioCollection.findOne;
       originalCall = Meteor.call;
+      originalCallAsync = Meteor.callAsync;
       subscriptionCalls = [];
+      projectClickCalls = [];
 
       // Neutralise the viewer-presence heartbeat. The component fires it on an
       // interval; in test mode the method is not registered, so left alone it
@@ -66,12 +71,22 @@ if (Meteor.isClient) {
         }
         return originalCall.call(Meteor, name, ...args);
       };
+
+      Meteor.callAsync = (name, ...args) => {
+        if (name === PROJECT_CLICK_METHOD) {
+          projectClickCalls.push(args[0]);
+          return Promise.resolve({ recorded: true });
+        }
+
+        return originalCallAsync.call(Meteor, name, ...args);
+      };
     });
 
     afterEach(() => {
       Meteor.subscribe = originalSubscribe;
       PortfolioCollection.findOne = originalFindOne;
       Meteor.call = originalCall;
+      Meteor.callAsync = originalCallAsync;
       // Unmount so the heartbeat interval's clearInterval cleanup runs; without
       // this the interval outlives the test and hangs the suite.
       cleanup();
@@ -144,6 +159,47 @@ if (Meteor.isClient) {
       expect(screen.getByText("Project Gallery")).to.exist;
       expect(screen.getByText("Weather Dashboard")).to.exist;
       expect(screen.getByText("Recipe Finder")).to.exist;
+    });
+
+    it("records project destination clicks with the public portfolio ID", () => {
+      stubSubscription({
+        portfolio: {
+          _id: "testPortfolioId",
+          isPublished: true,
+          publishedContent: {
+            ...publishedContent,
+            projects: [
+              {
+                ...publishedContent.projects[0],
+                githubLink:
+                  "https://github.com/example/public-weather-dashboard",
+                liveDemoLink: "https://weather-dashboard.example.com",
+              },
+            ],
+          },
+        },
+      });
+      renderPage();
+
+      fireEvent.click(screen.getByRole("link", { name: /code/i }));
+      fireEvent.click(screen.getByRole("link", { name: /demo/i }));
+
+      expect(projectClickCalls).to.have.lengthOf(2);
+      expect(projectClickCalls[0]).to.include({
+        portfolioId: "testPortfolioId",
+        projectId: "project-1",
+        target: "code",
+      });
+      expect(projectClickCalls[1]).to.include({
+        portfolioId: "testPortfolioId",
+        projectId: "project-1",
+        target: "demo",
+      });
+      expect(projectClickCalls[0].eventId).to.match(/^[A-Za-z0-9_-]{16,64}$/);
+      expect(projectClickCalls[1].eventId).to.match(/^[A-Za-z0-9_-]{16,64}$/);
+      expect(projectClickCalls[0].eventId).to.not.equal(
+        projectClickCalls[1].eventId,
+      );
     });
 
     it("subscribes to live viewer presence for a published portfolio", () => {
