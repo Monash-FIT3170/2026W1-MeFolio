@@ -492,8 +492,11 @@ Meteor.methods({
   },
 
   async "portfolios.insert"(portfolioData) {
+    const safePortfolioData = { ...portfolioData };
+    delete safePortfolioData.username;
+
     const newPortfolio = {
-      ...portfolioData,
+      ...safePortfolioData,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
