@@ -10,7 +10,7 @@
  * test, matching the mocking style used in RecruiterLoginPage.test.jsx.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { expect } from "chai";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
@@ -22,6 +22,7 @@ if (Meteor.isClient) {
   describe("PublicPortfolioPage Component", () => {
     let originalSubscribe;
     let originalFindOne;
+    let originalCall;
     let subscriptionCalls;
 
     // Shaped like the snapshot portfolios.publish writes. No githubLink on the
@@ -50,12 +51,30 @@ if (Meteor.isClient) {
     beforeEach(() => {
       originalSubscribe = Meteor.subscribe;
       originalFindOne = PortfolioCollection.findOne;
+      originalCall = Meteor.call;
       subscriptionCalls = [];
+
+      // Neutralise the viewer-presence heartbeat. The component fires it on an
+      // interval; in test mode the method is not registered, so left alone it
+      // 404s on a loop and keeps the DDP connection busy, which stops the test
+      // runner from ever exiting. Pass other calls through unchanged.
+      Meteor.call = (name, ...args) => {
+        if (name === "portfolios.viewerHeartbeat") {
+          const maybeCallback = args[args.length - 1];
+          if (typeof maybeCallback === "function") maybeCallback();
+          return undefined;
+        }
+        return originalCall.call(Meteor, name, ...args);
+      };
     });
 
     afterEach(() => {
       Meteor.subscribe = originalSubscribe;
       PortfolioCollection.findOne = originalFindOne;
+      Meteor.call = originalCall;
+      // Unmount so the heartbeat interval's clearInterval cleanup runs; without
+      // this the interval outlives the test and hangs the suite.
+      cleanup();
     });
 
     // Stands in for the portfolios.publicView subscription and whatever it
