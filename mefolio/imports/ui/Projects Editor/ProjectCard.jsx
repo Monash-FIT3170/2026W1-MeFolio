@@ -7,6 +7,7 @@ import {
   Star,
   GitBranch,
   Clock3,
+  RefreshCw,
 } from "lucide-react";
 import {
   Card,
@@ -31,6 +32,8 @@ export function ProjectCard({
   project,
   index,
   onEdit,
+  onSync,
+  isSyncing = false,
   draggable = false,
   isDragging = false,
   onDragStart,
@@ -55,6 +58,13 @@ export function ProjectCard({
         day: "numeric",
       }).format(new Date(githubStats.updatedAt))
     : "-";
+
+  const canSync = Boolean(onSync && githubLink);
+
+  const handleSync = (e) => {
+    e.stopPropagation();
+    if (!isSyncing) onSync(project);
+  };
 
   return (
     <Card
@@ -109,24 +119,46 @@ export function ProjectCard({
           </span>
         )}
 
-        {/* Edit button */}
-        {onEdit && (
-          <button
-            type="button"
-            data-testid="project-card-edit"
-            aria-label={`Edit ${title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(project);
-            }}
-            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </button>
-        )}
-      </div>
+        {/* Sync / Edit buttons */}
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          {onSync && (
+            <button
+              type="button"
+              data-testid="project-card-sync"
+              aria-label={
+                canSync
+                  ? `Sync ${title} stats now`
+                  : "Add a GitHub link to enable sync"
+              }
+              title={canSync ? "Sync now" : "Add a GitHub link to enable sync"}
+              disabled={!canSync || isSyncing}
+              onClick={handleSync}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface-fill disabled:hover:text-muted"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing…" : "Sync now"}
+            </button>
+          )}
 
+          {onEdit && (
+            <button
+              type="button"
+              data-testid="project-card-edit"
+              aria-label={`Edit ${title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(project);
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
       <CardHeader className="p-5 pb-2">
         <CardTitle className="text-lg font-bold text-primary">
           {title}
@@ -241,6 +273,8 @@ ProjectCard.propTypes = {
     }),
   }),
   onEdit: PropTypes.func,
+  onSync: PropTypes.func,
+  isSyncing: PropTypes.bool,
   draggable: PropTypes.bool,
   isDragging: PropTypes.bool,
   onDragStart: PropTypes.func,
