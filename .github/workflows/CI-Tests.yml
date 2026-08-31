@@ -47,5 +47,8 @@ jobs:
 
       - name: Run test suite
         working-directory: ./mefolio
-        run: npm run test-ci
+        run: |
+          npm run test-ci
+          echo "===FLUSH PROCESSES==="
+          sleep 1 && ps -ef || true
 
