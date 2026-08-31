@@ -533,6 +533,7 @@ const PublishedPortfolioRoute = () => {
     >
       <PortfolioPreview
         portfolio={publishedContent}
+        portfolioId={selectedPortfolio?._id}
         projects={publishedContent.projects || []}
         isPublishedView
       />

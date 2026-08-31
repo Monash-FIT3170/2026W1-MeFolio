@@ -100,6 +100,7 @@ export const PublicPortfolioPage = () => {
     >
       <PortfolioContent
         portfolio={publishedContent}
+        portfolioId={portfolioId}
         projects={publishedContent.projects || []}
       />
     </div>
