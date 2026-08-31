@@ -1,12 +1,10 @@
 import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import {
   ProjectEngagement,
   PROJECT_CLICK_TARGETS,
 } from "/imports/api/projectEngagement";
-import { ProjectCollection } from "./projects";
 
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 const MAX_DATABASE_ID_LENGTH = 128;
@@ -42,23 +40,21 @@ export const recordProjectClick = async (event) => {
   validateDatabaseId(portfolioId, "Portfolio ID");
   validateDatabaseId(projectId, "Project ID");
 
-  const [portfolio, project, portfolioProject] = await Promise.all([
-    PortfolioCollection.findOneAsync(portfolioId, {
-      fields: { projects: 1 },
-    }),
-    ProjectCollection.findOneAsync(projectId, { fields: { _id: 1 } }),
-    PortfolioProjectsCollection.findOneAsync(
-      { portfolioId, projectId },
-      { fields: { _id: 1 } },
-    ),
-  ]);
+  const portfolio = await PortfolioCollection.findOneAsync(portfolioId, {
+    fields: {
+      isPublished: 1,
+      "publishedContent.projects._id": 1,
+    },
+  });
 
-  const projectIsInPortfolio =
-    Boolean(portfolioProject) ||
-    (Array.isArray(portfolio?.projects) &&
-      portfolio.projects.includes(projectId));
+  const projectIsInPublishedSnapshot =
+    portfolio?.isPublished === true &&
+    Array.isArray(portfolio?.publishedContent?.projects) &&
+    portfolio.publishedContent.projects.some(
+      (publishedProject) => publishedProject?._id === projectId,
+    );
 
-  if (!portfolio || !project || !projectIsInPortfolio) {
+  if (!projectIsInPublishedSnapshot) {
     throw new Meteor.Error(
       "project-click.not-available",
       "The project is not available in this portfolio.",

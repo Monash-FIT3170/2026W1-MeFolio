@@ -21,12 +21,13 @@ const getUserEmail = (user) =>
 
 export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
+  portfolioId: providedPortfolioId,
   projects: draftProjects = null,
   isStaging = false,
   isPublishedView = false,
 }) => {
-  const { portfolioId } = useParams();
-  const isPublicView = Boolean(portfolioId);
+  const { portfolioId: routePortfolioId } = useParams();
+  const isPublicView = Boolean(routePortfolioId);
 
   const {
     projects: loadedProjects,
@@ -42,9 +43,9 @@ export const PortfolioPreview = ({
     }
 
     if (isPublicView) {
-      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      const viewerSub = Meteor.subscribe("portfolios.viewer", routePortfolioId);
       const selectedPortfolio = PortfolioCollection.findOne({
-        _id: portfolioId,
+        _id: routePortfolioId,
       });
 
       if (!selectedPortfolio?._id) {
@@ -85,9 +86,9 @@ export const PortfolioPreview = ({
     }
 
     if (isPublicView) {
-      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      const viewerSub = Meteor.subscribe("portfolios.viewer", routePortfolioId);
       const selectedPortfolio = PortfolioCollection.findOne({
-        _id: portfolioId,
+        _id: routePortfolioId,
       });
 
       if (!selectedPortfolio?._id) {
@@ -128,7 +129,7 @@ export const PortfolioPreview = ({
     }
 
     if (isPublicView) {
-      const viewerSub = Meteor.subscribe("portfolios.viewer", portfolioId);
+      const viewerSub = Meteor.subscribe("portfolios.viewer", routePortfolioId);
       return { projects: [], portfolio: null, ready: viewerSub.ready() };
     }
 
@@ -149,7 +150,7 @@ export const PortfolioPreview = ({
     const currentUser = Meteor.user();
     const selectedPortfolio =
       PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-      PortfolioCollection.findOne({ _id: portfolioId }) ||
+      PortfolioCollection.findOne({ _id: routePortfolioId }) ||
       (getUserEmail(currentUser) === "test@example.com"
         ? PortfolioCollection.findOne()
         : null);
@@ -186,15 +187,18 @@ export const PortfolioPreview = ({
       .filter(Boolean);
 
     return { portfolio: selectedPortfolio, projects, ready: true };
-  }, [draftPortfolio, draftProjects, isPublicView, portfolioId]);
+  }, [draftPortfolio, draftProjects, isPublicView, routePortfolioId]);
 
   const projects = draftProjects || loadedProjects || [];
+  const trackingPortfolioId = isPublishedView
+    ? providedPortfolioId || routePortfolioId || portfolio?._id
+    : undefined;
 
   useEffect(() => {
-    if (!isPublicView || !portfolioId || !ready) return undefined;
+    if (!isPublicView || !routePortfolioId || !ready) return undefined;
 
     const sendHeartbeat = () => {
-      Meteor.call("portfolios.viewerHeartbeat", portfolioId, (error) => {
+      Meteor.call("portfolios.viewerHeartbeat", routePortfolioId, (error) => {
         if (error) {
           console.error("Failed to send viewer heartbeat:", error);
         }
@@ -207,7 +211,7 @@ export const PortfolioPreview = ({
     return () => {
       clearInterval(heartbeatInterval);
     };
-  }, [isPublicView, portfolioId, ready]);
+  }, [isPublicView, routePortfolioId, ready]);
 
   const navigate = useNavigate();
   const scrollRef = useRef(null);
@@ -243,6 +247,7 @@ export const PortfolioPreview = ({
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const handleMouseDown = (e) => {
+    if (e.target.closest("a, button, input, select, textarea")) return;
     if (!scrollRef.current) return;
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -427,7 +432,10 @@ export const PortfolioPreview = ({
                   }`}
                   key={project._id}
                 >
-                  <ProjectCard project={project} />
+                  <ProjectCard
+                    project={project}
+                    portfolioId={trackingPortfolioId}
+                  />
                 </div>
               ))}
               <div className="flex-none w-8" />
@@ -443,6 +451,7 @@ export const PortfolioPreview = ({
 
 PortfolioPreview.propTypes = {
   portfolio: PropTypes.object,
+  portfolioId: PropTypes.string,
   projects: PropTypes.arrayOf(PropTypes.object),
   isStaging: PropTypes.bool,
   isPublishedView: PropTypes.bool,

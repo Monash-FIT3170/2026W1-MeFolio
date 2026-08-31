@@ -13,6 +13,7 @@ import { ProfileCard } from "../components/ProfileCard.jsx";
 // reads the logged-in user, so the same markup serves an anonymous visitor.
 export const PortfolioContent = ({
   portfolio,
+  portfolioId,
   projects = [],
   viewportMode = "desktop",
 }) => {
@@ -40,6 +41,7 @@ export const PortfolioContent = ({
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const handleMouseDown = (e) => {
+    if (e.target.closest("a, button, input, select, textarea")) return;
     if (!scrollRef.current) return;
     setIsDown(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -162,7 +164,7 @@ export const PortfolioContent = ({
                 }`}
                 key={project._id}
               >
-                <ProjectCard project={project} />
+                <ProjectCard project={project} portfolioId={portfolioId} />
               </div>
             ))}
             <div className="flex-none w-8" />
@@ -177,6 +179,7 @@ export const PortfolioContent = ({
 
 PortfolioContent.propTypes = {
   portfolio: PropTypes.object,
+  portfolioId: PropTypes.string,
   projects: PropTypes.arrayOf(PropTypes.object),
   viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
 };

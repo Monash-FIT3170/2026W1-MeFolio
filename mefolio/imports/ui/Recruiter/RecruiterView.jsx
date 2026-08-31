@@ -179,6 +179,7 @@ export function RecruiterView() {
       {published ? (
         <PortfolioPreview
           portfolio={published}
+          portfolioId={portfolioId}
           projects={published.projects || []}
           isPublishedView
           isRecruiterView

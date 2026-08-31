@@ -2,28 +2,6 @@ import PropTypes from "prop-types";
 
 const getProjectId = (project) => project?._id || project?.id;
 
-const parseAnalyticsDate = (date) => {
-  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  return new Date(date);
-};
-
-const formatDate = (date) =>
-  new Intl.DateTimeFormat("en-AU", {
-    day: "numeric",
-    month: "short",
-  }).format(parseAnalyticsDate(date));
-
-const getLocalDateKey = (date) =>
-  [date.getFullYear(), date.getMonth() + 1, date.getDate()]
-    .map((part, index) =>
-      index === 0 ? String(part) : String(part).padStart(2, "0"),
-    )
-    .join("-");
-
 const buildProjectAnalytics = (projects = [], engagements = []) =>
   projects
     .map((project) => {
@@ -45,32 +23,6 @@ const buildProjectAnalytics = (projects = [], engagements = []) =>
       };
     })
     .sort((a, b) => b.totalClicks - a.totalClicks);
-
-const buildDailyAnalytics = (engagements = []) => {
-  const clicksByDate = new Map();
-
-  engagements.forEach((engagement) => {
-    if (!engagement.date) return;
-
-    const date = new Date(engagement.date);
-
-    if (Number.isNaN(date.getTime())) return;
-
-    // The dashboard consistently groups and labels events in the viewer's
-    // local timezone, including clicks close to midnight.
-    const dateKey = getLocalDateKey(date);
-    const currentClicks = clicksByDate.get(dateKey) || 0;
-
-    clicksByDate.set(dateKey, currentClicks + Number(engagement.clicks || 0));
-  });
-
-  return [...clicksByDate.entries()]
-    .map(([date, clicks]) => ({
-      date,
-      clicks,
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-};
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -200,60 +152,6 @@ const TopProjects = ({ analytics }) => {
   );
 };
 
-const ClickActivity = ({ dailyAnalytics }) => {
-  const highestClickCount = Math.max(
-    ...dailyAnalytics.map((entry) => entry.clicks),
-    0,
-  );
-
-  return (
-    <section className="rounded-xl border border-line bg-surface-fill p-6 shadow-sm">
-      <div className="mb-6">
-        <h2 className="m-0 text-lg font-bold text-primary">Click Activity</h2>
-        <p className="mt-1 text-sm text-muted">
-          Recorded portfolio project clicks by date.
-        </p>
-      </div>
-
-      {dailyAnalytics.length === 0 ? (
-        <p className="text-sm text-muted">
-          No dated click activity is available yet.
-        </p>
-      ) : (
-        <div className="flex min-h-56 items-end gap-3 overflow-x-auto pb-2">
-          {dailyAnalytics.map((entry) => {
-            const height =
-              highestClickCount > 0
-                ? Math.max((entry.clicks / highestClickCount) * 160, 4)
-                : 4;
-
-            return (
-              <div
-                key={entry.date}
-                className="flex min-w-14 flex-1 flex-col items-center justify-end"
-              >
-                <span className="mb-2 text-xs font-semibold text-primary">
-                  {entry.clicks}
-                </span>
-
-                <div
-                  className="w-full max-w-12 rounded-t-md bg-accent2"
-                  style={{ height: `${height}px` }}
-                  title={`${entry.clicks} clicks on ${formatDate(entry.date)}`}
-                />
-
-                <span className="mt-2 whitespace-nowrap text-xs text-muted">
-                  {formatDate(entry.date)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-};
-
 const ProjectClickHeatmap = ({ analytics }) => {
   const highestDailyClickCount = Math.max(
     ...analytics.flatMap((project) => project.clicksByDay),
@@ -326,7 +224,6 @@ const ProjectClickHeatmap = ({ analytics }) => {
 
 const AnalyticsSection = ({ projects = [], engagements = [] }) => {
   const projectAnalytics = buildProjectAnalytics(projects, engagements);
-  const dailyAnalytics = buildDailyAnalytics(engagements);
   const projectHeatmap = buildProjectHeatmap(projects, engagements);
 
   const totalClicks = projectAnalytics.reduce(
@@ -359,8 +256,6 @@ const AnalyticsSection = ({ projects = [], engagements = [] }) => {
         <TopProjects analytics={projectAnalytics} />
       </div>
 
-      <ClickActivity dailyAnalytics={dailyAnalytics} />
-
       <ProjectClickHeatmap analytics={projectHeatmap} />
 
       <section className="rounded-xl border border-dashed border-line bg-surface-fill p-6">
@@ -388,15 +283,6 @@ ProjectClicksChart.propTypes = {
 
 TopProjects.propTypes = {
   analytics: PropTypes.arrayOf(projectAnalyticsPropType).isRequired,
-};
-
-ClickActivity.propTypes = {
-  dailyAnalytics: PropTypes.arrayOf(
-    PropTypes.shape({
-      date: PropTypes.string,
-      clicks: PropTypes.number,
-    }),
-  ).isRequired,
 };
 
 ProjectClickHeatmap.propTypes = {
