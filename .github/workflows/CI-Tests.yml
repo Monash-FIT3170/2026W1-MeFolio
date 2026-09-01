@@ -47,8 +47,9 @@ jobs:
 
       - name: Run test suite
         working-directory: ./mefolio
-        run: |
-          npm run test-ci
-          echo "===FLUSH PROCESSES==="
-          sleep 1 && ps -ef || true
+        # Wrapped because meteortesting:browser-tests + puppeteer does not exit
+        # after the suite passes (the browser process lingers), which otherwise
+        # burns the job to its 30-minute timeout. The wrapper force-exits once
+        # both suites report passing and fails on any real error. See the script.
+        run: bash scripts/run-ci-tests.sh
 
