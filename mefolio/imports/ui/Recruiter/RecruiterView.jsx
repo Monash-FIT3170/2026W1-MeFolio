@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview.jsx";
+import { PortfolioContent } from "../Portfolio Preview/PortfolioContent.jsx";
 import { getPublishedTheme } from "../publishedTheme";
 import {
   Shield,
@@ -175,14 +175,14 @@ export function RecruiterView() {
         </div>
       </div>
 
-      {/* The full published portfolio */}
+      {/* The full published portfolio — the same chrome-less presentation the
+          public page renders (PortfolioPreview self-nulls on routes with a
+          :portfolioId param, which includes the recruiter route). */}
       {published ? (
-        <PortfolioPreview
+        <PortfolioContent
           portfolio={published}
           portfolioId={portfolioId}
           projects={published.projects || []}
-          isPublishedView
-          isRecruiterView
         />
       ) : (
         <div className="max-w-2xl mx-auto px-6 py-10">
