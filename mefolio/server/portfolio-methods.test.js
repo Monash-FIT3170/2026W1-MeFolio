@@ -7,6 +7,13 @@ import { expect } from "chai";
 // Meteor.server.method_handlers without pulling in main.js's seed and OAuth
 import "./portfolio-methods.js";
 
+// Usernames are now backed by a unique index, and this suite runs against a
+// database that is not dropped between runs, so a hard-coded slug would be
+// left behind by one run and collide on the next. Build a fresh slug per test
+// instead. Only lowercase letters, numbers and hyphens are valid.
+const uniqueSlug = (label) =>
+  `${label}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 if (Meteor.isServer) {
   describe("portfolios.update method", function () {
     let ownerId;
@@ -85,8 +92,10 @@ if (Meteor.isServer) {
     });
 
     it("does not let the generic update method change username", async function () {
+      const originalUsername = uniqueSlug("original-name");
+
       await PortfolioCollection.updateAsync(portfolioId, {
-        $set: { username: "original-name" },
+        $set: { username: originalUsername },
       });
 
       await runUpdate({ userId: ownerId }, portfolioId, {
@@ -96,7 +105,7 @@ if (Meteor.isServer) {
 
       const updated = await PortfolioCollection.findOneAsync(portfolioId);
 
-      expect(updated.username).to.equal("original-name");
+      expect(updated.username).to.equal(originalUsername);
       expect(updated.title).to.equal("Updated Title");
     });
   });
@@ -133,11 +142,13 @@ if (Meteor.isServer) {
     });
 
     it("sets a valid username for the portfolio owner", async function () {
-      await runSetUsername({ userId: ownerId }, portfolioId, "jane-doe");
+      const username = uniqueSlug("jane-doe");
+
+      await runSetUsername({ userId: ownerId }, portfolioId, username);
 
       const updated = await PortfolioCollection.findOneAsync(portfolioId);
 
-      expect(updated.username).to.equal("jane-doe");
+      expect(updated.username).to.equal(username);
     });
 
     it("rejects an invalid username format", async function () {
@@ -151,19 +162,17 @@ if (Meteor.isServer) {
     });
 
     it("rejects a username that is already used by another portfolio", async function () {
+      const takenUsername = uniqueSlug("already-taken");
+
       await PortfolioCollection.insertAsync({
         userId: otherUserId,
         title: "Other Portfolio",
-        username: "already-taken",
+        username: takenUsername,
         createdAt: new Date(),
       });
 
       try {
-        await runSetUsername(
-          { userId: ownerId },
-          portfolioId,
-          "already-taken",
-        );
+        await runSetUsername({ userId: ownerId }, portfolioId, takenUsername);
         expect.fail("Expected a duplicate username to be rejected");
       } catch (error) {
         expect(error).to.be.instanceOf(Meteor.Error);
@@ -173,15 +182,17 @@ if (Meteor.isServer) {
     });
 
     it("allows a portfolio to keep its existing username", async function () {
+      const username = uniqueSlug("same-name");
+
       await PortfolioCollection.updateAsync(portfolioId, {
-        $set: { username: "same-name" },
+        $set: { username },
       });
 
-      await runSetUsername({ userId: ownerId }, portfolioId, "same-name");
+      await runSetUsername({ userId: ownerId }, portfolioId, username);
 
       const updated = await PortfolioCollection.findOneAsync(portfolioId);
 
-      expect(updated.username).to.equal("same-name");
+      expect(updated.username).to.equal(username);
     });
 
     it("rejects a username change from a non-owner", async function () {
