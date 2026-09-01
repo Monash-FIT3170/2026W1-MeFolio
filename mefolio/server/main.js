@@ -24,6 +24,8 @@ import "./publications/publicPortfolioMeta.js";
 // portfolio methods (in their own module so tests can load them without the
 // app seed and OAuth config)
 import "./portfolio-methods.js";
+// portfolio indexes (unique custom URL / username)
+import "./portfolio-indexes.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
