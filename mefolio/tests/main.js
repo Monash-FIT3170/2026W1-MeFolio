@@ -18,6 +18,7 @@ import "/server/publications/publicPortfolioMeta.test.js";
 import "/imports/ui/Login/SignUpPage.test.jsx";
 import "/server/recruiter-tokens/verifytokens.test.js";
 import "/server/portfolio-methods.test.js";
+import "/server/portfolio-indexes.test.js";
 import "/server/portfolios.byUsername.test.js";
 
 describe("mefolio", function () {
