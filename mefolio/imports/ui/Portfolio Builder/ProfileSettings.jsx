@@ -159,7 +159,9 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
                     return;
                   }
 
-                  setSlugError("Failed to update custom URL. Please try again.");
+                  setSlugError(
+                    "Failed to update custom URL. Please try again.",
+                  );
                   return;
                 }
 
@@ -170,7 +172,7 @@ const ProfileSettings = ({ profile, aboutMe, portfolioId }) => {
         },
       );
     }
-    };
+  };
 
   return (
     <div className="bg-surface-fill rounded-xl border border-line p-6">
