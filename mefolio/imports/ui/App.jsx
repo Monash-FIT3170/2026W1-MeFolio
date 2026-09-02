@@ -87,7 +87,8 @@ export const App = () => {
           path="/recruiter/:portfolioId/view"
           element={<RecruiterView />}
         />
-        {/* FEAT-12: public portfolio view (no login required). */}
+        {/* FEAT-12 / FEAT-13: public portfolio view (no login required). */}
+        <Route path="/u/:username" element={<PublicPortfolioPage />} />
         <Route path="/:portfolioId/view" element={<PublicPortfolioPage />} />
         <Route
           path="/*"

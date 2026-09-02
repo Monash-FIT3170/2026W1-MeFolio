@@ -18,16 +18,19 @@ import { getPublishedTheme } from "../Portfolio Preview/publishedTheme.js";
  * edits in progress stay private until the owner publishes them again.
  */
 export const PublicPortfolioPage = () => {
-  const { portfolioId } = useParams();
+  const { portfolioId, username } = useParams();
+  const lookupValue = username || portfolioId;
 
   const { isLoading, publishedContent } = useTracker(() => {
+
     const publicViewHandle = Meteor.subscribe(
       "portfolios.publicView",
-      portfolioId,
+      lookupValue,
     );
     const viewerHandle = Meteor.subscribe("portfolios.viewer", portfolioId);
-    const portfolio = PortfolioCollection.findOne({ _id: portfolioId });
-
+    const portfolio = PortfolioCollection.findOne({
+      $or: [{ _id: lookupValue }, { username: lookupValue }],
+    });
     // The publication withholds unpublished portfolios, but an owner signed in
     // elsewhere in the app has their own draft in minimongo already. Checking
     // isPublished here keeps this route showing the same thing to everyone.
@@ -37,7 +40,7 @@ export const PublicPortfolioPage = () => {
         ? portfolio.publishedContent
         : null,
     };
-  }, [portfolioId]);
+  }, [lookupValue]);
 
   useEffect(() => {
     if (isLoading || !publishedContent || !portfolioId) return undefined;
