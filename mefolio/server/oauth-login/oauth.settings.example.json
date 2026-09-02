@@ -6,7 +6,8 @@
     },
     "github": {
       "clientId": "GITHUB_CLIENT_ID_HERE",
-      "secret": "GITHUB_CLIENT_SECRET_HERE"
+      "secret": "GITHUB_CLIENT_SECRET_HERE",
+      "apiToken": "GITHUB_API_TOKEN_HERE"
     }
   }
 }

@@ -26,6 +26,7 @@ import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
+import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
@@ -160,6 +161,7 @@ const DashboardLayout = () => {
   const [editingProject, setEditingProject] = useState(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
+  const [syncingProjectId, setSyncingProjectId] = useState(null);
 
   const {
     isLoading,
@@ -274,6 +276,37 @@ const DashboardLayout = () => {
     });
   };
 
+  // Manual "Sync now" trigger. Patches orderedProjects directly (same
+  // pattern as handleSaveProject above) since that's the source the grid
+  // renders from.
+  const handleSyncProject = (project) => {
+    const projectId = project._id || project.id;
+    if (!projectId || syncingProjectId) return;
+
+    setSyncingProjectId(projectId);
+
+    Meteor.call("projects.syncGithubStats", projectId, (error, result) => {
+      setSyncingProjectId(null);
+
+      if (error) {
+        console.error("Failed to sync GitHub stats:", error);
+        return;
+      }
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.map((existingProject) =>
+          (existingProject._id || existingProject.id) === projectId
+            ? {
+                ...existingProject,
+                githubStats: result.githubStats,
+                lastSyncedAt: result.lastSyncedAt,
+              }
+            : existingProject,
+        ),
+      );
+    });
+  };
+
   const handleCopyLink = async () => {
     if (!selectedPortfolio?._id || !selectedPortfolio?.isPublished) return;
 
@@ -313,6 +346,8 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-background">
+      {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
+      <RecruiterVisitAlert />
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
@@ -410,6 +445,8 @@ const DashboardLayout = () => {
             <ProjectsSection
               projects={orderedProjects}
               onEdit={handleEditProject}
+              syncingProjectId={syncingProjectId}
+              onSync={handleSyncProject}
               draggedProjectIndex={draggedProjectIndex}
               onDragStart={handleProjectDragStart}
               onDragOver={handleProjectDragOver}
@@ -530,6 +567,7 @@ const PublishedPortfolioRoute = () => {
     >
       <PortfolioPreview
         portfolio={publishedContent}
+        portfolioId={selectedPortfolio?._id}
         projects={publishedContent.projects || []}
         isPublishedView
       />

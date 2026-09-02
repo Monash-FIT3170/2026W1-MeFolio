@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { RecruiterTokens } from "./collection";
+import { RecruiterTokens, RecruiterVisits } from "./collection";
 import { expect } from "chai";
 
 // Register the methods under test. Without this, plain `meteor test` (which
@@ -683,6 +683,819 @@ if (Meteor.isServer) {
             { portfolioId: "non-existent-portfolio-id" },
           );
           expect.fail("Expected recruiterLinks.list to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-found");
+        }
+      });
+    });
+
+    describe("recruiterVisits.record", function () {
+      let accessCode;
+      let tokenDoc;
+
+      beforeEach(async function () {
+        // Generate a token for testing
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: "Test Recruiter Company",
+          },
+        );
+        tokenDoc = await RecruiterTokens.findOneAsync({ token: accessCode });
+      });
+
+      afterEach(async function () {
+        // Clean up visits created during tests
+        await RecruiterVisits.removeAsync({ portfolioId: mockPortfolioId });
+      });
+
+      it("records a visit successfully", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const visitId = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+          },
+        );
+
+        expect(visitId).to.exist;
+        expect(visitId).to.be.a("string");
+
+        // Verify the visit was inserted
+        const visit = await RecruiterVisits.findOneAsync(visitId);
+        expect(visit).to.exist;
+        expect(visit.portfolioId).to.equal(mockPortfolioId);
+        expect(visit.token).to.equal(accessCode);
+        expect(visit.recruiterCompany).to.equal("Test Recruiter Company");
+        expect(visit.tokenId).to.equal(tokenDoc._id);
+        expect(visit.createdAt).to.exist;
+        expect(visit.metadata).to.exist;
+      });
+
+      it("records a visit with metadata", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const metadata = {
+          ip: "192.168.1.1",
+          userAgent: "Mozilla/5.0 (Test Browser)",
+          referrer: "https://linkedin.com",
+          customField: "custom-value",
+        };
+
+        const visitId = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+            metadata: metadata,
+          },
+        );
+
+        expect(visitId).to.exist;
+
+        const visit = await RecruiterVisits.findOneAsync(visitId);
+        expect(visit.metadata.ip).to.equal("192.168.1.1");
+        expect(visit.metadata.userAgent).to.equal("Mozilla/5.0 (Test Browser)");
+        expect(visit.metadata.referrer).to.equal("https://linkedin.com");
+        expect(visit.metadata.customField).to.equal("custom-value");
+      });
+
+      it("records visit with server-side IP from connection", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const mockConnection = {
+          clientAddress: "192.168.1.100",
+          httpHeaders: {
+            "user-agent": "Mozilla/5.0 (Test Browser)",
+            referer: "https://example.com",
+          },
+        };
+
+        // Mock the connection
+        const originalConnection = this.connection;
+        this.connection = mockConnection;
+
+        try {
+          const visitId = await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+              connection: mockConnection,
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: accessCode,
+            },
+          );
+
+          expect(visitId).to.exist;
+
+          const visit = await RecruiterVisits.findOneAsync(visitId);
+          expect(visit.metadata.ip).to.equal("192.168.1.100");
+          expect(visit.metadata.userAgent).to.equal(
+            "Mozilla/5.0 (Test Browser)",
+          );
+          expect(visit.metadata.referrer).to.equal("https://example.com");
+        } finally {
+          // Restore original connection
+          this.connection = originalConnection;
+        }
+      });
+
+      it("records multiple separate visit entries when the same link is accessed repeatedly", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // First visit
+        const visitId1 = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Test Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+
+        // Second visit
+        const visitId2 = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Test Browser 2" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+
+        // Should be different IDs
+        expect(visitId1).to.not.equal(visitId2);
+
+        // Verify both visits were recorded
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visits.length).to.equal(2);
+      });
+
+      it("uses provided IP when connection is not available", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        const visitId = await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: null, // No connection
+          },
+          {
+            portfolioId: mockPortfolioId,
+            accessCode: accessCode,
+            ip: "203.0.113.1",
+          },
+        );
+
+        expect(visitId).to.exist;
+
+        const visit = await RecruiterVisits.findOneAsync(visitId);
+        expect(visit.metadata.ip).to.equal("203.0.113.1");
+      });
+
+      it("throws error when token is not found", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: "invalid-token",
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+      });
+
+      it("throws error when token belongs to different portfolio", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: "different-portfolio-id",
+              accessCode: accessCode,
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+      });
+
+      it("throws error when token is expired", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Create an expired token
+        const expiredCode = `expired-${Date.now()}`;
+        const past = new Date();
+        past.setDate(past.getDate() - 1);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Expired Recruiter",
+          token: expiredCode,
+          createdAt: new Date(),
+          expiresAt: past,
+          isRevoked: false,
+        });
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: expiredCode,
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+
+        // Verify no visit was recorded
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visits.length).to.equal(0);
+      });
+
+      it("throws error when token is revoked", async function () {
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Create a revoked token
+        const revokedCode = `revoked-${Date.now()}`;
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+
+        await RecruiterTokens.insertAsync({
+          userId: mockUserId,
+          portfolioId: mockPortfolioId,
+          recruiterName: "Revoked Recruiter",
+          token: revokedCode,
+          createdAt: new Date(),
+          expiresAt: futureDate,
+          isRevoked: true,
+        });
+
+        try {
+          await recordHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            {
+              portfolioId: mockPortfolioId,
+              accessCode: revokedCode,
+            },
+          );
+          expect.fail("Expected recruiterVisits.record to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("invalid-token");
+        }
+
+        // Verify no visit was recorded
+        const visits = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visits.length).to.equal(0);
+      });
+    });
+
+    describe("recruiterVisits.getStats", function () {
+      let accessCode1, accessCode2;
+
+      beforeEach(async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+
+        // Create two tokens
+        accessCode1 = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: "Google",
+          },
+        );
+
+        accessCode2 = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: "Atlassian",
+          },
+        );
+
+        // Create visits with different IPs
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Visit 1 (Google, IP 1)
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode1 },
+        );
+
+        // Visit 2 (Google, IP 2)
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode1 },
+        );
+
+        // Visit 3 (Atlassian, IP 3)
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.3",
+              httpHeaders: { "user-agent": "Browser 2" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode2 },
+        );
+      });
+
+      afterEach(async function () {
+        await RecruiterVisits.removeAsync({ portfolioId: mockPortfolioId });
+      });
+
+      it("returns visit statistics for a portfolio the user owns", async function () {
+        const statsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getStats"];
+
+        const stats = await statsHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        expect(stats).to.exist;
+        expect(stats.totalVisits).to.equal(3);
+        expect(stats.uniqueRecruiters).to.equal(2);
+        expect(stats.recentVisits).to.be.a("number");
+        expect(stats.topCompanies).to.be.an("array");
+        expect(stats.visits).to.be.an("array");
+        expect(stats.visits.length).to.equal(3);
+      });
+
+      it("returns top companies sorted by visit count", async function () {
+        const statsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getStats"];
+
+        const stats = await statsHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        expect(stats.topCompanies).to.be.an("array");
+        expect(stats.topCompanies.length).to.be.at.least(2);
+        // Google should be first with 2 visits
+        expect(stats.topCompanies[0].company).to.equal("Google");
+        expect(stats.topCompanies[0].count).to.equal(2);
+      });
+
+      it("throws not-authorized error when user is not logged in", async function () {
+        const statsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getStats"];
+
+        try {
+          await statsHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: mockPortfolioId },
+          );
+          expect.fail("Expected recruiterVisits.getStats to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-authorized error when user does not own the portfolio", async function () {
+        const statsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getStats"];
+
+        const otherUserId = await Accounts.createUserAsync({
+          email: `other-stats-user-${Date.now()}@mefolio.com`,
+          password: "password123",
+        });
+
+        try {
+          await statsHandler.call(
+            {
+              userId: otherUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: mockPortfolioId },
+          );
+          expect.fail("Expected recruiterVisits.getStats to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-found error when portfolio does not exist", async function () {
+        const statsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getStats"];
+
+        try {
+          await statsHandler.call(
+            {
+              userId: mockUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: "non-existent-portfolio" },
+          );
+          expect.fail("Expected recruiterVisits.getStats to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-found");
+        }
+      });
+    });
+
+    describe("recruiterVisits.getTokenVisits", function () {
+      let accessCode;
+
+      beforeEach(async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+
+        accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: "Microsoft",
+          },
+        );
+
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        // Create multiple visits with different IPs
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+      });
+
+      afterEach(async function () {
+        await RecruiterVisits.removeAsync({ portfolioId: mockPortfolioId });
+      });
+
+      it("returns visits for a specific token the user owns", async function () {
+        const tokenVisitsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getTokenVisits"];
+
+        const visits = await tokenVisitsHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { token: accessCode },
+        );
+
+        expect(visits).to.be.an("array");
+        expect(visits.length).to.equal(2);
+        expect(visits[0].token).to.equal(accessCode);
+        expect(visits[0].recruiterCompany).to.equal("Microsoft");
+      });
+
+      it("throws not-authorized error when user is not logged in", async function () {
+        const tokenVisitsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getTokenVisits"];
+
+        try {
+          await tokenVisitsHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            { token: accessCode },
+          );
+          expect.fail("Expected recruiterVisits.getTokenVisits to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-found error when token does not exist", async function () {
+        const tokenVisitsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getTokenVisits"];
+
+        try {
+          await tokenVisitsHandler.call(
+            {
+              userId: mockUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { token: "non-existent-token" },
+          );
+          expect.fail("Expected recruiterVisits.getTokenVisits to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-found");
+        }
+      });
+
+      it("throws not-authorized error when token belongs to another user", async function () {
+        const tokenVisitsHandler =
+          Meteor.server.method_handlers["recruiterVisits.getTokenVisits"];
+
+        const otherUserId = await Accounts.createUserAsync({
+          email: `other-token-user-${Date.now()}@mefolio.com`,
+          password: "password123",
+        });
+
+        try {
+          await tokenVisitsHandler.call(
+            {
+              userId: otherUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { token: accessCode },
+          );
+          expect.fail("Expected recruiterVisits.getTokenVisits to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+    });
+
+    describe("recruiterVisits.clearHistory", function () {
+      let accessCode;
+
+      beforeEach(async function () {
+        const generateHandler =
+          Meteor.server.method_handlers["tokens.generate"];
+        const recordHandler =
+          Meteor.server.method_handlers["recruiterVisits.record"];
+
+        accessCode = await generateHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          {
+            portfolioId: mockPortfolioId,
+            recruiterName: "Test Company",
+          },
+        );
+
+        // Create multiple visits with different IPs
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.1",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+
+        await recordHandler.call(
+          {
+            userId: null,
+            isSimulation: false,
+            unblock() {},
+            connection: {
+              clientAddress: "192.168.1.2",
+              httpHeaders: { "user-agent": "Browser 1" },
+            },
+          },
+          { portfolioId: mockPortfolioId, accessCode: accessCode },
+        );
+      });
+
+      afterEach(async function () {
+        await RecruiterVisits.removeAsync({ portfolioId: mockPortfolioId });
+      });
+
+      it("clears all visit history for a portfolio the user owns", async function () {
+        const clearHandler =
+          Meteor.server.method_handlers["recruiterVisits.clearHistory"];
+
+        // Verify visits exist
+        const visitsBefore = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visitsBefore.length).to.equal(2);
+
+        // Clear history
+        const count = await clearHandler.call(
+          {
+            userId: mockUserId,
+            isSimulation: false,
+            unblock() {},
+          },
+          { portfolioId: mockPortfolioId },
+        );
+
+        expect(count).to.equal(2);
+
+        // Verify visits are gone
+        const visitsAfter = await RecruiterVisits.find({
+          portfolioId: mockPortfolioId,
+        }).fetch();
+        expect(visitsAfter.length).to.equal(0);
+      });
+
+      it("throws not-authorized error when user is not logged in", async function () {
+        const clearHandler =
+          Meteor.server.method_handlers["recruiterVisits.clearHistory"];
+
+        try {
+          await clearHandler.call(
+            {
+              userId: null,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: mockPortfolioId },
+          );
+          expect.fail("Expected recruiterVisits.clearHistory to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-authorized error when user does not own the portfolio", async function () {
+        const clearHandler =
+          Meteor.server.method_handlers["recruiterVisits.clearHistory"];
+
+        const otherUserId = await Accounts.createUserAsync({
+          email: `other-clear-user-${Date.now()}@mefolio.com`,
+          password: "password123",
+        });
+
+        try {
+          await clearHandler.call(
+            {
+              userId: otherUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: mockPortfolioId },
+          );
+          expect.fail("Expected recruiterVisits.clearHistory to throw");
+        } catch (error) {
+          expect(error).to.be.instanceOf(Meteor.Error);
+          expect(error.error).to.equal("not-authorized");
+        }
+      });
+
+      it("throws not-found error when portfolio does not exist", async function () {
+        const clearHandler =
+          Meteor.server.method_handlers["recruiterVisits.clearHistory"];
+
+        try {
+          await clearHandler.call(
+            {
+              userId: mockUserId,
+              isSimulation: false,
+              unblock() {},
+            },
+            { portfolioId: "non-existent-portfolio" },
+          );
+          expect.fail("Expected recruiterVisits.clearHistory to throw");
         } catch (error) {
           expect(error).to.be.instanceOf(Meteor.Error);
           expect(error.error).to.equal("not-found");

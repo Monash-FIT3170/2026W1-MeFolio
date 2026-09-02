@@ -27,6 +27,10 @@ if (Meteor.isServer) {
         userId: Random.id(),
         title: "Click tracking test portfolio",
         projects: [projectId],
+        isPublished: true,
+        publishedContent: {
+          projects: [{ _id: projectId }],
+        },
         createdAt: new Date(),
       });
       portfolioProjectId = await PortfolioProjectsCollection.insertAsync({
@@ -116,6 +120,56 @@ if (Meteor.isServer) {
           _id: { $in: eventIds },
         }).countAsync(),
       ).to.equal(2);
+    });
+
+    it("records clicks for a project in the published snapshot", async function () {
+      const event = createEvent({ target: "demo" });
+      eventIds.push(event.eventId);
+
+      await PortfolioCollection.updateAsync(portfolioId, {
+        $set: {
+          projects: [],
+          isPublished: true,
+          publishedContent: {
+            projects: [{ _id: projectId }],
+          },
+        },
+      });
+      await PortfolioProjectsCollection.removeAsync(portfolioProjectId);
+      await ProjectCollection.removeAsync(projectId);
+
+      const result = await recordProjectClick(event);
+      const savedEvent = await ProjectEngagement.findOneAsync(event.eventId);
+
+      expect(result.recorded).to.equal(true);
+      expect(savedEvent).to.include({
+        portfolioId,
+        project_id: projectId,
+        target: "demo",
+        clicks: 1,
+      });
+    });
+
+    it("rejects clicks for a project that exists only in the draft", async function () {
+      const event = createEvent();
+      eventIds.push(event.eventId);
+
+      await PortfolioCollection.updateAsync(portfolioId, {
+        $set: {
+          isPublished: true,
+          publishedContent: { projects: [] },
+        },
+      });
+
+      let error;
+      try {
+        await recordProjectClick(event);
+      } catch (caughtError) {
+        error = caughtError;
+      }
+
+      expect(error?.error).to.equal("project-click.not-available");
+      expect(await ProjectEngagement.findOneAsync(event.eventId)).to.not.exist;
     });
 
     it("rejects a project that does not belong to the portfolio", async function () {
