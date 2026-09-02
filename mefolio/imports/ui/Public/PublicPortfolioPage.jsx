@@ -17,11 +17,14 @@ import { getPublishedTheme } from "../Portfolio Preview/publishedTheme.js";
  * edits in progress stay private until the owner publishes them again.
  */
 export const PublicPortfolioPage = () => {
-  const { portfolioId } = useParams();
+  const { portfolioId, username } = useParams();
+  const lookupValue = username || portfolioId;
 
   const { isLoading, publishedContent } = useTracker(() => {
-    const handle = Meteor.subscribe("portfolios.publicView", portfolioId);
-    const portfolio = PortfolioCollection.findOne({ _id: portfolioId });
+    const handle = Meteor.subscribe("portfolios.publicView", lookupValue);
+    const portfolio = PortfolioCollection.findOne({
+      $or: [{ _id: lookupValue }, { username: lookupValue }],
+    });
 
     // The publication withholds unpublished portfolios, but an owner signed in
     // elsewhere in the app has their own draft in minimongo already. Checking
@@ -32,7 +35,7 @@ export const PublicPortfolioPage = () => {
         ? portfolio.publishedContent
         : null,
     };
-  }, [portfolioId]);
+  }, [lookupValue]);
 
   if (isLoading) {
     return (

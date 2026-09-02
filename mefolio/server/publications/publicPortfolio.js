@@ -8,11 +8,23 @@ import { check } from "meteor/check";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
 if (Meteor.isServer) {
-  Meteor.publish("portfolios.publicView", function (portfolioId) {
-    check(portfolioId, String);
+  Meteor.publish("portfolios.publicView", function (portfolioIdentifier) {
+    check(portfolioIdentifier, String);
+
     return PortfolioCollection.find(
-      { _id: portfolioId, isPublished: true },
-      { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
+      {
+        isPublished: true,
+        $or: [{ _id: portfolioIdentifier }, { username: portfolioIdentifier }],
+      },
+      {
+        fields: {
+          _id: 1,
+          username: 1,
+          isPublished: 1,
+          publishedAt: 1,
+          publishedContent: 1,
+        },
+      },
     );
   });
 }
