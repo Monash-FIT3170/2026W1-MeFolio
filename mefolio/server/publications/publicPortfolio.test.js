@@ -22,14 +22,14 @@ if (Meteor.isServer) {
 
     // Publish handlers run with `this` bound to a subscription. This one only
     // ever returns a cursor, so a stub context is enough.
-    const runPublication = (portfolioId) =>
+    const runPublication = (identifier) =>
       Meteor.server.publish_handlers["portfolios.publicView"].call(
         { userId: null, ready() {} },
-        portfolioId,
+        identifier,
       );
 
-    const fetchPublished = async (portfolioId) => {
-      const cursor = runPublication(portfolioId);
+    const fetchPublished = async (identifier) => {
+      const cursor = runPublication(identifier);
       return cursor ? await cursor.fetchAsync() : [];
     };
 
@@ -68,6 +68,14 @@ if (Meteor.isServer) {
 
       expect(documents).to.have.lengthOf(1);
       expect(documents[0]._id).to.equal(publishedPortfolioId);
+      expect(documents[0].publishedContent.title).to.equal("Published title");
+    });
+
+    it("publishes the snapshot for a published portfolio username slug", async function () {
+      const documents = await fetchPublished("publicowner");
+
+      expect(documents).to.have.lengthOf(1);
+      expect(documents[0].username).to.equal("publicowner");
       expect(documents[0].publishedContent.title).to.equal("Published title");
     });
 
