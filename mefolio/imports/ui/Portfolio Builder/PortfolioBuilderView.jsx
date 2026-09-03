@@ -102,12 +102,32 @@ const getPortfolioProjects = (
   );
 };
 
+// GRACEFUL FAILURE: Keeps snapshot of last loaded data
+const useLastKnownGood = (isLoading, snapshotFactory, deps) => {
+  const [lastGoodData, setLastGoodData] = useState(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLastGoodData(snapshotFactory());
+    }
+  }, [isLoading, ...deps]);
+
+  const hasLoadedOnce = lastGoodData !== null;
+
+  return {
+    data: isLoading && hasLoadedOnce ? lastGoodData : snapshotFactory(),
+    hasLoadedOnce,
+  };
+};
+
 const useDashboardData = () =>
   useTracker(() => {
     const portfoliosHandler = Meteor.subscribe("portfolios.all");
     const projectsHandler = Meteor.subscribe("projects.all");
     const portfolioProjectsHandler = Meteor.subscribe("portfolioProjects.all");
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
+
+    const connection = Meteor.status();
 
     const projectDocuments = ProjectCollection.find({}).fetch();
     const portfolios = PortfolioCollection.find(
@@ -136,6 +156,9 @@ const useDashboardData = () =>
         !currentUserHandler.ready() ||
         !engagementsReady,
 
+      isConnected: connection.connected,
+      connectionStatus: connection.status,
+
       portfolios,
 
       projectDocuments,
@@ -162,9 +185,11 @@ const DashboardLayout = () => {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
   const [syncingProjectId, setSyncingProjectId] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const {
     isLoading,
+    isConnected,
     portfolios,
     projectDocuments,
     projectOrderDocuments,
@@ -172,14 +197,22 @@ const DashboardLayout = () => {
     user,
   } = useDashboardData();
 
-  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({ portfolios, projectDocuments, projectOrderDocuments, engagements, user }),
+    [portfolios, projectDocuments, projectOrderDocuments, engagements, user],
+  );
+
+  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
   const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
 
   const databaseProjects = getPortfolioProjects(
     selectedPortfolio,
-    projectDocuments,
-    projectOrderDocuments,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
   );
+
+  const showFullPageLoading = isLoading && !hasLoadedOnce;
 
   const {
     isLoading: viewModelLoading,
@@ -188,10 +221,10 @@ const DashboardLayout = () => {
     profile,
     aboutMe,
   } = createDashboardViewModel({
-    isLoading,
+    isLoading: showFullPageLoading,
     portfolios: visiblePortfolios,
     projects: databaseProjects,
-    user,
+    user: snapshot.user,
   });
 
   useEffect(() => {
@@ -205,6 +238,11 @@ const DashboardLayout = () => {
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
 
+  const showActionError = (message) => {
+    setActionError(message);
+    window.setTimeout(() => setActionError(null), 5000);
+  };
+
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
 
   const handleProjectDragOver = (event) => event.preventDefault();
@@ -215,6 +253,7 @@ const DashboardLayout = () => {
       return;
     }
 
+    const previousOrder = orderedProjects;
     const updatedProjects = [...orderedProjects];
     const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
 
@@ -224,10 +263,24 @@ const DashboardLayout = () => {
     setDraggedProjectIndex(null);
 
     if (selectedPortfolio?._id) {
-      Meteor.call("portfolioProjects.reorder", {
-        portfolioId: selectedPortfolio._id,
-        projectIds: updatedProjects.map((project) => project._id || project.id),
-      });
+      Meteor.call(
+        "portfolioProjects.reorder",
+        {
+          portfolioId: selectedPortfolio._id,
+          projectIds: updatedProjects.map(
+            (project) => project._id || project.id,
+          ),
+        },
+        (error) => {
+          if (error) {
+            console.error("Failed to save project order:", error);
+            setOrderedProjects(previousOrder);
+            showActionError(
+              "Couldn't save the new project order. Reverted to last changes",
+            );
+          }
+        },
+      );
     }
   };
 
@@ -244,6 +297,7 @@ const DashboardLayout = () => {
     Meteor.call("projects.update", projectId, updates, (error) => {
       if (error) {
         console.error("Failed to update project:", error);
+        showActionError("Couldn't save your changes. Please try again.");
         return;
       }
 
@@ -263,6 +317,7 @@ const DashboardLayout = () => {
     Meteor.call("projects.delete", projectId, (error) => {
       if (error) {
         console.error("Failed to delete project:", error);
+        showActionError("Couldn't delete the project. Please try again.");
         return;
       }
 
@@ -290,6 +345,10 @@ const DashboardLayout = () => {
 
       if (error) {
         console.error("Failed to sync GitHub stats:", error);
+        // GRACEFUL FAILURE: keep whatever GitHub stats were already loaded
+        showActionError(
+          "Couldn't refresh GitHub stats. Showing the last synced data.",
+        );
         return;
       }
 
@@ -336,7 +395,7 @@ const DashboardLayout = () => {
     projects: orderedProjects,
   });
 
-  if (viewModelLoading) {
+  if (showFullPageLoading) {
     return <p className="p-8 text-lg">Loading...</p>;
   }
 
@@ -365,6 +424,12 @@ const DashboardLayout = () => {
           </h1>
 
           <div className="flex items-center gap-3">
+            {!isConnected && hasLoadedOnce && (
+              <span className="text-xs font-medium text-amber-600">
+                Reconnecting… showing your last saved data
+              </span>
+            )}
+
             <DraftStatusIndicator
               status={draftStatus}
               onReview={() => setIsComparisonOpen(true)}
@@ -405,6 +470,24 @@ const DashboardLayout = () => {
           </div>
         </header>
 
+        {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
+            save/reorder/sync/delete. Dismissible, and auto-clears itself. */}
+        {actionError && (
+          <div
+            role="alert"
+            className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            <span>{actionError}</span>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="shrink-0 font-semibold text-red-700 hover:underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="p-8">
           {activeTab === "overview" ? (
             <OverviewSection
@@ -430,6 +513,13 @@ const DashboardLayout = () => {
                   (error) => {
                     if (error) {
                       console.error("Failed to save portfolio:", error);
+                      // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
+                      // from here once `value` is passed down, so the
+                      // user's typed changes aren't lost - just flag that
+                      // they weren't persisted.
+                      showActionError(
+                        "Couldn't save your About Me changes. Please try again.",
+                      );
                     }
                   },
                 );
@@ -456,12 +546,12 @@ const DashboardLayout = () => {
           ) : activeTab === "analytics" ? (
             <AnalyticsSection
               projects={orderedProjects}
-              engagements={engagements}
+              engagements={snapshot.engagements}
             />
           ) : activeTab === "visitors" ? (
             <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={selectedPortfolio} userId={user?._id} />
+            <RecruiterPortal portfolio={selectedPortfolio} userId={snapshot.user?._id} />
           ) : activeTab === "themes" ? (
             <ThemeSection
               portfolioId={selectedPortfolio?._id}
@@ -504,14 +594,21 @@ const OwnerPreviewRoute = () => {
     projectOrderDocuments,
     user,
   } = useDashboardData();
-  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
-  const databaseProjects = getPortfolioProjects(
-    selectedPortfolio,
-    projectDocuments,
-    projectOrderDocuments,
+
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({ portfolios, projectDocuments, projectOrderDocuments, user }),
+    [portfolios, projectDocuments, projectOrderDocuments, user],
   );
 
-  if (isLoading) {
+  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
+  );
+
+  if (isLoading && !hasLoadedOnce) {
     return <p className="p-8 text-lg">Loading draft preview...</p>;
   }
 
@@ -529,10 +626,17 @@ const OwnerPreviewRoute = () => {
 const PublishedPortfolioRoute = () => {
   const { isLoading, portfolios, user } = useDashboardData();
   const navigate = useNavigate();
-  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({ portfolios, user }),
+    [portfolios, user],
+  );
+
+  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
   const publishedContent = selectedPortfolio?.publishedContent;
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedOnce) {
     return <p className="p-8 text-lg">Loading published portfolio...</p>;
   }
 
