@@ -23,6 +23,9 @@ import "/server/recruiter-tokens/visit-notifications.test.js";
 import "/server/portfolio-methods.test.js";
 import "/server/github-methods.test.js";
 import "/server/portfolios.byUsername.test.js";
+import "/server/github-api.test.js";
+import "/server/github-methods.test.js";
+import "/imports/api/projects.test.js";
 import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
 
 describe("mefolio", function () {
