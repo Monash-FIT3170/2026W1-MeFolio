@@ -108,7 +108,13 @@ const useLastKnownGood = (isLoading, snapshotFactory, deps) => {
 
   useEffect(() => {
     if (!isLoading) {
-      setLastGoodData(snapshotFactory());
+      const nextSnapshot = snapshotFactory();
+
+      setLastGoodData((currentSnapshot) =>
+        JSON.stringify(currentSnapshot) === JSON.stringify(nextSnapshot)
+          ? currentSnapshot
+          : nextSnapshot,
+      );
     }
   }, [isLoading, ...deps]);
 
