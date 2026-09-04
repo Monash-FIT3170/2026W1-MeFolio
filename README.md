@@ -154,6 +154,50 @@ mefolio/
 
 ---
 
+## OAuth Configuration
+
+MeFolio supports **Google OAuth** and **GitHub OAuth**.
+
+OAuth credentials are not committed to the repository.
+
+Access to the google and github developer sites to manage the generated oauth credentials can be accessed via the mefolio admin account.
+
+
+### Local Development
+
+Each developer creates:
+
+    server/oauth-login/oauth.settings.json
+
+using the provided example/template file:
+
+    {
+      "private": {
+        "google": {
+          "clientId": "YOUR_GOOGLE_CLIENT_ID",
+          "secret": "YOUR_GOOGLE_CLIENT_SECRET"
+        },
+        "github": {
+          "clientId": "YOUR_GITHUB_CLIENT_ID",
+          "secret": "YOUR_GITHUB_CLIENT_SECRET"
+        }
+      }
+    }
+
+There is an existing .gitignore already to prevent committing OAuth credentials or secrets.
+
+### Staging and Production
+
+OAuth credentials for deployed environments are already stored in **Meteor Galaxy Private Meteor Settings**.
+
+The same OAuth credentials can be used across local development, staging and production, provided the correct callback URLs are configured.
+
+The OAuth configuration code is located at:
+
+    server/oauth-login/oauth.js
+
+---
+
 ## Key Technologies
 
 - **Meteor.js**: Full-stack JavaScript framework for real-time applications
@@ -281,7 +325,10 @@ Sometimes the CI test runner shows "CLIENT FAILURES: 1" without displaying the e
 
 ### Deployment Strategy
 
-The project has two deployed environments:
+MeFolio has two deployed environments which have been deployed via Meteor Galaxy:
+
+(Note: Access to the Meteor Galaxy deployment config can be accessed via the MeFolio admin account)
+
 
 #### Staging Environment
 - Automatically deployed from the `dev` branch
