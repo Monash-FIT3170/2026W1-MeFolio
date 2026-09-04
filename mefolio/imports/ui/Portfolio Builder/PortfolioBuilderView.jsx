@@ -384,7 +384,9 @@ const DashboardLayout = () => {
   const handleCopyLink = async () => {
     if (!selectedPortfolio?._id || !selectedPortfolio?.isPublished) return;
 
-    const publicUrl = `${window.location.origin}/${selectedPortfolio._id}/view`;
+    const publicUrl = selectedPortfolio.username
+      ? `${window.location.origin}/u/${selectedPortfolio.username}`
+      : `${window.location.origin}/${selectedPortfolio._id}/view`;
 
     try {
       await navigator.clipboard.writeText(publicUrl);

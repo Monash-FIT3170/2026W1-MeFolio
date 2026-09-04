@@ -102,14 +102,15 @@ if (Meteor.isClient) {
       PortfolioCollection.findOne = () => portfolio;
     };
 
-    const renderPage = () =>
+    const renderPage = (initialPath = "/testPortfolioId/view") =>
       render(
-        <MemoryRouter initialEntries={["/testPortfolioId/view"]}>
+        <MemoryRouter initialEntries={[initialPath]}>
           <Routes>
             <Route
               path="/:portfolioId/view"
               element={<PublicPortfolioPage />}
             />
+            <Route path="/u/:username" element={<PublicPortfolioPage />} />
           </Routes>
         </MemoryRouter>,
       );
@@ -216,6 +217,22 @@ if (Meteor.isClient) {
         "portfolios.viewer",
         "testPortfolioId",
       ]);
+    });
+
+    it("renders the published snapshot for a username slug route", () => {
+      stubSubscription({
+        portfolio: {
+          _id: "testPortfolioId",
+          username: "public-owner",
+          isPublished: true,
+          publishedContent,
+        },
+      });
+      renderPage("/u/public-owner");
+
+      expect(screen.getByRole("heading", { name: "Public Owner Portfolio" })).to
+        .exist;
+      expect(screen.getByText("Builds things on the web.")).to.exist;
     });
 
     it("does not render the dashboard chrome", () => {
