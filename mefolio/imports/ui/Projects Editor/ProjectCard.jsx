@@ -1,5 +1,14 @@
 import PropTypes from "prop-types";
-import { Github, ExternalLink, ImageOff, Pencil } from "lucide-react";
+import {
+  Github,
+  ExternalLink,
+  ImageOff,
+  Pencil,
+  Star,
+  GitBranch,
+  Clock3,
+  RefreshCw,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -23,6 +32,8 @@ export function ProjectCard({
   project,
   index,
   onEdit,
+  onSync,
+  isSyncing = false,
   draggable = false,
   isDragging = false,
   onDragStart,
@@ -37,7 +48,23 @@ export function ProjectCard({
     githubLink = "",
     liveDemoLink = "",
     media = "",
+    githubStats = null,
   } = project || {};
+
+  const lastUpdated = githubStats?.updatedAt
+    ? new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }).format(new Date(githubStats.updatedAt))
+    : "-";
+
+  const canSync = Boolean(onSync && githubLink);
+
+  const handleSync = (e) => {
+    e.stopPropagation();
+    if (!isSyncing) onSync(project);
+  };
 
   return (
     <Card
@@ -47,12 +74,12 @@ export function ProjectCard({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      className={`overflow-hidden gap-0 ${
+      className={`overflow-hidden gap-0 bg-surface-fill border border-line ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
-      } ${isDragging ? "opacity-60 ring-2 ring-indigo-300" : "hover:-translate-y-1"}`}
+      } ${isDragging ? "opacity-60 ring-2 ring-accent2" : "hover:-translate-y-1"}`}
     >
       {/* Media / placeholder */}
-      <div className="relative h-44 bg-slate-100 overflow-hidden">
+      <div className="relative h-44 bg-background overflow-hidden">
         {media ? (
           isVideoMedia(media) ? (
             <video
@@ -72,7 +99,7 @@ export function ProjectCard({
         ) : (
           <div
             data-testid="project-card-placeholder"
-            className="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-400"
+            className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted"
           >
             <ImageOff className="h-7 w-7" />
             <span className="text-[11px] font-extrabold uppercase tracking-widest">
@@ -86,39 +113,73 @@ export function ProjectCard({
           <span
             data-testid="project-card-order-number"
             aria-hidden="true"
-            className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white shadow-md ring-2 ring-white"
+            className="absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-accent2 text-secondary text-xs font-bold shadow-md ring-2 ring-surface-fill"
           >
             {index + 1}
           </span>
         )}
 
-        {/* Edit button */}
-        {onEdit && (
-          <button
-            type="button"
-            data-testid="project-card-edit"
-            aria-label={`Edit ${title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(project);
-            }}
-            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-white hover:text-indigo-600"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </button>
-        )}
-      </div>
+        {/* Sync / Edit buttons */}
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          {onSync && (
+            <button
+              type="button"
+              data-testid="project-card-sync"
+              aria-label={
+                canSync
+                  ? `Sync ${title} stats now`
+                  : "Add a GitHub link to enable sync"
+              }
+              title={canSync ? "Sync now" : "Add a GitHub link to enable sync"}
+              disabled={!canSync || isSyncing}
+              onClick={handleSync}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface-fill disabled:hover:text-muted"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing…" : "Sync now"}
+            </button>
+          )}
 
+          {onEdit && (
+            <button
+              type="button"
+              data-testid="project-card-edit"
+              aria-label={`Edit ${title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(project);
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-surface-fill border border-line px-3 py-1.5 text-xs font-bold text-muted shadow-sm transition hover:bg-background hover:text-accent2"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
       <CardHeader className="p-5 pb-2">
-        <CardTitle className="text-lg font-bold text-slate-900">
+        <CardTitle className="text-lg font-bold text-primary">
           {title}
         </CardTitle>
         {description && (
-          <p className="mt-1 text-sm text-slate-500 line-clamp-3">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-muted line-clamp-3">{description}</p>
         )}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 text-accent2" />
+            {githubStats?.stars ?? "-"} stars
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <GitBranch className="h-3.5 w-3.5 text-accent1" />
+            {githubStats?.commits ?? "-"} commits
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Clock3 className="h-3.5 w-3.5 text-alt" />
+            Updated {lastUpdated}
+          </span>
+        </div>
       </CardHeader>
 
       <CardContent className="px-5 pb-5 pt-3">
@@ -128,7 +189,7 @@ export function ProjectCard({
             {technologies.map((tech) => (
               <span
                 key={tech}
-                className="rounded-lg bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-500"
+                className="rounded-lg bg-selected px-2.5 py-1 text-[11px] font-bold text-accent2"
               >
                 {tech}
               </span>
@@ -146,7 +207,7 @@ export function ProjectCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-500 transition-all hover:bg-slate-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-line bg-surface-fill py-2.5 text-sm font-bold text-muted transition-all hover:bg-background"
             >
               <Github className="h-4 w-4" />
               Code
@@ -158,7 +219,7 @@ export function ProjectCard({
               disabled
               title="No GitHub link added"
               onClick={(e) => e.stopPropagation()}
-              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-100 bg-slate-50 py-2.5 text-sm font-bold text-slate-300"
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-line bg-background py-2.5 text-sm font-bold text-muted opacity-50"
             >
               <Github className="h-4 w-4" />
               Code
@@ -172,7 +233,7 @@ export function ProjectCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-bold text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-700"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-button py-2.5 text-sm font-bold text-secondary shadow-md transition-all hover:bg-accent1"
             >
               <ExternalLink className="h-4 w-4" />
               Demo
@@ -184,7 +245,7 @@ export function ProjectCard({
               disabled
               title="No live demo link added"
               onClick={(e) => e.stopPropagation()}
-              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-indigo-300/60 py-2.5 text-sm font-bold text-white"
+              className="flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-button py-2.5 text-sm font-bold text-secondary opacity-40"
             >
               <ExternalLink className="h-4 w-4" />
               Demo
@@ -205,8 +266,15 @@ ProjectCard.propTypes = {
     githubLink: PropTypes.string,
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
+    githubStats: PropTypes.shape({
+      stars: PropTypes.number,
+      commits: PropTypes.number,
+      updatedAt: PropTypes.string,
+    }),
   }),
   onEdit: PropTypes.func,
+  onSync: PropTypes.func,
+  isSyncing: PropTypes.bool,
   draggable: PropTypes.bool,
   isDragging: PropTypes.bool,
   onDragStart: PropTypes.func,

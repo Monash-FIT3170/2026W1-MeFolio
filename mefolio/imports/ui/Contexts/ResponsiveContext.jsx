@@ -5,7 +5,7 @@
  *
  */
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 
 const ResponsiveContext = createContext();

@@ -2,10 +2,34 @@ import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
-import { PortfolioCollection } from "/imports/api/portfolio";
+import {
+  PortfolioCollection,
+  createDefaultPortfolioPublishingState,
+} from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { ResumeFiles } from "/imports/api/files/resumeFiles";
+import "/imports/api/files/resumeFiles";
+
+// oauth login
 import "./oauth-login/oauth.js";
+import "./projectClickTracking.js";
+
+// recruiter access token
+import "./recruiter-tokens/collection.js";
+import "./recruiter-tokens/methods.js";
+import "./recruiter-tokens/verifytokens.js";
+import "./recruiter-tokens/visit-notifications.js";
+
+// public portfolio view
+import "./publications/publicPortfolio.js";
+import "./publications/publicPortfolioMeta.js";
+// portfolio methods (in their own module so tests can load them without the
+// app seed and OAuth config)
+import "./portfolio-methods.js";
+// portfolio indexes (unique custom URL / username)
+import "./portfolio-indexes.js";
+
+// register github methods for sync
+import "./github-methods.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -147,6 +171,8 @@ Meteor.startup(async () => {
       title: "Sample Portfolio",
       bio: "This is a sample portfolio.",
 
+      ...createDefaultPortfolioPublishingState(),
+
       // Agreed FEAT-05 structure
       profile: {
         fullName: "John Doe",
@@ -180,14 +206,12 @@ Meteor.startup(async () => {
       },
 
       cta: {
-        resumeUrl: "https://example.com/resume.pdf",
         contactEnabled: true,
       },
 
       createdAt: new Date(),
       projects: projectIds,
-      theme: "minimal",
-      username: "me",
+      theme: "minimalist",
       badges: [
         {
           title: "Sample Badge",
@@ -203,11 +227,32 @@ Meteor.startup(async () => {
         currentLocation: "Sydney NSW",
         availability: "Immediate",
         personalNote: "Looking for opportunities in full-stack development.",
-        resumeLink: "https://example.com/resume.pdf",
         allowAccess: true,
       },
     });
   }
+
+  // FEAT-11: Backfill publication fields for portfolios created before
+  // draft/live separation was introduced.
+  await PortfolioCollection.updateAsync(
+    { isPublished: { $exists: false } },
+    {
+      $set: {
+        isPublished: false,
+      },
+    },
+    { multi: true },
+  );
+
+  await PortfolioCollection.updateAsync(
+    { publishedContent: { $exists: false } },
+    {
+      $set: {
+        publishedContent: null,
+      },
+    },
+    { multi: true },
+  );
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
@@ -239,8 +284,145 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
+// Private portfolio fields that must never reach a client that does not own
+// the portfolio. `recruiterInfo` holds private recruiter details (salary,
+// phone, personal note) and the access code itself, so it is only sent to the
+// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
+// publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+const activeViewerConnections = new Map();
+
+const getViewerData = async (publication) => {
+  const connectionId = publication.connection?.id;
+  if (!connectionId) return null;
+
+  const user = publication.userId
+    ? await Meteor.users.findOneAsync(publication.userId, {
+        fields: {
+          emails: 1,
+          profile: 1,
+          "services.google.email": 1,
+          "services.google.name": 1,
+          "services.github.email": 1,
+          "services.github.username": 1,
+        },
+      })
+    : null;
+
+  const email =
+    user?.emails?.[0]?.address ||
+    user?.services?.google?.email ||
+    user?.services?.github?.email ||
+    "";
+  const name =
+    user?.profile?.name ||
+    user?.profile?.username ||
+    user?.services?.google?.name ||
+    user?.services?.github?.username ||
+    "Anonymous Viewer";
+
+  const viewer = {
+    connectionId,
+    name,
+    email,
+    connectedAt: new Date(),
+    lastSeenAt: new Date(),
+  };
+
+  if (publication.userId) {
+    viewer.userId = publication.userId;
+  }
+
+  return viewer;
+};
+
+const addPortfolioViewer = async (portfolioId, viewer) => {
+  if (!viewer) return;
+
+  activeViewerConnections.set(viewer.connectionId, {
+    portfolioId,
+    viewer,
+  });
+
+  await PortfolioCollection.updateAsync(portfolioId, {
+    $pull: { viewers: { connectionId: viewer.connectionId } },
+  });
+
+  await PortfolioCollection.updateAsync(portfolioId, {
+    $addToSet: { viewers: viewer },
+  });
+};
+
+const removePortfolioViewer = async (connectionId) => {
+  const entry = activeViewerConnections.get(connectionId);
+  if (!entry) return;
+
+  await PortfolioCollection.updateAsync(entry.portfolioId, {
+    $pull: { viewers: { connectionId } },
+  });
+
+  activeViewerConnections.delete(connectionId);
+};
+
 Meteor.publish("portfolios.all", function () {
-  return PortfolioCollection.find({}, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  // Not logged in: nobody owns these, so strip private fields from all.
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      {},
+      { sort, fields: { ...NON_OWNER_PORTFOLIO_FIELDS, viewers: 0 } },
+    );
+  }
+
+  // Logged in: only your own portfolios. Nothing on the dashboard needs other
+  // users' portfolios, and a publish function cannot return two cursors for the
+  // same collection. The recruiter view reads its portfolio from the
+  // token-gated `portfolio.recruiterView` publication instead.
+  return PortfolioCollection.find(
+    { userId: this.userId },
+    { sort, fields: { viewers: 0 } },
+  );
+});
+
+Meteor.publish("portfolios.liveVisitors", function (portfolioId) {
+  check(portfolioId, String);
+
+  if (!this.userId) return this.ready();
+
+  return PortfolioCollection.find(
+    { _id: portfolioId, userId: this.userId },
+    { fields: { _id: 1, viewers: 1 } },
+  );
+});
+
+Meteor.publish("portfolios.viewer", function (portfolioId) {
+  check(portfolioId, String);
+
+  const publication = this;
+  const connectionId = publication.connection?.id;
+
+  PortfolioCollection.findOneAsync({ _id: portfolioId, isPublished: true })
+    .then((portfolio) => {
+      if (!portfolio) return null;
+      return getViewerData(publication);
+    })
+    .then((viewer) => {
+      if (!viewer) return null;
+      return addPortfolioViewer(portfolioId, viewer);
+    })
+    .catch(console.error);
+
+  this.onStop(() => {
+    if (connectionId) {
+      removePortfolioViewer(connectionId).catch(console.error);
+    }
+  });
+
+  return PortfolioCollection.find(
+    { _id: portfolioId, isPublished: true },
+    { fields: { publishedContent: 1, isPublished: 1, publishedAt: 1 } },
+  );
 });
 
 Meteor.publish("users.current", function () {
@@ -272,7 +454,22 @@ Meteor.publish("portfolioProjects.all", function () {
 
 Meteor.publish("portfolios.byUsername", function (username) {
   check(username, String);
-  return PortfolioCollection.find({ username }, { sort: { createdAt: -1 } });
+  const sort = { createdAt: -1 };
+
+  if (!this.userId) {
+    return PortfolioCollection.find(
+      { username },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    );
+  }
+
+  return [
+    PortfolioCollection.find({ username, userId: this.userId }, { sort }),
+    PortfolioCollection.find(
+      { username, userId: { $ne: this.userId } },
+      { sort, fields: NON_OWNER_PORTFOLIO_FIELDS },
+    ),
+  ];
 });
 
 Meteor.methods({
@@ -351,6 +548,8 @@ Meteor.methods({
       liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
       media: typeof projectData.media === "string" ? projectData.media : "",
       status: projectData.status ?? "live",
+      githubStats: null,
+      lastSyncedAt: null,
       createdAt: projectData.createdAt
         ? new Date(projectData.createdAt)
         : new Date(),
@@ -372,6 +571,7 @@ Meteor.methods({
         userId: this.userId,
         title: "My Portfolio",
         projects: [],
+        ...createDefaultPortfolioPublishingState(),
         createdAt: new Date(),
       });
       portfolio = await PortfolioCollection.findOneAsync(newPortfolioId);
@@ -416,14 +616,154 @@ Meteor.methods({
   },
 
   async "portfolios.insert"(portfolioData) {
-    portfolioData.userId = this.userId;
-    return await PortfolioCollection.insertAsync(portfolioData);
+    const safePortfolioData = { ...portfolioData };
+    delete safePortfolioData.username;
+
+    const newPortfolio = {
+      ...safePortfolioData,
+      ...createDefaultPortfolioPublishingState(),
+      userId: this.userId,
+    };
+
+    return await PortfolioCollection.insertAsync(newPortfolio);
   },
 
-  async "portfolios.update"(portfolioId, updates) {
-    return await PortfolioCollection.updateAsync(portfolioId, {
-      $set: updates,
+  async "portfolios.publish"(portfolioId) {
+    check(portfolioId, String);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to publish a portfolio.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
     });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.publish.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const missingFields = [];
+    if (!portfolio.title || !String(portfolio.title).trim()) {
+      missingFields.push("title");
+    }
+
+    if (!portfolio.bio || !String(portfolio.bio).trim()) {
+      missingFields.push("bio");
+    }
+
+    const profileName =
+      portfolio.profile?.fullName || portfolio.profile?.name || "";
+    if (!profileName.trim()) {
+      missingFields.push("profile.fullName");
+    }
+
+    if (!Array.isArray(portfolio.projects) || portfolio.projects.length === 0) {
+      missingFields.push("projects");
+    }
+
+    if (missingFields.length) {
+      throw new Meteor.Error(
+        "portfolios.publish.validationFailed",
+        `Required portfolio content missing: ${missingFields.join(", ")}`,
+      );
+    }
+
+    const projectIds = Array.isArray(portfolio.projects)
+      ? portfolio.projects
+      : [];
+
+    const projectRecords = await ProjectCollection.find({
+      _id: { $in: projectIds },
+    }).fetchAsync();
+
+    const orderedProjects = projectIds
+      .map((projectId) =>
+        projectRecords.find((project) => project._id === projectId),
+      )
+      .filter(Boolean)
+      .map((project) => ({
+        _id: project._id,
+        title: project.title || "",
+        description: project.description || "",
+        technologies: Array.isArray(project.technologies)
+          ? project.technologies
+          : [],
+        githubLink: project.githubLink || "",
+        liveDemoLink: project.liveDemoLink || "",
+        media: project.media || "",
+        status: project.status || "",
+        githubStats: project.githubStats || null,
+        lastSyncedAt: project.lastSyncedAt || null,
+      }));
+
+    if (orderedProjects.length !== projectIds.length) {
+      throw new Meteor.Error(
+        "portfolios.publish.projectsNotFound",
+        "One or more portfolio projects could not be found. Please review your projects before publishing.",
+      );
+    }
+
+    const publishedContent = {
+      title: portfolio.title,
+      bio: portfolio.bio,
+      profile: portfolio.profile || {},
+      about: portfolio.about || {},
+      contact: portfolio.contact || {},
+      socials: portfolio.socials || {},
+      cta: portfolio.cta || {},
+      projects: orderedProjects,
+      theme: portfolio.theme || "minimal",
+      badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    };
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: {
+        publishedContent,
+        isPublished: true,
+        publishedAt: new Date(),
+      },
+    });
+  },
+
+  async "portfolios.viewerHeartbeat"(portfolioId) {
+    check(portfolioId, String);
+
+    const connectionId = this.connection?.id;
+
+    if (!connectionId) {
+      return 0;
+    }
+
+    const lastSeenAt = new Date();
+
+    const updatedCount = await PortfolioCollection.updateAsync(
+      {
+        _id: portfolioId,
+        "viewers.connectionId": connectionId,
+      },
+      {
+        $set: {
+          "viewers.$.lastSeenAt": lastSeenAt,
+        },
+      },
+    );
+
+    const activeViewer = activeViewerConnections.get(connectionId);
+
+    if (activeViewer?.portfolioId === portfolioId) {
+      activeViewer.viewer.lastSeenAt = lastSeenAt;
+      activeViewerConnections.set(connectionId, activeViewer);
+    }
+
+    return updatedCount;
   },
 
   async "portfolios.delete"(portfolioId) {

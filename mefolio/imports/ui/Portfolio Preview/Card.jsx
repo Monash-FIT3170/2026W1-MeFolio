@@ -1,10 +1,9 @@
-import React from "react";
 import PropTypes from "prop-types";
 
 export function Card({ className = "", children, ...props }) {
   return (
     <div
-      className={`bg-white text-slate-900 flex flex-col gap-4 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-indigo-100 ${className}`}
+      className={`bg-background text-primary flex flex-col gap-4 rounded-2xl border-2 border-line shadow-sm transition-all hover:shadow-md hover:border-secondary ${className}`}
       {...props}
     >
       {children}
@@ -23,7 +22,7 @@ export function CardHeader({ className = "", children, ...props }) {
 export function CardTitle({ className = "", children, ...props }) {
   return (
     <h3
-      className={`text-xl font-bold tracking-tight text-slate-900 ${className}`}
+      className={`text-xl font-bold tracking-tight text-primary ${className}`}
       {...props}
     >
       {children}

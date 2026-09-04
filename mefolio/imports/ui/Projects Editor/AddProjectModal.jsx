@@ -29,17 +29,17 @@ const MediaUpload = ({ file, onChange }) => {
     return (
       <div
         data-testid="upload-preview"
-        className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50"
+        className="flex items-center gap-3 p-3 border border-line rounded-lg bg-background"
       >
         <span className="text-xl">upload</span>
-        <span className="flex-1 text-sm text-gray-600 font-mono truncate">
+        <span className="flex-1 text-sm text-muted font-mono truncate">
           {file.name}
         </span>
         <button
           type="button"
           onClick={() => onChange(null)}
           aria-label="Remove file"
-          className="text-gray-400 hover:text-red-500 text-lg leading-none transition"
+          className="text-muted hover:text-accent2 text-lg leading-none transition"
         >
           x
         </button>
@@ -67,8 +67,8 @@ const MediaUpload = ({ file, onChange }) => {
       className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition
         ${
           dragging
-            ? "border-indigo-500 bg-indigo-50"
-            : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50"
+            ? "border-accent2 bg-selected"
+            : "border-line bg-background hover:border-accent2 hover:bg-selected"
         }`}
     >
       <input
@@ -79,18 +79,18 @@ const MediaUpload = ({ file, onChange }) => {
         onChange={(e) => handle(e.target.files[0])}
         data-testid="file-input"
       />
-      <p className="text-sm text-gray-500">
-        <span className="text-indigo-600 font-semibold">Click to upload</span>{" "}
-        or drag & drop
+      <p className="text-sm text-muted">
+        <span className="text-alt font-semibold">Click to upload</span> or drag
+        & drop
       </p>
-      <p className="text-xs text-gray-400 mt-1">
+      <p className="text-xs text-muted mt-1">
         PNG · JPG · GIF · WEBP · MP4 · WEBM
       </p>
     </div>
   );
 };
 
-const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
+const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const overlayRef = useRef(null);
@@ -150,7 +150,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
         createdAt: new Date(),
         portfolioId,
       };
-      Meteor.call("projects.insert", payload, (err, newId) => {
+      Meteor.call("projects.insert", payload, (err) => {
         if (err) {
           console.error(err);
           return;
@@ -174,6 +174,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
     setErrors({});
     onClose();
   };
+
+  const fieldClass = (key) =>
+    `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition
+      focus:border-accent2 focus:ring-2 focus:ring-selected
+      ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
+
   return (
     <div
       ref={overlayRef}
@@ -184,20 +190,20 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
       onClick={(e) => {
         if (e.target === overlayRef.current) handleCancel();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-gray-900/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-5 bg-primary/50 backdrop-blur-sm"
     >
       {/* Panel */}
       <div
         data-testid="modal-panel"
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-surface-fill rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+        <div className="flex items-start justify-between px-6 py-5 border-b border-line sticky top-0 bg-surface-fill rounded-t-2xl z-10">
           <div>
-            <h2 id="modal-title" className="text-lg font-bold text-gray-900">
+            <h2 id="modal-title" className="text-lg font-bold text-primary">
               Add New Project
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted mt-0.5">
               Fill in the details below to add it to your portfolio
             </p>
           </div>
@@ -205,7 +211,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
             data-testid="modal-close-btn"
             onClick={handleCancel}
             aria-label="Close modal"
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg w-8 h-8 flex items-center justify-center text-xl transition"
+            className="text-muted hover:text-primary hover:bg-selected rounded-lg w-8 h-8 flex items-center justify-center text-xl transition"
           >
             x
           </button>
@@ -217,9 +223,9 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
           <div>
             <label
               htmlFor="mf-title"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
+              className="block text-sm font-semibold text-primary mb-1.5"
             >
-              Project Title <span className="text-red-500">*</span>
+              Project Title <span className="text-accent2">*</span>
             </label>
             <input
               id="mf-title"
@@ -229,14 +235,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
               autoFocus
-              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
-                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
-                ${errors.title ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              className={fieldClass("title")}
             />
             {errors.title && (
               <p
                 data-testid="error-title"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.title}
               </p>
@@ -247,9 +251,9 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
           <div>
             <label
               htmlFor="mf-desc"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
+              className="block text-sm font-semibold text-primary mb-1.5"
             >
-              Description <span className="text-red-500">*</span>
+              Description <span className="text-accent2">*</span>
             </label>
             <textarea
               id="mf-desc"
@@ -258,14 +262,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               rows={3}
-              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none resize-y leading-relaxed transition
-                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
-                ${errors.description ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              className={`${fieldClass("description")} resize-y leading-relaxed`}
             />
             {errors.description && (
               <p
                 data-testid="error-description"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.description}
               </p>
@@ -274,21 +276,21 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
 
           {/* Tech Stack */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-sm font-semibold text-primary mb-1.5">
               Tech Stack
             </label>
             <TechStackInput
               value={form.technologies}
               onChange={(v) => set("technologies", v)}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted mt-1">
               Press Enter or comma to add · Backspace to remove last
             </p>
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label className="block text-sm font-semibold text-primary mb-1.5">
               Project Status
             </label>
             <div className="flex gap-2">
@@ -300,8 +302,8 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
                   className={`px-4 py-1.5 rounded-full text-xs font-medium border capitalize transition
                     ${
                       form.status === s
-                        ? "border-indigo-600 bg-indigo-100 text-indigo-700"
-                        : "border-gray-200 text-gray-500 hover:border-indigo-400"
+                        ? "border-alt bg-selected text-alt"
+                        : "border-line text-muted hover:border-alt"
                     }`}
                 >
                   {s}
@@ -310,14 +312,14 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
             </div>
           </div>
 
-          <hr className="border-gray-100 -mx-6" />
+          <hr className="border-line -mx-6" />
 
           {/* GitHub + Demo */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
                 htmlFor="mf-github"
-                className="block text-sm font-semibold text-gray-700 mb-1.5"
+                className="block text-sm font-semibold text-primary mb-1.5"
               >
                 GitHub Repo
               </label>
@@ -328,14 +330,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
                 placeholder="https://github.com/..."
                 value={form.githubLink}
                 onChange={(e) => set("githubLink", e.target.value)}
-                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
-                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
-                  ${errors.githubLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+                className={fieldClass("githubLink")}
               />
               {errors.githubLink && (
                 <p
                   data-testid="error-githubLink"
-                  className="text-xs text-red-500 mt-1"
+                  className="text-xs text-accent2 mt-1"
                 >
                   {errors.githubLink}
                 </p>
@@ -344,7 +344,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
             <div>
               <label
                 htmlFor="mf-demo"
-                className="block text-sm font-semibold text-gray-700 mb-1.5"
+                className="block text-sm font-semibold text-primary mb-1.5"
               >
                 Live Demo URL
               </label>
@@ -355,14 +355,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
                 placeholder="https://yourproject.com"
                 value={form.liveDemoLink}
                 onChange={(e) => set("liveDemoLink", e.target.value)}
-                className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
-                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
-                  ${errors.liveDemoLink ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+                className={fieldClass("liveDemoLink")}
               />
               {errors.liveDemoLink && (
                 <p
                   data-testid="error-liveDemoLink"
-                  className="text-xs text-red-500 mt-1"
+                  className="text-xs text-accent2 mt-1"
                 >
                   {errors.liveDemoLink}
                 </p>
@@ -374,7 +372,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
           <div>
             <label
               htmlFor="mf-media"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
+              className="block text-sm font-semibold text-primary mb-1.5"
             >
               Project Media URL
             </label>
@@ -385,18 +383,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
               placeholder="https://images.unsplash.com/photo-..."
               value={form.media || ""}
               onChange={(e) => set("media", e.target.value)}
-              className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
-                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100
-                ${errors.media ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+              className={fieldClass("media")}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted mt-1">
               Link to an image, GIF, or video (e.g., from Unsplash or
               Cloudinary)
             </p>
             {errors.media && (
               <p
                 data-testid="error-media"
-                className="text-xs text-red-500 mt-1"
+                className="text-xs text-accent2 mt-1"
               >
                 {errors.media}
               </p>
@@ -405,16 +401,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sticky bottom-0">
-          <p className="text-xs text-gray-400">
-            <span className="text-red-500">*</span> Required fields
+        <div className="flex items-center justify-between px-6 py-4 border-t border-line bg-background rounded-b-2xl sticky bottom-0">
+          <p className="text-xs text-muted">
+            <span className="text-accent2">*</span> Required fields
           </p>
           <div className="flex gap-2.5">
             <button
               type="button"
               data-testid="btn-cancel"
               onClick={handleCancel}
-              className="px-5 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+              className="px-5 py-2 rounded-lg border border-line bg-surface-fill text-sm font-medium text-muted hover:bg-selected transition"
             >
               Cancel
             </button>
@@ -422,7 +418,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd, portfolioId }) => {
               type="button"
               data-testid="btn-submit"
               onClick={handleSubmit}
-              className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+              className="px-5 py-2 rounded-lg bg-button text-secondary text-sm font-semibold hover:bg-accent1 transition"
             >
               Add Project
             </button>

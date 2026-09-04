@@ -19,6 +19,7 @@ import ProfileSummary from "./Portfolio Builder/ProfileSummary";
 import PlaceholderSection from "./Portfolio Builder/PlaceholderSection";
 import OverviewSection from "./Portfolio Builder/OverviewSection";
 import ProfileSettings from "./Portfolio Builder/ProfileSettings";
+import LiveVisitorsPage from "./Portfolio Builder/LiveVisitorsSection.jsx";
 
 // Temporary adapter from the current flat mock shape to the agreed links shape.
 // We will clean this up in a later commit when we update the mock/view-model layer.
@@ -92,7 +93,7 @@ const AboutMeSection = ({
         </button>
 
         {saveMessage ? (
-          <span style={{ color: "#4b5563", fontSize: "14px" }}>
+          <span className="text-muted" style={{ fontSize: "14px" }}>
             {saveMessage}
           </span>
         ) : null}
@@ -248,8 +249,10 @@ const DashboardLayout = () => {
               aboutMe={aboutMe}
               userId={user[0]?._id}
             />
+          ) : activeTab === "visitors" ? (
+            <LiveVisitorsPage portfolioId={portfolio?._id} />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={portfolio} />
+            <RecruiterPortal portfolio={portfolio} userId={user[0]?._id} />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}

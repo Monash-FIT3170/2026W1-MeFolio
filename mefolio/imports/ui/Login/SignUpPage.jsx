@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -34,7 +34,6 @@ export function SignUpPage({
     email: "",
     password: "",
     confirmPassword: "",
-    portfolioUrl: "",
   });
 
   const handleSubmit = (e) => {
@@ -53,7 +52,6 @@ export function SignUpPage({
         email: formData.email,
         password: formData.password,
         profile: {
-          userName: formData.portfolioUrl,
           fullName: formData.name,
         },
       },
@@ -236,26 +234,6 @@ export function SignUpPage({
                   onChange={handleChange}
                   className="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-100 rounded-xl focus:border-indigo-600 outline-none transition-all placeholder:text-gray-300 font-medium text-base shadow-sm group-hover:border-gray-200"
                   placeholder="you@example.com"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 ml-1">
-                Portfolio URL
-              </label>
-              <div className="flex group">
-                <span className="inline-flex items-center px-4 py-3 border-2 border-r-0 border-gray-100 bg-gray-50 text-gray-500 rounded-l-xl text-base font-medium">
-                  mefolio.dev/
-                </span>
-                <input
-                  name="portfolioUrl"
-                  type="text"
-                  value={formData.portfolioUrl}
-                  onChange={handleChange}
-                  className="flex-1 px-4 py-3 bg-white border-2 border-gray-100 rounded-r-xl focus:border-indigo-600 outline-none transition-all placeholder:text-gray-300 font-medium text-base shadow-sm group-hover:border-gray-200"
-                  placeholder="yourname"
                   required
                 />
               </div>

@@ -1,0 +1,55 @@
+name: CI-Test-Runner
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  test-suite:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Meteor
+        id: meteor-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            $HOME/.meteor
+          key: ${{ runner.os }}-meteor-${{ hashFiles('mefolio/.meteor/release') }}
+          restore-keys: |
+            ${{ runner.os }}-meteor-
+
+      - name: Install Meteor
+        if: steps.meteor-cache.outputs.cache-hit != 'true'
+        run: |
+            curl https://install.meteor.com/ | sh
+
+      - name: Add Meteor to PATH
+        run: echo "$HOME/.meteor" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        working-directory: ./mefolio
+        run: npm ci
+
+      - name: Run test suite
+        working-directory: ./mefolio
+        # Wrapped because meteortesting:browser-tests + puppeteer does not exit
+        # after the suite passes (the browser process lingers), which otherwise
+        # burns the job to its 30-minute timeout. The wrapper force-exits once
+        # both suites report passing and fails on any real error. See the script.
+        run: bash scripts/run-ci-tests.sh
+

@@ -4,6 +4,11 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects";
 import { ProjectCollection } from "../../api/projects";
+import { getPublishedTheme } from "../publishedTheme";
+import {
+  ProjectEngagement,
+  PROJECT_ENGAGEMENT_PUBLICATION,
+} from "../../api/projectEngagement";
 import {
   createDashboardViewModel,
   getCurrentTab,
@@ -14,18 +19,22 @@ import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
 import OverviewSection from "./OverviewSection";
 import ProfileSettings from "./ProfileSettings";
+import ThemeSection from "./Themes/ThemeSection";
 import ProjectsSection from "../Projects Editor/ProjectsSection";
 import AddProjectModal from "../Projects Editor/AddProjectModal";
 import EditProjectModal from "../Projects Editor/EditProjectModal";
 import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
+import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
+import AnalyticsSection from "./AnalyticsSection";
+import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
+import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
+import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
+import LiveVisitorsPage from "./LiveVisitorsSection";
 
 const getProjectId = (project) => project?._id || project?.id;
-
-const getProjectOrderKey = (projects = []) =>
-  projects.map((project) => getProjectId(project)).join("|");
 
 const getProjectDataKey = (projects = []) =>
   projects
@@ -52,6 +61,7 @@ const getSelectedPortfolio = (portfolios = [], user) => {
 
   if (ownedPortfolio) return ownedPortfolio;
   if (getUserEmail(user) === "test@example.com") return portfolios[0];
+
   return null;
 };
 
@@ -92,9 +102,29 @@ const getPortfolioProjects = (
   );
 };
 
-// Newest project first (falls back to insertion order when createdAt is absent).
-const byNewestFirst = (a, b) =>
-  new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0);
+// GRACEFUL FAILURE: Keeps snapshot of last loaded data
+const useLastKnownGood = (isLoading, snapshotFactory, deps) => {
+  const [lastGoodData, setLastGoodData] = useState(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const nextSnapshot = snapshotFactory();
+
+      setLastGoodData((currentSnapshot) =>
+        JSON.stringify(currentSnapshot) === JSON.stringify(nextSnapshot)
+          ? currentSnapshot
+          : nextSnapshot,
+      );
+    }
+  }, [isLoading, ...deps]);
+
+  const hasLoadedOnce = lastGoodData !== null;
+
+  return {
+    data: isLoading && hasLoadedOnce ? lastGoodData : snapshotFactory(),
+    hasLoadedOnce,
+  };
+};
 
 const useDashboardData = () =>
   useTracker(() => {
@@ -103,19 +133,50 @@ const useDashboardData = () =>
     const portfolioProjectsHandler = Meteor.subscribe("portfolioProjects.all");
     const currentUserHandler = Meteor.subscribe("currentUser.profile");
 
+    const connection = Meteor.status();
+
+    const projectDocuments = ProjectCollection.find({}).fetch();
+    const portfolios = PortfolioCollection.find(
+      {},
+      { fields: { viewers: 0 } },
+    ).fetch();
+    const user = Meteor.user();
+    const selectedPortfolio = getSelectedPortfolio(portfolios, user);
+    const engagementHandler = selectedPortfolio?._id
+      ? Meteor.subscribe(PROJECT_ENGAGEMENT_PUBLICATION, selectedPortfolio._id)
+      : null;
+    const engagementsReady = !engagementHandler || engagementHandler.ready();
+
+    const engagements = selectedPortfolio?._id
+      ? ProjectEngagement.find(
+          { portfolioId: selectedPortfolio._id },
+          { sort: { date: 1 } },
+        ).fetch()
+      : [];
+
     return {
       isLoading:
         !portfoliosHandler.ready() ||
         !projectsHandler.ready() ||
         !portfolioProjectsHandler.ready() ||
-        !currentUserHandler.ready(),
-      portfolios: PortfolioCollection.find({}).fetch(),
-      projectDocuments: ProjectCollection.find({}).fetch(),
+        !currentUserHandler.ready() ||
+        !engagementsReady,
+
+      isConnected: connection.connected,
+      connectionStatus: connection.status,
+
+      portfolios,
+
+      projectDocuments,
+
       projectOrderDocuments: PortfolioProjectsCollection.find(
         {},
         { sort: { orderIndex: 1 } },
       ).fetch(),
-      user: Meteor.user(),
+
+      engagements,
+
+      user,
     };
   });
 
@@ -123,91 +184,82 @@ const DashboardLayout = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
-  const [sourceProjectOrderKey, setSourceProjectOrderKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
+  const [syncingProjectId, setSyncingProjectId] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const {
     isLoading,
+    isConnected,
     portfolios,
     projectDocuments,
     projectOrderDocuments,
+    engagements,
     user,
   } = useDashboardData();
-  const selectedPortfolio = getSelectedPortfolio(portfolios, user);
-  const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
-  const databaseProjects = getPortfolioProjects(
-    selectedPortfolio,
-    projectDocuments,
-    projectOrderDocuments,
+
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({
+      portfolios,
+      projectDocuments,
+      projectOrderDocuments,
+      engagements,
+      user,
+    }),
+    [portfolios, projectDocuments, projectOrderDocuments, engagements, user],
   );
 
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
+  const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
+
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
+  );
+
+  const showFullPageLoading = isLoading && !hasLoadedOnce;
+
   const {
-    isLoading: viewModelLoading,
+    isLoading: _viewModelLoading,
     sidebarItems,
     overviewStats,
-    liveVisitors,
     profile,
     aboutMe,
   } = createDashboardViewModel({
-    isLoading,
+    isLoading: showFullPageLoading,
     portfolios: visiblePortfolios,
     projects: databaseProjects,
-    user,
+    user: snapshot.user,
   });
 
   useEffect(() => {
     const nextProjects = databaseProjects;
     const nextProjectDataKey = getProjectDataKey(nextProjects);
-    const nextProjectOrderKey = getProjectOrderKey(nextProjects);
 
     if (saveStatus !== "unsaved" && nextProjectDataKey !== dataProjectKey) {
       setOrderedProjects(nextProjects);
       setDataProjectKey(nextProjectDataKey);
-      setSourceProjectOrderKey(nextProjectOrderKey);
       setSaveStatus("idle");
     }
   }, [databaseProjects, dataProjectKey, saveStatus]);
 
-  const handleProjectsReorder = (nextProjects) => {
-    setOrderedProjects(nextProjects);
-    setSaveStatus(
-      getProjectOrderKey(nextProjects) === sourceProjectOrderKey
-        ? "idle"
-        : "unsaved",
-    );
-  };
-
-  const handleSaveProjectOrder = () => {
-    if (!selectedPortfolio?._id) {
-      setSaveStatus("error");
-      return;
-    }
-
-    const projectIds = orderedProjects.map((project) => getProjectId(project));
-
-    setSaveStatus("saving");
-    Meteor.call(
-      "portfolioProjects.reorder",
-      {
-        portfolioId: selectedPortfolio._id,
-        projectIds,
-      },
-      (error) => {
-        if (error) {
-          setSaveStatus("error");
-          return;
-        }
-
-        setSourceProjectOrderKey(projectIds.join("|"));
-        setSaveStatus("saved");
-      },
-    );
+  const showActionError = (message) => {
+    setActionError(message);
+    window.setTimeout(() => setActionError(null), 5000);
   };
 
   const handleProjectDragStart = (index) => setDraggedProjectIndex(index);
+
   const handleProjectDragOver = (event) => event.preventDefault();
 
   const handleProjectDrop = (dropIndex) => {
@@ -216,18 +268,34 @@ const DashboardLayout = () => {
       return;
     }
 
+    const previousOrder = orderedProjects;
     const updatedProjects = [...orderedProjects];
     const [draggedProject] = updatedProjects.splice(draggedProjectIndex, 1);
+
     updatedProjects.splice(dropIndex, 0, draggedProject);
 
     setOrderedProjects(updatedProjects);
     setDraggedProjectIndex(null);
 
     if (selectedPortfolio?._id) {
-      Meteor.call("portfolioProjects.reorder", {
-        portfolioId: selectedPortfolio._id,
-        projectIds: updatedProjects.map((p) => p._id || p.id),
-      });
+      Meteor.call(
+        "portfolioProjects.reorder",
+        {
+          portfolioId: selectedPortfolio._id,
+          projectIds: updatedProjects.map(
+            (project) => project._id || project.id,
+          ),
+        },
+        (error) => {
+          if (error) {
+            console.error("Failed to save project order:", error);
+            setOrderedProjects(previousOrder);
+            showActionError(
+              "Couldn't save the new project order. Reverted to last changes",
+            );
+          }
+        },
+      );
     }
   };
 
@@ -235,7 +303,7 @@ const DashboardLayout = () => {
 
   // New project becomes the first card in the display.
   const handleAddProject = (newProject) => {
-    setOrderedProjects((prev) => [newProject, ...prev]);
+    setOrderedProjects((previousProjects) => [newProject, ...previousProjects]);
   };
 
   const handleEditProject = (project) => setEditingProject(project);
@@ -244,16 +312,18 @@ const DashboardLayout = () => {
     Meteor.call("projects.update", projectId, updates, (error) => {
       if (error) {
         console.error("Failed to update project:", error);
+        showActionError("Couldn't save your changes. Please try again.");
         return;
       }
-      // Reflect the change immediately in the locally ordered list.
-      setOrderedProjects((prev) =>
-        prev.map((project) =>
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.map((project) =>
           (project._id || project.id) === projectId
             ? { ...project, ...updates }
             : project,
         ),
       );
+
       setEditingProject(null);
     });
   };
@@ -262,20 +332,87 @@ const DashboardLayout = () => {
     Meteor.call("projects.delete", projectId, (error) => {
       if (error) {
         console.error("Failed to delete project:", error);
+        showActionError("Couldn't delete the project. Please try again.");
         return;
       }
-      // Remove the card from the display and close the modal.
-      setOrderedProjects((prev) =>
-        prev.filter((project) => (project._id || project.id) !== projectId),
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.filter(
+          (project) => (project._id || project.id) !== projectId,
+        ),
       );
+
       setEditingProject(null);
     });
   };
 
+  // Manual "Sync now" trigger. Patches orderedProjects directly (same
+  // pattern as handleSaveProject above) since that's the source the grid
+  // renders from.
+  const handleSyncProject = (project) => {
+    const projectId = project._id || project.id;
+    if (!projectId || syncingProjectId) return;
+
+    setSyncingProjectId(projectId);
+
+    Meteor.call("projects.syncGithubStats", projectId, (error, result) => {
+      setSyncingProjectId(null);
+
+      if (error) {
+        console.error("Failed to sync GitHub stats:", error);
+        // GRACEFUL FAILURE: keep whatever GitHub stats were already loaded
+        showActionError(
+          "Couldn't refresh GitHub stats. Showing the last synced data.",
+        );
+        return;
+      }
+
+      setOrderedProjects((previousProjects) =>
+        previousProjects.map((existingProject) =>
+          (existingProject._id || existingProject.id) === projectId
+            ? {
+                ...existingProject,
+                githubStats: result.githubStats,
+                lastSyncedAt: result.lastSyncedAt,
+              }
+            : existingProject,
+        ),
+      );
+    });
+  };
+
+  const handleCopyLink = async () => {
+    if (!selectedPortfolio?._id || !selectedPortfolio?.isPublished) return;
+
+    const publicUrl = selectedPortfolio.username
+      ? `${window.location.origin}/u/${selectedPortfolio.username}`
+      : `${window.location.origin}/${selectedPortfolio._id}/view`;
+
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopyLinkStatus("copied");
+
+      window.setTimeout(() => {
+        setCopyLinkStatus("idle");
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy portfolio link:", error);
+      setCopyLinkStatus("error");
+
+      window.setTimeout(() => {
+        setCopyLinkStatus("idle");
+      }, 2000);
+    }
+  };
+
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
+  const draftStatus = getDraftStatus({
+    portfolio: selectedPortfolio,
+    projects: orderedProjects,
+  });
 
-  if (viewModelLoading) {
+  if (showFullPageLoading) {
     return <p className="p-8 text-lg">Loading...</p>;
   }
 
@@ -284,7 +421,9 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
+      {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
+      <RecruiterVisitAlert />
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
@@ -296,16 +435,51 @@ const DashboardLayout = () => {
       />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold text-gray-900">
+        <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
+          <h1 className="text-2xl font-extrabold text-primary">
             {currentTab.label}
           </h1>
+
           <div className="flex items-center gap-3">
+            {!isConnected && hasLoadedOnce && (
+              <span className="text-xs font-medium text-amber-600">
+                Reconnecting… showing your last saved data
+              </span>
+            )}
+
+            <DraftStatusIndicator
+              status={draftStatus}
+              onReview={() => setIsComparisonOpen(true)}
+            />
+
+            <button
+              type="button"
+              data-testid="copy-public-link-btn"
+              onClick={handleCopyLink}
+              disabled={
+                !selectedPortfolio?._id || !selectedPortfolio?.isPublished
+              }
+              title={
+                selectedPortfolio?.isPublished
+                  ? "Copy public portfolio link"
+                  : "Publish your portfolio before sharing it"
+              }
+              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {copyLinkStatus === "copied"
+                ? "Link Copied!"
+                : copyLinkStatus === "error"
+                  ? "Copy Failed"
+                  : "Copy Link"}
+            </button>
+
             {activeTab === "settings" && <LogoutButton />}
+
             {activeTab === "projects" && (
               <button
+                type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="px-5 py-2 rounded-lg bg-indigo-700 text-white text-sm font-semibold hover:bg-indigo-800 transition"
+                className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
               >
                 Add Project
               </button>
@@ -313,15 +487,39 @@ const DashboardLayout = () => {
           </div>
         </header>
 
+        {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
+            save/reorder/sync/delete. Dismissible, and auto-clears itself. */}
+        {actionError && (
+          <div
+            role="alert"
+            className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            <span>{actionError}</span>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="shrink-0 font-semibold text-red-700 hover:underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="p-8">
           {activeTab === "overview" ? (
-            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+            <OverviewSection
+              stats={overviewStats}
+              portfolioId={selectedPortfolio?._id}
+              onViewAllVisitors={() => setActiveTab("visitors")}
+            />
           ) : activeTab === "about-me" ? (
             <AboutMeLinksEditor
               value={aboutMe}
               onChange={(updatedValue) => {
                 const portfolioId = selectedPortfolio?._id;
+
                 if (!portfolioId) return;
+
                 Meteor.call(
                   "portfolios.update",
                   portfolioId,
@@ -332,6 +530,13 @@ const DashboardLayout = () => {
                   (error) => {
                     if (error) {
                       console.error("Failed to save portfolio:", error);
+                      // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
+                      // from here once `value` is passed down, so the
+                      // user's typed changes aren't lost - just flag that
+                      // they weren't persisted.
+                      showActionError(
+                        "Couldn't save your About Me changes. Please try again.",
+                      );
                     }
                   },
                 );
@@ -347,25 +552,44 @@ const DashboardLayout = () => {
             <ProjectsSection
               projects={orderedProjects}
               onEdit={handleEditProject}
+              syncingProjectId={syncingProjectId}
+              onSync={handleSyncProject}
               draggedProjectIndex={draggedProjectIndex}
               onDragStart={handleProjectDragStart}
               onDragOver={handleProjectDragOver}
               onDrop={handleProjectDrop}
               onDragEnd={handleProjectDragEnd}
             />
+          ) : activeTab === "analytics" ? (
+            <AnalyticsSection
+              projects={orderedProjects}
+              engagements={snapshot.engagements}
+            />
+          ) : activeTab === "visitors" ? (
+            <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={selectedPortfolio} />
+            <RecruiterPortal
+              portfolio={selectedPortfolio}
+              userId={snapshot.user?._id}
+            />
+          ) : activeTab === "themes" ? (
+            <ThemeSection
+              portfolioId={selectedPortfolio?._id}
+              currentActiveTheme={selectedPortfolio?.theme}
+            />
           ) : (
             <PlaceholderSection title={currentTab.label} />
           )}
         </div>
       </main>
+
       <AddProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
         portfolioId={selectedPortfolio?._id}
       />
+
       <EditProjectModal
         isOpen={Boolean(editingProject)}
         project={editingProject}
@@ -373,15 +597,148 @@ const DashboardLayout = () => {
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
       />
+      <DraftComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        status={draftStatus}
+      />
+    </div>
+  );
+};
+
+const OwnerPreviewRoute = () => {
+  const {
+    isLoading,
+    portfolios,
+    projectDocuments,
+    projectOrderDocuments,
+    user,
+  } = useDashboardData();
+
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({ portfolios, projectDocuments, projectOrderDocuments, user }),
+    [portfolios, projectDocuments, projectOrderDocuments, user],
+  );
+
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
+  );
+
+  if (isLoading && !hasLoadedOnce) {
+    return <p className="p-8 text-lg">Loading draft preview...</p>;
+  }
+
+  return (
+    <PortfolioPreview
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      isStaging
+    />
+  );
+};
+
+// Renders the snapshot taken at publish time rather than the live draft, so
+// the owner can see exactly what was published.
+const PublishedPortfolioRoute = () => {
+  const { isLoading, portfolios, user } = useDashboardData();
+  const navigate = useNavigate();
+
+  const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
+    isLoading,
+    () => ({ portfolios, user }),
+    [portfolios, user],
+  );
+
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
+  const publishedContent = selectedPortfolio?.publishedContent;
+
+  if (isLoading && !hasLoadedOnce) {
+    return <p className="p-8 text-lg">Loading published portfolio...</p>;
+  }
+
+  if (!publishedContent) {
+    return (
+      <div className="flex flex-col items-start gap-4 p-8">
+        <p className="text-lg text-primary">
+          This portfolio has not been published yet.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate("/preview")}
+          className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+        >
+          Back to draft preview
+        </button>
+      </div>
+    );
+  }
+
+  // The app applies the draft's theme globally, so the snapshot's own theme is
+  // re-applied here. Theme variables are plain CSS custom properties, so this
+  // nested data-theme overrides the outer one for everything inside it.
+  //
+  // The background and font utilities have to be repeated rather than
+  // inherited: they are declared once on the app shell, where the draft theme
+  // is in scope, and an inherited font-family arrives already resolved.
+  return (
+    <div
+      data-theme={getPublishedTheme(publishedContent.theme)}
+      className="min-h-screen bg-background font-main"
+    >
+      <PortfolioPreview
+        portfolio={publishedContent}
+        portfolioId={selectedPortfolio?._id}
+        projects={publishedContent.projects || []}
+        isPublishedView
+      />
     </div>
   );
 };
 
 export const PortfolioBuilderView = () => {
+  const { portfolio, ready } = useTracker(() => {
+    const portfoliosSub = Meteor.subscribe("portfolios.all");
+    const currentUserSub = Meteor.subscribe("users.current");
+
+    const user = Meteor.user();
+    const portfolios = PortfolioCollection.find({}).fetch();
+
+    return {
+      portfolio: getSelectedPortfolio(portfolios, user),
+      ready: portfoliosSub.ready() && currentUserSub.ready(),
+    };
+  });
+
+  // AUTO-CREATE PORTFOLIO FOR USER IF NOT EXISTS
+  // note this is intentionally minimal as extra fields can be added later as the user edits their portfolio.
+  useEffect(() => {
+    if (ready && !portfolio) {
+      Meteor.call("portfolios.insert", {
+        title: "My Portfolio",
+        projects: [],
+        theme: "default",
+        createdAt: new Date(),
+      });
+    }
+  }, [ready, portfolio]);
+
+  if (!ready) return null;
+
   return (
     <Routes>
       <Route path="/" element={<DashboardLayout />} />
-      <Route path="/preview" element={<PortfolioPreview />} />
+      <Route path="/preview" element={<OwnerPreviewRoute />} />
+      <Route path="/published" element={<PublishedPortfolioRoute />} />
     </Routes>
   );
 };

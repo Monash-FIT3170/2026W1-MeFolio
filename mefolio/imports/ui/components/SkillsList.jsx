@@ -1,5 +1,3 @@
-import React from "react";
-
 const SkillsList = () => {
   return (
     <div className="skills-list">
