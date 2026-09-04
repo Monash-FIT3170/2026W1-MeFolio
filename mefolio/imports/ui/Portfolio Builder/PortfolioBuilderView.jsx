@@ -199,11 +199,20 @@ const DashboardLayout = () => {
 
   const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
     isLoading,
-    () => ({ portfolios, projectDocuments, projectOrderDocuments, engagements, user }),
+    () => ({
+      portfolios,
+      projectDocuments,
+      projectOrderDocuments,
+      engagements,
+      user,
+    }),
     [portfolios, projectDocuments, projectOrderDocuments, engagements, user],
   );
 
-  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
   const visiblePortfolios = selectedPortfolio ? [selectedPortfolio] : [];
 
   const databaseProjects = getPortfolioProjects(
@@ -215,7 +224,7 @@ const DashboardLayout = () => {
   const showFullPageLoading = isLoading && !hasLoadedOnce;
 
   const {
-    isLoading: viewModelLoading,
+    isLoading: _viewModelLoading,
     sidebarItems,
     overviewStats,
     profile,
@@ -551,7 +560,10 @@ const DashboardLayout = () => {
           ) : activeTab === "visitors" ? (
             <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
           ) : activeTab === "recruiter" ? (
-            <RecruiterPortal portfolio={selectedPortfolio} userId={snapshot.user?._id} />
+            <RecruiterPortal
+              portfolio={selectedPortfolio}
+              userId={snapshot.user?._id}
+            />
           ) : activeTab === "themes" ? (
             <ThemeSection
               portfolioId={selectedPortfolio?._id}
@@ -601,7 +613,10 @@ const OwnerPreviewRoute = () => {
     [portfolios, projectDocuments, projectOrderDocuments, user],
   );
 
-  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
   const databaseProjects = getPortfolioProjects(
     selectedPortfolio,
     snapshot.projectDocuments,
@@ -633,7 +648,10 @@ const PublishedPortfolioRoute = () => {
     [portfolios, user],
   );
 
-  const selectedPortfolio = getSelectedPortfolio(snapshot.portfolios, snapshot.user);
+  const selectedPortfolio = getSelectedPortfolio(
+    snapshot.portfolios,
+    snapshot.user,
+  );
   const publishedContent = selectedPortfolio?.publishedContent;
 
   if (isLoading && !hasLoadedOnce) {
