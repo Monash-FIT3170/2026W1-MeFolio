@@ -24,7 +24,9 @@ if (Meteor.isClient) {
         name: /Skill CSS, used in 1 project/,
       });
 
-      expect(reactNode.querySelector("circle").getAttribute("r")).to.equal("26");
+      expect(reactNode.querySelector("circle").getAttribute("r")).to.equal(
+        "26",
+      );
       expect(cssNode.querySelector("circle").getAttribute("r")).to.equal("22");
     });
 

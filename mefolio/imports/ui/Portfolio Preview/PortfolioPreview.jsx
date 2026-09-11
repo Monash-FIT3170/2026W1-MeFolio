@@ -364,10 +364,7 @@ export const PortfolioPreview = ({
           </div>
         </section>
 
-        <SkillsProjectMap
-          projects={projects}
-          viewportMode={viewportMode}
-        />
+        <SkillsProjectMap projects={projects} viewportMode={viewportMode} />
 
         {/* Project gallery section */}
         <section
