@@ -86,7 +86,12 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with http).";
     if (form.challengeEnabled) {
-      for (const key of ["title", "language", "starterCode", "expectedOutput"]) {
+      for (const key of [
+        "title",
+        "language",
+        "starterCode",
+        "expectedOutput",
+      ]) {
         if (!form.challenge[key].trim()) {
           e[`challenge.${key}`] = "This challenge field is required.";
         }

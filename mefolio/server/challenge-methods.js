@@ -2,12 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 
-const CHALLENGE_FIELDS = [
-  "title",
-  "language",
-  "starterCode",
-  "expectedOutput",
-];
+const CHALLENGE_FIELDS = ["title", "language", "starterCode", "expectedOutput"];
 
 export const validateChallenge = (challenge) => {
   if (challenge === undefined || challenge === null) return undefined;
