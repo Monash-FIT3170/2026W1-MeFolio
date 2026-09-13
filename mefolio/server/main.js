@@ -30,6 +30,7 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+import { validateChallenge } from "./challenge-methods.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -550,6 +551,9 @@ Meteor.methods({
       status: projectData.status ?? "live",
       githubStats: null,
       lastSyncedAt: null,
+      ...(projectData.challenge === undefined
+        ? {}
+        : { challenge: validateChallenge(projectData.challenge) }),
       createdAt: projectData.createdAt
         ? new Date(projectData.createdAt)
         : new Date(),
@@ -602,7 +606,23 @@ Meteor.methods({
   },
 
   async "projects.update"(projectId, updates) {
-    return await ProjectCollection.updateAsync(projectId, { $set: updates });
+    const normalizedUpdates = { ...updates };
+    const unset = {};
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, "challenge")) {
+      if (normalizedUpdates.challenge === null) {
+        delete normalizedUpdates.challenge;
+        unset.challenge = "";
+      } else {
+        normalizedUpdates.challenge = validateChallenge(
+          normalizedUpdates.challenge,
+        );
+      }
+    }
+
+    const update = { $set: normalizedUpdates };
+    if (Object.keys(unset).length) update.$unset = unset;
+
+    return await ProjectCollection.updateAsync(projectId, update);
   },
 
   async "projects.delete"(projectId) {
@@ -700,6 +720,15 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        ...(project.challenge
+          ? {
+              challenge: {
+                title: project.challenge.title || "",
+                language: project.challenge.language || "",
+                starterCode: project.challenge.starterCode || "",
+              },
+            }
+          : {}),
         githubStats: project.githubStats || null,
         lastSyncedAt: project.lastSyncedAt || null,
       }));

@@ -15,6 +15,13 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     githubLink: "",
     liveDemoLink: "",
     media: "",
+    challengeEnabled: false,
+    challenge: {
+      title: "",
+      language: "",
+      starterCode: "",
+      expectedOutput: "",
+    },
   });
   const [errors, setErrors] = useState({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -31,6 +38,13 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       githubLink: project.githubLink || "",
       liveDemoLink: project.liveDemoLink || "",
       media: project.media || "",
+      challengeEnabled: Boolean(project.challenge),
+      challenge: {
+        title: project.challenge?.title || "",
+        language: project.challenge?.language || "",
+        starterCode: project.challenge?.starterCode || "",
+        expectedOutput: project.challenge?.expectedOutput || "",
+      },
     });
     setErrors({});
   }, [project]);
@@ -56,6 +70,13 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
   };
 
+  const setChallenge = (key, value) => {
+    setForm((current) => ({
+      ...current,
+      challenge: { ...current.challenge, [key]: value },
+    }));
+  };
+
   const validate = () => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
@@ -64,6 +85,13 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       e.githubLink = "Enter a valid URL (starting with http).";
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with http).";
+    if (form.challengeEnabled) {
+      for (const key of ["title", "language", "starterCode", "expectedOutput"]) {
+        if (!form.challenge[key].trim()) {
+          e[`challenge.${key}`] = "This challenge field is required.";
+        }
+      }
+    }
     return e;
   };
 
@@ -82,6 +110,14 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       githubLink: form.githubLink.trim(),
       liveDemoLink: form.liveDemoLink.trim(),
       media: form.media.trim(),
+      challenge: form.challengeEnabled
+        ? {
+            title: form.challenge.title.trim(),
+            language: form.challenge.language.trim(),
+            starterCode: form.challenge.starterCode,
+            expectedOutput: form.challenge.expectedOutput,
+          }
+        : null,
     });
   };
 
@@ -115,6 +151,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               Update the details below and save your changes.
             </p>
           </div>
+
           <button
             type="button"
             data-testid="edit-modal-close-btn"
@@ -286,6 +323,78 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
             <p className="mt-1 text-xs text-muted">
               Paste a link to an image/video (e.g. from Unsplash or Cloudinary).
             </p>
+          </div>
+
+          <hr className="border-line -mx-6" />
+
+          <div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-primary">
+                  Project Challenge
+                </h3>
+                <p className="mt-1 text-xs text-muted">
+                  Optionally give visitors a coding task to complete.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.challengeEnabled}
+                onClick={() => set("challengeEnabled", !form.challengeEnabled)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  form.challengeEnabled
+                    ? "bg-button text-secondary"
+                    : "border border-line text-muted hover:border-alt"
+                }`}
+              >
+                {form.challengeEnabled ? "Enabled" : "Add"}
+              </button>
+            </div>
+
+            {form.challengeEnabled && (
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+                {[
+                  ["title", "Challenge Description", "e.g. Add two numbers"],
+                  ["language", "Language", "e.g. JavaScript"],
+                ].map(([key, label, placeholder]) => (
+                  <div key={key}>
+                    <label
+                      htmlFor={`edit-challenge-${key}`}
+                      className="mb-1.5 block text-sm font-semibold text-primary"
+                    >
+                      {label} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id={`edit-challenge-${key}`}
+                      type="text"
+                      value={form.challenge[key]}
+                      placeholder={placeholder}
+                      onChange={(e) => setChallenge(key, e.target.value)}
+                      className={fieldClass(`challenge.${key}`)}
+                    />
+                  </div>
+                ))}
+                <textarea
+                  aria-label="Starter Code"
+                  rows={4}
+                  placeholder="Starter code"
+                  value={form.challenge.starterCode}
+                  onChange={(e) => setChallenge("starterCode", e.target.value)}
+                  className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
+                />
+                <textarea
+                  aria-label="Expected Output"
+                  rows={2}
+                  placeholder="Expected output"
+                  value={form.challenge.expectedOutput}
+                  onChange={(e) =>
+                    setChallenge("expectedOutput", e.target.value)
+                  }
+                  className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
+                />
+              </div>
+            )}
           </div>
         </div>
 

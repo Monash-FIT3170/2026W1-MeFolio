@@ -12,6 +12,13 @@ const EMPTY_FORM = {
   status: "live",
   media: null,
   createdAt: null,
+  challengeEnabled: false,
+  challenge: {
+    title: "",
+    language: "",
+    starterCode: "",
+    expectedOutput: "",
+  },
 };
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
@@ -118,6 +125,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     if (errors[k]) setErrors((e) => ({ ...e, [k]: "" }));
   };
 
+  const setChallenge = (key, value) => {
+    setForm((current) => ({
+      ...current,
+      challenge: { ...current.challenge, [key]: value },
+    }));
+    if (errors[`challenge.${key}`]) {
+      setErrors((current) => ({ ...current, [`challenge.${key}`]: "" }));
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
@@ -126,6 +143,13 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       e.githubLink = "Enter a valid URL (starting with https://)";
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
+    if (form.challengeEnabled) {
+      for (const key of ["title", "language", "starterCode", "expectedOutput"]) {
+        if (!form.challenge[key].trim()) {
+          e[`challenge.${key}`] = "This challenge field is required.";
+        }
+      }
+    }
     return e;
   };
 
@@ -149,6 +173,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
         status: form.status,
         createdAt: new Date(),
         portfolioId,
+        ...(form.challengeEnabled
+          ? {
+              challenge: {
+                title: form.challenge.title.trim(),
+                language: form.challenge.language.trim(),
+                starterCode: form.challenge.starterCode,
+                expectedOutput: form.challenge.expectedOutput,
+              },
+            }
+          : {}),
       };
       Meteor.call("projects.insert", payload, (err) => {
         if (err) {
@@ -207,6 +241,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               Fill in the details below to add it to your portfolio
             </p>
           </div>
+
           <button
             data-testid="modal-close-btn"
             onClick={handleCancel}
@@ -368,6 +403,79 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             </div>
           </div>
 
+          <hr className="border-line -mx-6" />
+
+            <div>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-primary">
+                    Add a Challenge
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    Give visitors a small coding task to complete from this
+                    project card.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={form.challengeEnabled}
+                  onClick={() => set("challengeEnabled", !form.challengeEnabled)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    form.challengeEnabled
+                      ? "bg-button text-secondary"
+                      : "border border-line text-muted hover:border-alt"
+                  }`}
+                >
+                  {form.challengeEnabled ? "Enabled" : "Add"}
+                </button>
+              </div>
+
+              {form.challengeEnabled && (
+                <div className="mt-4 flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+                  {[
+                    ["title", "Challenge Description", "e.g. Add two numbers"],
+                    ["language", "Language", "e.g. JavaScript"],
+                  ].map(([key, label, placeholder]) => (
+                    <div key={key}>
+                      <label
+                        htmlFor={`mf-challenge-${key}`}
+                        className="mb-1.5 block text-sm font-semibold text-primary"
+                      >
+                        {label} <span className="text-accent2">*</span>
+                      </label>
+                      <input
+                        id={`mf-challenge-${key}`}
+                        data-testid={`field-challenge-${key}`}
+                        type="text"
+                        placeholder={placeholder}
+                        value={form.challenge[key]}
+                        onChange={(e) => setChallenge(key, e.target.value)}
+                        className={fieldClass(`challenge.${key}`)}
+                      />
+                    </div>
+                  ))}
+                  <textarea
+                    aria-label="Starter Code"
+                    rows={4}
+                    placeholder="const result = 2 + 2;"
+                    value={form.challenge.starterCode}
+                    onChange={(e) => setChallenge("starterCode", e.target.value)}
+                    className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
+                  />
+                  <textarea
+                    aria-label="Expected Output"
+                    rows={2}
+                    placeholder="4"
+                    value={form.challenge.expectedOutput}
+                    onChange={(e) =>
+                      setChallenge("expectedOutput", e.target.value)
+                    }
+                    className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
+                  />
+                </div>
+              )}
+            </div>
           {/* Media */}
           <div>
             <label
