@@ -144,7 +144,12 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
     if (form.challengeEnabled) {
-      for (const key of ["title", "language", "starterCode", "expectedOutput"]) {
+      for (const key of [
+        "title",
+        "language",
+        "starterCode",
+        "expectedOutput",
+      ]) {
         if (!form.challenge[key].trim()) {
           e[`challenge.${key}`] = "This challenge field is required.";
         }
@@ -405,77 +410,77 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
 
           <hr className="border-line -mx-6" />
 
-            <div>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-primary">
-                    Add a Challenge
-                  </h3>
-                  <p className="mt-1 text-xs text-muted">
-                    Give visitors a small coding task to complete from this
-                    project card.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={form.challengeEnabled}
-                  onClick={() => set("challengeEnabled", !form.challengeEnabled)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    form.challengeEnabled
-                      ? "bg-button text-secondary"
-                      : "border border-line text-muted hover:border-alt"
-                  }`}
-                >
-                  {form.challengeEnabled ? "Enabled" : "Add"}
-                </button>
+          <div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-primary">
+                  Add a Challenge
+                </h3>
+                <p className="mt-1 text-xs text-muted">
+                  Give visitors a small coding task to complete from this
+                  project card.
+                </p>
               </div>
-
-              {form.challengeEnabled && (
-                <div className="mt-4 flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
-                  {[
-                    ["title", "Challenge Description", "e.g. Add two numbers"],
-                    ["language", "Language", "e.g. JavaScript"],
-                  ].map(([key, label, placeholder]) => (
-                    <div key={key}>
-                      <label
-                        htmlFor={`mf-challenge-${key}`}
-                        className="mb-1.5 block text-sm font-semibold text-primary"
-                      >
-                        {label} <span className="text-accent2">*</span>
-                      </label>
-                      <input
-                        id={`mf-challenge-${key}`}
-                        data-testid={`field-challenge-${key}`}
-                        type="text"
-                        placeholder={placeholder}
-                        value={form.challenge[key]}
-                        onChange={(e) => setChallenge(key, e.target.value)}
-                        className={fieldClass(`challenge.${key}`)}
-                      />
-                    </div>
-                  ))}
-                  <textarea
-                    aria-label="Starter Code"
-                    rows={4}
-                    placeholder="const result = 2 + 2;"
-                    value={form.challenge.starterCode}
-                    onChange={(e) => setChallenge("starterCode", e.target.value)}
-                    className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
-                  />
-                  <textarea
-                    aria-label="Expected Output"
-                    rows={2}
-                    placeholder="4"
-                    value={form.challenge.expectedOutput}
-                    onChange={(e) =>
-                      setChallenge("expectedOutput", e.target.value)
-                    }
-                    className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
-                  />
-                </div>
-              )}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.challengeEnabled}
+                onClick={() => set("challengeEnabled", !form.challengeEnabled)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  form.challengeEnabled
+                    ? "bg-button text-secondary"
+                    : "border border-line text-muted hover:border-alt"
+                }`}
+              >
+                {form.challengeEnabled ? "Enabled" : "Add"}
+              </button>
             </div>
+
+            {form.challengeEnabled && (
+              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+                {[
+                  ["title", "Challenge Description", "e.g. Add two numbers"],
+                  ["language", "Language", "e.g. JavaScript"],
+                ].map(([key, label, placeholder]) => (
+                  <div key={key}>
+                    <label
+                      htmlFor={`mf-challenge-${key}`}
+                      className="mb-1.5 block text-sm font-semibold text-primary"
+                    >
+                      {label} <span className="text-accent2">*</span>
+                    </label>
+                    <input
+                      id={`mf-challenge-${key}`}
+                      data-testid={`field-challenge-${key}`}
+                      type="text"
+                      placeholder={placeholder}
+                      value={form.challenge[key]}
+                      onChange={(e) => setChallenge(key, e.target.value)}
+                      className={fieldClass(`challenge.${key}`)}
+                    />
+                  </div>
+                ))}
+                <textarea
+                  aria-label="Starter Code"
+                  rows={4}
+                  placeholder="const result = 2 + 2;"
+                  value={form.challenge.starterCode}
+                  onChange={(e) => setChallenge("starterCode", e.target.value)}
+                  className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
+                />
+                <textarea
+                  aria-label="Expected Output"
+                  rows={2}
+                  placeholder="4"
+                  value={form.challenge.expectedOutput}
+                  onChange={(e) =>
+                    setChallenge("expectedOutput", e.target.value)
+                  }
+                  className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
+                />
+              </div>
+            )}
+          </div>
           {/* Media */}
           <div>
             <label
