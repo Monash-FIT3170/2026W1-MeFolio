@@ -11,6 +11,7 @@ import {
   Mic,
 } from "lucide-react";
 import { trackProjectClick } from "../../api/projectClickTracking";
+import { Meteor } from "meteor/meteor";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 
 export function ProjectCard({
@@ -19,6 +20,9 @@ export function ProjectCard({
   onProjectClick = trackProjectClick,
 }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
+  const [challengeCode, setChallengeCode] = useState("");
+  const [challengeResult, setChallengeResult] = useState(null);
+  const [challengeError, setChallengeError] = useState("");
   const [, setImageError] = useState(false);
 
   const data = project || {
@@ -54,6 +58,25 @@ export function ProjectCard({
     } catch {
       // Keep the destination usable if analytics fails.
     }
+  };
+
+  const handleChallengeSubmit = () => {
+    const projectId = data._id || data.id;
+    setChallengeResult(null);
+    setChallengeError("");
+
+    Meteor.call(
+      "validate_challenge_completion",
+      projectId,
+      challengeCode,
+      (error, result) => {
+        if (error) {
+          setChallengeError(error.reason || "Unable to validate challenge.");
+          return;
+        }
+        setChallengeResult(result.completed);
+      },
+    );
   };
 
   return (
@@ -133,12 +156,54 @@ export function ProjectCard({
             </span>
           </div>
 
-          <p
-            data-testid="challenge-placeholder"
-            className="ml-6 mb-3 text-[11px] font-semibold text-accent2"
-          >
-            Challenge feature coming soon
-          </p>
+          {data.challenge ? (
+            showMockChallenge ? (
+              <div className="ml-6 mb-3 space-y-3">
+                <p className="text-[11px] font-semibold text-accent2">
+                  {data.challenge.title} · {data.challenge.language}
+                </p>
+                <pre className="whitespace-pre-wrap rounded-lg bg-surface-fill p-3 text-xs text-primary">
+                  {data.challenge.starterCode}
+                </pre>
+                <textarea
+                  aria-label="Challenge answer"
+                  value={challengeCode}
+                  onChange={(event) => setChallengeCode(event.target.value)}
+                  placeholder="Enter your answer"
+                  rows={3}
+                  className="w-full rounded-lg border border-line bg-surface-fill p-2 text-xs text-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleChallengeSubmit}
+                  className="w-full rounded-lg bg-button py-2 text-xs font-bold text-secondary"
+                >
+                  Check Answer
+                </button>
+                {challengeResult !== null && (
+                  <p
+                    className={`text-xs font-bold ${
+                      challengeResult ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {challengeResult ? "Correct!" : "Not quite yet!"}
+                  </p>
+                )}
+                {challengeError && (
+                  <p className="text-xs font-bold text-accent2">
+                    {challengeError}
+                  </p>
+                )}
+              </div>
+            ) : null
+          ) : (
+            <p
+              data-testid="challenge-placeholder"
+              className="ml-6 mb-3 text-[11px] font-semibold text-accent2"
+            >
+              Challenge feature coming soon
+            </p>
+          )}
 
           <button
             onClick={() => setShowMockChallenge(!showMockChallenge)}
@@ -215,6 +280,12 @@ ProjectCard.propTypes = {
       stars: PropTypes.number,
       commits: PropTypes.number,
       updatedAt: PropTypes.string,
+    }),
+    challenge: PropTypes.shape({
+      title: PropTypes.string,
+      language: PropTypes.string,
+      starterCode: PropTypes.string,
+      expectedOutput: PropTypes.string,
     }),
   }),
   portfolioId: PropTypes.string,
