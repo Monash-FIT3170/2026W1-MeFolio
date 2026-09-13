@@ -19,6 +19,7 @@ const EMPTY_FORM = {
   challenge: {
     title: "",
     language: "",
+    hint: "",
     starterCode: "",
     expectedOutput: "",
   },
@@ -187,6 +188,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               challenge: {
                 title: form.challenge.title.trim(),
                 language: form.challenge.language.trim(),
+                hint: form.challenge.hint.trim(),
                 starterCode: form.challenge.starterCode,
                 expectedOutput: form.challenge.expectedOutput,
               },
@@ -449,6 +451,24 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
                   )}
                 </div>
               ))}
+
+              <div>
+                <label
+                  htmlFor="mf-challenge-hint"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Hint <span className="text-muted">(optional)</span>
+                </label>
+                <input
+                  id="mf-challenge-hint"
+                  data-testid="field-challenge-hint"
+                  type="text"
+                  placeholder="e.g. Consider item quantities"
+                  value={form.challenge.hint}
+                  onChange={(e) => setChallenge("hint", e.target.value)}
+                  className={fieldClass("challenge.hint")}
+                />
+              </div>
 
               <div>
                 <label

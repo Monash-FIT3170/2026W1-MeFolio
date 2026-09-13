@@ -22,6 +22,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     challenge: {
       title: "",
       language: "",
+      hint: "",
       starterCode: "",
       expectedOutput: "",
     },
@@ -48,6 +49,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       challenge: {
         title: project.challenge?.title || "",
         language: project.challenge?.language || "",
+        hint: project.challenge?.hint || "",
         starterCode: project.challenge?.starterCode || "",
         expectedOutput: project.challenge?.expectedOutput || "",
       },
@@ -130,6 +132,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
           ? {
               title: form.challenge.title.trim(),
               language: form.challenge.language.trim(),
+              hint: form.challenge.hint.trim(),
               starterCode: form.challenge.starterCode,
               expectedOutput: form.challenge.expectedOutput,
             }
@@ -378,6 +381,23 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
                   )}
                 </div>
               ))}
+
+              <div>
+                <label
+                  htmlFor="edit-challenge-hint"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Hint <span className="text-muted">(optional)</span>
+                </label>
+                <input
+                  id="edit-challenge-hint"
+                  type="text"
+                  value={form.challenge.hint}
+                  placeholder="e.g. Consider item quantities"
+                  onChange={(e) => setChallenge("hint", e.target.value)}
+                  className={fieldClass("challenge.hint")}
+                />
+              </div>
 
               <div>
                 <label

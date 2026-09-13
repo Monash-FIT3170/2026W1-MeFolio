@@ -3,6 +3,7 @@ import { check } from "meteor/check";
 import { ProjectCollection } from "/imports/api/projects";
 
 const CHALLENGE_FIELDS = ["title", "language", "starterCode", "expectedOutput"];
+const OPTIONAL_CHALLENGE_FIELDS = ["hint"];
 
 export const validateChallenge = (challenge) => {
   if (challenge === undefined || challenge === null) return undefined;
@@ -19,13 +20,27 @@ export const validateChallenge = (challenge) => {
     normalizedChallenge[field] = challenge[field];
   }
 
+  // Optional fields default to "" and are only rejected if present but non-string.
+  for (const field of OPTIONAL_CHALLENGE_FIELDS) {
+    if (challenge[field] === undefined || challenge[field] === null) {
+      normalizedChallenge[field] = "";
+    } else if (typeof challenge[field] !== "string") {
+      throw new Meteor.Error(
+        "projects.invalid-challenge",
+        `Challenge ${field} must be a string.`,
+      );
+    } else {
+      normalizedChallenge[field] = challenge[field];
+    }
+  }
+
   return normalizedChallenge;
 };
 
 Meteor.methods({
-  async validate_challenge_completion(projectId, providedCode) {
+  async validate_challenge_completion(projectId, providedOutput) {
     check(projectId, String);
-    check(providedCode, String);
+    check(providedOutput, String);
 
     const project = await ProjectCollection.findOneAsync(projectId, {
       fields: { challenge: 1 },
@@ -42,8 +57,12 @@ Meteor.methods({
       );
     }
 
+    // Compare trimmed so trailing newlines / surrounding spaces don't fail an
+    // otherwise-correct answer. The client sends the sandbox's captured output.
     return {
-      completed: providedCode === project.challenge.expectedOutput,
+      completed:
+        providedOutput.trim() ===
+        (project.challenge.expectedOutput || "").trim(),
     };
   },
 });

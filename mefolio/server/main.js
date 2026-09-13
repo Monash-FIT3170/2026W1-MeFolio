@@ -740,6 +740,7 @@ Meteor.methods({
               challenge: {
                 title: project.challenge.title || "",
                 language: project.challenge.language || "",
+                hint: project.challenge.hint || "",
                 starterCode: project.challenge.starterCode || "",
               },
             }
