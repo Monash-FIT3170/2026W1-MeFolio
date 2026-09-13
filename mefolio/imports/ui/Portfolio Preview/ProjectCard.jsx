@@ -11,10 +11,8 @@ import {
   Mic,
 } from "lucide-react";
 import { trackProjectClick } from "../../api/projectClickTracking";
-import { Meteor } from "meteor/meteor";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
-import CodeBlock from "../Projects Editor/CodeBlock";
-import getLanguageFromTechStack from "../Projects Editor/techToLanguage";
+import { ProjectChallenge } from "./ProjectChallenge";
 
 export function ProjectCard({
   project,
@@ -23,9 +21,6 @@ export function ProjectCard({
   dataTheme = "default",
 }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
-  const [challengeCode, setChallengeCode] = useState("");
-  const [challengeResult, setChallengeResult] = useState(null);
-  const [challengeError, setChallengeError] = useState("");
   const [, setImageError] = useState(false);
 
   const data = project || {
@@ -61,25 +56,6 @@ export function ProjectCard({
     } catch {
       // Keep the destination usable if analytics fails.
     }
-  };
-
-  const handleChallengeSubmit = () => {
-    const projectId = data._id || data.id;
-    setChallengeResult(null);
-    setChallengeError("");
-
-    Meteor.call(
-      "validate_challenge_completion",
-      projectId,
-      challengeCode,
-      (error, result) => {
-        if (error) {
-          setChallengeError(error.reason || "Unable to validate challenge.");
-          return;
-        }
-        setChallengeResult(result.completed);
-      },
-    );
   };
 
   return (
@@ -161,45 +137,7 @@ export function ProjectCard({
 
           {data.challenge ? (
             showMockChallenge ? (
-              <div className="ml-6 mb-3 space-y-3">
-                <p className="text-[11px] font-semibold text-accent2">
-                  {data.challenge.title} · {data.challenge.language}
-                </p>
-                <CodeBlock
-                  code={data.challenge.starterCode}
-                  language={getLanguageFromTechStack(data.technologies)}
-                  dataTheme={dataTheme}
-                />
-                <textarea
-                  aria-label="Challenge answer"
-                  value={challengeCode}
-                  onChange={(event) => setChallengeCode(event.target.value)}
-                  placeholder="Enter your answer"
-                  rows={3}
-                  className="w-full rounded-lg border border-line bg-surface-fill p-2 text-xs text-primary"
-                />
-                <button
-                  type="button"
-                  onClick={handleChallengeSubmit}
-                  className="w-full rounded-lg bg-button py-2 text-xs font-bold text-secondary"
-                >
-                  Check Answer
-                </button>
-                {challengeResult !== null && (
-                  <p
-                    className={`text-xs font-bold ${
-                      challengeResult ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {challengeResult ? "Correct!" : "Not quite yet!"}
-                  </p>
-                )}
-                {challengeError && (
-                  <p className="text-xs font-bold text-accent2">
-                    {challengeError}
-                  </p>
-                )}
-              </div>
+              <ProjectChallenge project={data} dataTheme={dataTheme} />
             ) : null
           ) : (
             <p
