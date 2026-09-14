@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Meteor } from "meteor/meteor";
 import PropTypes from "prop-types";
 import TechStackInput from "./TechStackInput";
+import ProofOfWorkSection from "./ProofOfWorkSection";
+import CodeBlock from "./CodeBlock";
+import getLanguageFromTechStack from "./techToLanguage";
 
 const EMPTY_FORM = {
   title: "",
@@ -12,7 +15,7 @@ const EMPTY_FORM = {
   status: "live",
   media: null,
   createdAt: null,
-  challengeEnabled: false,
+  proofOfWorkMode: "standard",
   challenge: {
     title: "",
     language: "",
@@ -143,7 +146,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       e.githubLink = "Enter a valid URL (starting with https://)";
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
-    if (form.challengeEnabled) {
+    if (form.proofOfWorkMode === "interactive") {
       for (const key of [
         "title",
         "language",
@@ -178,7 +181,8 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
         status: form.status,
         createdAt: new Date(),
         portfolioId,
-        ...(form.challengeEnabled
+        proofOfWorkMode: form.proofOfWorkMode,
+        ...(form.proofOfWorkMode === "interactive"
           ? {
               challenge: {
                 title: form.challenge.title.trim(),
@@ -187,7 +191,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
                 expectedOutput: form.challenge.expectedOutput,
               },
             }
-          : {}),
+          : { challenge: null }),
       };
       Meteor.call("projects.insert", payload, (err) => {
         if (err) {
@@ -218,6 +222,8 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition
       focus:border-accent2 focus:ring-2 focus:ring-selected
       ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
+
+  const previewLanguage = getLanguageFromTechStack(form.technologies);
 
   return (
     <div
@@ -410,66 +416,85 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
 
           <hr className="border-line -mx-6" />
 
-          <div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-semibold text-primary">
-                  Add a Challenge
-                </h3>
-                <p className="mt-1 text-xs text-muted">
-                  Give visitors a small coding task to complete from this
-                  project card.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={form.challengeEnabled}
-                onClick={() => set("challengeEnabled", !form.challengeEnabled)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  form.challengeEnabled
-                    ? "bg-button text-secondary"
-                    : "border border-line text-muted hover:border-alt"
-                }`}
-              >
-                {form.challengeEnabled ? "Enabled" : "Add"}
-              </button>
-            </div>
+          {/* Proof of Work */}
+          <ProofOfWorkSection
+            mode={form.proofOfWorkMode}
+            onModeChange={(m) => set("proofOfWorkMode", m)}
+          >
+            <div className="flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+              {[
+                ["title", "Challenge Description", "e.g. Add two numbers"],
+                ["language", "Language", "e.g. JavaScript"],
+              ].map(([key, label, placeholder]) => (
+                <div key={key}>
+                  <label
+                    htmlFor={`mf-challenge-${key}`}
+                    className="mb-1.5 block text-sm font-semibold text-primary"
+                  >
+                    {label} <span className="text-accent2">*</span>
+                  </label>
+                  <input
+                    id={`mf-challenge-${key}`}
+                    data-testid={`field-challenge-${key}`}
+                    type="text"
+                    placeholder={placeholder}
+                    value={form.challenge[key]}
+                    onChange={(e) => setChallenge(key, e.target.value)}
+                    className={fieldClass(`challenge.${key}`)}
+                  />
+                  {errors[`challenge.${key}`] && (
+                    <p className="text-xs text-accent2 mt-1">
+                      {errors[`challenge.${key}`]}
+                    </p>
+                  )}
+                </div>
+              ))}
 
-            {form.challengeEnabled && (
-              <div className="mt-4 flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
-                {[
-                  ["title", "Challenge Description", "e.g. Add two numbers"],
-                  ["language", "Language", "e.g. JavaScript"],
-                ].map(([key, label, placeholder]) => (
-                  <div key={key}>
-                    <label
-                      htmlFor={`mf-challenge-${key}`}
-                      className="mb-1.5 block text-sm font-semibold text-primary"
-                    >
-                      {label} <span className="text-accent2">*</span>
-                    </label>
-                    <input
-                      id={`mf-challenge-${key}`}
-                      data-testid={`field-challenge-${key}`}
-                      type="text"
-                      placeholder={placeholder}
-                      value={form.challenge[key]}
-                      onChange={(e) => setChallenge(key, e.target.value)}
-                      className={fieldClass(`challenge.${key}`)}
-                    />
-                  </div>
-                ))}
+              <div>
+                <label
+                  htmlFor="mf-challenge-starter"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Starter Code <span className="text-accent2">*</span>
+                </label>
                 <textarea
-                  aria-label="Starter Code"
+                  id="mf-challenge-starter"
+                  data-testid="field-challenge-starterCode"
                   rows={4}
                   placeholder="const result = 2 + 2;"
                   value={form.challenge.starterCode}
                   onChange={(e) => setChallenge("starterCode", e.target.value)}
                   className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
                 />
+                {errors["challenge.starterCode"] && (
+                  <p className="text-xs text-accent2 mt-1">
+                    {errors["challenge.starterCode"]}
+                  </p>
+                )}
+              </div>
+
+              {form.challenge.starterCode.trim() && (
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Preview
+                  </p>
+                  <CodeBlock
+                    code={form.challenge.starterCode}
+                    language={previewLanguage}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="mf-challenge-output"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Expected Output <span className="text-accent2">*</span>
+                </label>
                 <textarea
-                  aria-label="Expected Output"
+                  id="mf-challenge-output"
+                  data-testid="field-challenge-expectedOutput"
                   rows={2}
                   placeholder="4"
                   value={form.challenge.expectedOutput}
@@ -478,9 +503,14 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
                   }
                   className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
                 />
+                {errors["challenge.expectedOutput"] && (
+                  <p className="text-xs text-accent2 mt-1">
+                    {errors["challenge.expectedOutput"]}
+                  </p>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          </ProofOfWorkSection>
           {/* Media */}
           <div>
             <label

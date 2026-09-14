@@ -13,6 +13,8 @@ import {
 import { trackProjectClick } from "../../api/projectClickTracking";
 import { Meteor } from "meteor/meteor";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
+import CodeBlock from "../Projects Editor/CodeBlock";
+import getLanguageFromTechStack from "../Projects Editor/techToLanguage";
 
 export function ProjectCard({
   project,
@@ -162,9 +164,10 @@ export function ProjectCard({
                 <p className="text-[11px] font-semibold text-accent2">
                   {data.challenge.title} · {data.challenge.language}
                 </p>
-                <pre className="whitespace-pre-wrap rounded-lg bg-surface-fill p-3 text-xs text-primary">
-                  {data.challenge.starterCode}
-                </pre>
+                <CodeBlock
+                  code={data.challenge.starterCode}
+                  language={getLanguageFromTechStack(data.technologies)}
+                />
                 <textarea
                   aria-label="Challenge answer"
                   value={challengeCode}
