@@ -551,6 +551,10 @@ Meteor.methods({
       status: projectData.status ?? "live",
       githubStats: null,
       lastSyncedAt: null,
+      proofOfWorkMode:
+        projectData.proofOfWorkMode === "interactive"
+          ? "interactive"
+          : "standard",
       ...(projectData.challenge === undefined
         ? {}
         : { challenge: validateChallenge(projectData.challenge) }),
@@ -608,6 +612,16 @@ Meteor.methods({
   async "projects.update"(projectId, updates) {
     const normalizedUpdates = { ...updates };
     const unset = {};
+
+    if (
+      Object.prototype.hasOwnProperty.call(normalizedUpdates, "proofOfWorkMode")
+    ) {
+      normalizedUpdates.proofOfWorkMode =
+        normalizedUpdates.proofOfWorkMode === "interactive"
+          ? "interactive"
+          : "standard";
+    }
+
     if (Object.prototype.hasOwnProperty.call(normalizedUpdates, "challenge")) {
       if (normalizedUpdates.challenge === null) {
         delete normalizedUpdates.challenge;
@@ -720,12 +734,14 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        proofOfWorkMode: project.proofOfWorkMode || "standard",
         ...(project.challenge
           ? {
               challenge: {
                 title: project.challenge.title || "",
                 language: project.challenge.language || "",
                 starterCode: project.challenge.starterCode || "",
+                expectedOutput: project.challenge.expectedOutput || "",
               },
             }
           : {}),
