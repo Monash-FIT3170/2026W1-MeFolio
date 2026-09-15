@@ -741,7 +741,6 @@ Meteor.methods({
                 title: project.challenge.title || "",
                 language: project.challenge.language || "",
                 starterCode: project.challenge.starterCode || "",
-                expectedOutput: project.challenge.expectedOutput || "",
               },
             }
           : {}),

@@ -164,7 +164,11 @@ export const PortfolioContent = ({
                 }`}
                 key={project._id}
               >
-                <ProjectCard project={project} portfolioId={portfolioId} />
+                <ProjectCard
+                  project={project}
+                  portfolioId={portfolioId}
+                  dataTheme={portfolio.theme || "default"}
+                />
               </div>
             ))}
             <div className="flex-none w-8" />
