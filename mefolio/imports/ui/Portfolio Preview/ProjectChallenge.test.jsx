@@ -113,7 +113,8 @@ if (Meteor.isClient) {
           screen.getByRole("button", { name: /submit solution/i }),
         );
 
-        expect(await screen.findByText(/boom/)).to.exist;
+        const alert = await screen.findByRole("alert");
+        expect(alert.textContent).to.contain("boom");
         expect(called).to.equal(false);
       } finally {
         Meteor.call = originalCall;
