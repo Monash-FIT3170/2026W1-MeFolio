@@ -20,6 +20,7 @@ export function ProjectCard({
   project,
   portfolioId,
   onProjectClick = trackProjectClick,
+  dataTheme = "default",
 }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
   const [challengeCode, setChallengeCode] = useState("");
@@ -167,6 +168,7 @@ export function ProjectCard({
                 <CodeBlock
                   code={data.challenge.starterCode}
                   language={getLanguageFromTechStack(data.technologies)}
+                  dataTheme={dataTheme}
                 />
                 <textarea
                   aria-label="Challenge answer"
@@ -293,4 +295,5 @@ ProjectCard.propTypes = {
   }),
   portfolioId: PropTypes.string,
   onProjectClick: PropTypes.func,
+  dataTheme: PropTypes.string,
 };

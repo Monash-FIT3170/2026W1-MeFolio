@@ -5,7 +5,7 @@ const MODES = [
   {
     value: "standard",
     label: "Standard",
-    description: "Base project card with title, derscription, and links.",
+    description: "Base project card with title, description, and links.",
     Icon: FileText,
   },
   {
