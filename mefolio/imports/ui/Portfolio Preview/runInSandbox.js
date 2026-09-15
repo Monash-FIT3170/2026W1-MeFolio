@@ -34,9 +34,17 @@ export const buildWorkerSource = (code) => `
     self.WebSocket = undefined;
 
     try {
-      // Indirect eval runs the code in the worker's global scope, not this closure.
-      (0, eval)(${JSON.stringify(code)});
-      self.postMessage({ ok: true, output: logs.join("\\n") });
+      // Indirect eval runs the code in the worker's global scope, not this
+      // closure, and returns the value of the final expression.
+      var result = (0, eval)(${JSON.stringify(code)});
+      var output = logs.join("\\n");
+      // If the visitor logged nothing, fall back to whatever their code
+      // evaluated to — so a bare expression like "2 + 2" or "sum([1,2,3])"
+      // is captured automatically without an explicit console.log.
+      if (output === "" && result !== undefined) {
+        output = typeof result === "string" ? result : JSON.stringify(result);
+      }
+      self.postMessage({ ok: true, output: output });
     } catch (error) {
       self.postMessage({
         ok: false,

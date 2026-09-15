@@ -46,6 +46,19 @@ if (Meteor.isClient) {
       expect(result.output).to.equal("4");
     });
 
+    it("captures the last expression's value when nothing is logged", async function () {
+      const result = await runInSandbox(
+        "const add = (a, b) => a + b;\nadd(2, 2);",
+      );
+      expect(result.error).to.equal("");
+      expect(result.output).to.equal("4");
+    });
+
+    it("prefers console.log output over the expression value", async function () {
+      const result = await runInSandbox("console.log('logged');\n99;");
+      expect(result.output).to.equal("logged");
+    });
+
     it("reports an error thrown by the snippet", async function () {
       const result = await runInSandbox("throw new Error('boom');");
       expect(result.timedOut).to.equal(false);
