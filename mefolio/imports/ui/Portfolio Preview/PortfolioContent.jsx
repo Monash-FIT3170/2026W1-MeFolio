@@ -4,6 +4,7 @@ import { ProjectCard } from "./ProjectCard.jsx";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import SkillsProjectMap from "./SkillsProjectMap.jsx";
 
 // The portfolio as its owner designed it - navbar, hero and project gallery -
 // with none of the surrounding dashboard controls. PortfolioPreview renders
@@ -94,6 +95,8 @@ export const PortfolioContent = ({
           </div>
         </div>
       </section>
+
+      <SkillsProjectMap projects={projects} viewportMode={viewportMode} />
 
       {/* Project gallery section */}
       <section

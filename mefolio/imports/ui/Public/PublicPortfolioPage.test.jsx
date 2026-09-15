@@ -160,6 +160,11 @@ if (Meteor.isClient) {
       expect(screen.getByText("Project Gallery")).to.exist;
       expect(screen.getByText("Weather Dashboard")).to.exist;
       expect(screen.getByText("Recipe Finder")).to.exist;
+      expect(screen.getByRole("heading", { name: "Skills in practice" })).to
+        .exist;
+      expect(screen.getByRole("button", { name: "Skill React" })).to.exist;
+      expect(screen.getByRole("button", { name: "Project Weather Dashboard" }))
+        .to.exist;
     });
 
     it("records project destination clicks with the public portfolio ID", () => {
