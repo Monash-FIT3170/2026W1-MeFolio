@@ -5,6 +5,7 @@ import {
   oneDark,
   vscDarkPlus,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { getPublishedTheme } from "../Portfolio Preview/publishedTheme";
 
 const THEME_STYLES = {
   default: oneLight,
@@ -17,7 +18,9 @@ const THEME_STYLES = {
  * Used for syntax highlighting code snippets
  */
 const CodeBlock = ({ code, language = "text", dataTheme = "default" }) => {
-  const style = THEME_STYLES[dataTheme] || oneLight;
+  // Resolve through getPublishedTheme so legacy/unknown theme ids (e.g. the old
+  // "minimal") map to the same style the page's [data-theme] uses.
+  const style = THEME_STYLES[getPublishedTheme(dataTheme)] || oneLight;
 
   return (
     <div className="rounded-lg overflow-hidden border border-line">

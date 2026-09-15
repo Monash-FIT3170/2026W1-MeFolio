@@ -87,16 +87,17 @@ export function ProjectChallenge({ project, dataTheme = "default" }) {
       )}
 
       <p className="text-[11px] text-muted">
-        Tip: <code>console.log</code> your result so it can be checked.
+        Your last line&apos;s value — or anything you <code>console.log</code> —
+        is checked.
       </p>
 
       <button
         type="button"
         onClick={handleSubmit}
         disabled={running}
-        className="w-full py-2 flex items-center justify-center gap-2 bg-button text-secondary rounded-lg font-bold text-sm disabled:opacity-60"
+        className="w-full py-2 flex items-center justify-center gap-2 bg-primary text-background rounded-lg font-bold text-sm transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        <Play className="w-3.5 h-3.5 fill-secondary" />
+        <Play className="w-3.5 h-3.5 fill-background" />
         {running ? "Running…" : "Submit Solution"}
       </button>
 
@@ -110,10 +111,10 @@ export function ProjectChallenge({ project, dataTheme = "default" }) {
         <p className="text-xs font-bold text-accent1">Correct!</p>
       )}
       {status === "incorrect" && (
-        <p className="text-xs font-bold text-accent2">Not quite yet!</p>
+        <p className="text-xs font-bold text-primary">Not quite yet!</p>
       )}
       {(status === "error" || status === "timeout") && message && (
-        <p role="alert" className="text-xs font-bold text-accent2">
+        <p role="alert" className="text-xs font-bold text-primary">
           {message}
         </p>
       )}

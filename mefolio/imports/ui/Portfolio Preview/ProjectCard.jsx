@@ -129,8 +129,8 @@ export function ProjectCard({
 
         <div className="p-4 mb-5 bg-background border border-accent2 rounded-2xl">
           <div className="flex items-center mb-1">
-            <Code className="w-4 h-4 text-accent2 mr-2" />
-            <span className="text-xs font-extrabold text-accent2 uppercase">
+            <Code className="w-4 h-4 text-primary mr-2" />
+            <span className="text-xs font-extrabold text-primary uppercase">
               Mini Challenge
             </span>
           </div>
@@ -150,9 +150,9 @@ export function ProjectCard({
 
           <button
             onClick={() => setShowMockChallenge(!showMockChallenge)}
-            className="w-full py-2 flex items-center justify-center gap-2 bg-background text-accent2 rounded-lg font-bold text-sm hover:bg-accent2 hover:text-background transition-colors"
+            className="w-full py-2 flex items-center justify-center gap-2 bg-background border border-line text-primary rounded-lg font-bold text-sm hover:bg-primary hover:text-background transition-colors"
           >
-            <Play className="w-3.5 h-3.5 fill-accent2" />
+            <Play className="w-3.5 h-3.5 fill-primary" />
             Try Challenge
           </button>
         </div>
