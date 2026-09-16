@@ -182,8 +182,8 @@ if (Meteor.isClient) {
       });
       renderPage();
 
-      fireEvent.click(screen.getByRole("link", { name: /code/i }));
-      fireEvent.click(screen.getByRole("link", { name: /demo/i }));
+      fireEvent.click(screen.getByRole("link", { name: /^code$/i }));
+      fireEvent.click(screen.getByRole("link", { name: /^demo$/i }));
 
       expect(projectClickCalls).to.have.lengthOf(2);
       expect(projectClickCalls[0]).to.include({
