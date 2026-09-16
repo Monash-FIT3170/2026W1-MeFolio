@@ -80,14 +80,15 @@ if (Meteor.isClient) {
         expect(result.output).to.equal("");
       });
 
-      it("times out a recursive infinite loop, not just a while-loop", async function () {
-        // Different loop shape, same guarantee: timeout isn't tied to one
-        // specific pattern.
+      it("catches a stack overflow from unbounded recursion instead of hanging", async function () {
+        // Unlike while(true), recursion with no base case throws a stack
+        // overflow almost instantly — it doesn't hang, so no timeout here.
         const result = await runInSandbox(
           "function loop() { return loop(); }\nloop();",
           { timeoutMs: 200 },
         );
-        expect(result.timedOut).to.equal(true);
+        expect(result.timedOut).to.equal(false);
+        expect(result.error).to.not.equal("");
       });
 
       it("times out a busy-spin loop that never yields", async function () {

@@ -29,14 +29,14 @@ if (Meteor.isClient) {
 
     it("shows the title, language, hint, starter code and submit button", function () {
       render(<ProjectChallenge project={project} />);
-
+ 
       expect(screen.getByText(/Cart Logic Challenge/)).to.exist;
-      expect(screen.getByText(/JavaScript/)).to.exist;
+      expect(screen.getAllByText(/JavaScript/).length).to.be.greaterThan(0);
       expect(screen.getByText(/Consider item quantities/)).to.exist;
-
+ 
       const editor = screen.getByLabelText("Challenge code");
       expect(editor.value).to.equal("console.log(2 + 2);");
-
+ 
       expect(screen.getByRole("button", { name: /submit solution/i })).to.exist;
     });
 
@@ -242,7 +242,7 @@ if (Meteor.isClient) {
           expect(screen.getByText(/2 \+ 2;/)).to.exist;
         });
 
-        it("does not crash when technologies is missing (falls back to plain text highlighting)", function () {
+        it("does not crash when technologies is missing", function () {
           render(
             <ProjectChallenge
               project={{
@@ -255,8 +255,12 @@ if (Meteor.isClient) {
               }}
             />,
           );
-
-          expect(screen.getByText(/console\.log\('ok'\);/)).to.exist;
+ 
+          // With no tech stack, language falls back to "text" (no
+          // tokenizing), so the textarea and preview both match the same
+          // full string. Two matches is expected here, not a bug.
+          const matches = screen.getAllByText(/console\.log\('ok'\);/);
+          expect(matches.length).to.be.greaterThan(0);
         });
       });
     });
