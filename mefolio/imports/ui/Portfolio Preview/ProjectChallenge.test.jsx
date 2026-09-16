@@ -29,14 +29,14 @@ if (Meteor.isClient) {
 
     it("shows the title, language, hint, starter code and submit button", function () {
       render(<ProjectChallenge project={project} />);
- 
+
       expect(screen.getByText(/Cart Logic Challenge/)).to.exist;
       expect(screen.getAllByText(/JavaScript/).length).to.be.greaterThan(0);
       expect(screen.getByText(/Consider item quantities/)).to.exist;
- 
+
       const editor = screen.getByLabelText("Challenge code");
       expect(editor.value).to.equal("console.log(2 + 2);");
- 
+
       expect(screen.getByRole("button", { name: /submit solution/i })).to.exist;
     });
 
@@ -255,7 +255,7 @@ if (Meteor.isClient) {
               }}
             />,
           );
- 
+
           // With no tech stack, language falls back to "text" (no
           // tokenizing), so the textarea and preview both match the same
           // full string. Two matches is expected here, not a bug.

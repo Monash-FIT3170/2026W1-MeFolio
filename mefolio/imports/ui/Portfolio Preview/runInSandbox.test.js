@@ -182,7 +182,9 @@ if (Meteor.isClient) {
       });
 
       it("actually attempting a WebSocket connection throws", async function () {
-        const result = await runInSandbox("new WebSocket('wss://example.com');");
+        const result = await runInSandbox(
+          "new WebSocket('wss://example.com');",
+        );
         expect(result.error).to.not.equal("");
       });
 
