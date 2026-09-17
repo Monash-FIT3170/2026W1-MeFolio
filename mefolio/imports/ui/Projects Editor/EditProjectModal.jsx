@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import TechStackInput from "./TechStackInput";
+import ProofOfWorkSection from "./ProofOfWorkSection";
+import CodeBlock from "./CodeBlock";
+import getLanguageFromTechStack from "./techToLanguage";
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
@@ -15,6 +18,14 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     githubLink: "",
     liveDemoLink: "",
     media: "",
+    proofOfWorkMode: "standard",
+    challenge: {
+      title: "",
+      language: "",
+      hint: "",
+      starterCode: "",
+      expectedOutput: "",
+    },
   });
   const [errors, setErrors] = useState({});
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -31,6 +42,17 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       githubLink: project.githubLink || "",
       liveDemoLink: project.liveDemoLink || "",
       media: project.media || "",
+      // Backwards compat: old projects may not have proofOfWorkMode
+      proofOfWorkMode:
+        project.proofOfWorkMode ??
+        (project.challenge ? "interactive" : "standard"),
+      challenge: {
+        title: project.challenge?.title || "",
+        language: project.challenge?.language || "",
+        hint: project.challenge?.hint || "",
+        starterCode: project.challenge?.starterCode || "",
+        expectedOutput: project.challenge?.expectedOutput || "",
+      },
     });
     setErrors({});
   }, [project]);
@@ -56,6 +78,16 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: "" }));
   };
 
+  const setChallenge = (key, value) => {
+    setForm((current) => ({
+      ...current,
+      challenge: { ...current.challenge, [key]: value },
+    }));
+    if (errors[`challenge.${key}`]) {
+      setErrors((current) => ({ ...current, [`challenge.${key}`]: "" }));
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
@@ -64,6 +96,18 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       e.githubLink = "Enter a valid URL (starting with http).";
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with http).";
+    if (form.proofOfWorkMode === "interactive") {
+      for (const key of [
+        "title",
+        "language",
+        "starterCode",
+        "expectedOutput",
+      ]) {
+        if (!form.challenge[key].trim()) {
+          e[`challenge.${key}`] = "This challenge field is required.";
+        }
+      }
+    }
     return e;
   };
 
@@ -82,6 +126,17 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
       githubLink: form.githubLink.trim(),
       liveDemoLink: form.liveDemoLink.trim(),
       media: form.media.trim(),
+      proofOfWorkMode: form.proofOfWorkMode,
+      challenge:
+        form.proofOfWorkMode === "interactive"
+          ? {
+              title: form.challenge.title.trim(),
+              language: form.challenge.language.trim(),
+              hint: form.challenge.hint.trim(),
+              starterCode: form.challenge.starterCode,
+              expectedOutput: form.challenge.expectedOutput,
+            }
+          : null,
     });
   };
 
@@ -89,6 +144,8 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition focus:border-accent2 focus:ring-2 focus:ring-selected ${
       errors[key] ? "border-red-400 bg-red-50" : "border-line"
     }`;
+
+  const previewLanguage = getLanguageFromTechStack(form.technologies);
 
   return (
     <div
@@ -115,6 +172,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               Update the details below and save your changes.
             </p>
           </div>
+
           <button
             type="button"
             data-testid="edit-modal-close-btn"
@@ -287,6 +345,121 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               Paste a link to an image/video (e.g. from Unsplash or Cloudinary).
             </p>
           </div>
+
+          <hr className="border-line -mx-6" />
+
+          {/* Proof of Work */}
+          <ProofOfWorkSection
+            mode={form.proofOfWorkMode}
+            onModeChange={(m) => set("proofOfWorkMode", m)}
+          >
+            <div className="flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+              {[
+                ["title", "Challenge Description", "e.g. Add two numbers"],
+                ["language", "Language", "e.g. JavaScript"],
+              ].map(([key, label, placeholder]) => (
+                <div key={key}>
+                  <label
+                    htmlFor={`edit-challenge-${key}`}
+                    className="mb-1.5 block text-sm font-semibold text-primary"
+                  >
+                    {label} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id={`edit-challenge-${key}`}
+                    data-testid={`edit-field-challenge-${key}`}
+                    type="text"
+                    value={form.challenge[key]}
+                    placeholder={placeholder}
+                    onChange={(e) => setChallenge(key, e.target.value)}
+                    className={fieldClass(`challenge.${key}`)}
+                  />
+                  {errors[`challenge.${key}`] && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors[`challenge.${key}`]}
+                    </p>
+                  )}
+                </div>
+              ))}
+
+              <div>
+                <label
+                  htmlFor="edit-challenge-hint"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Hint <span className="text-muted">(optional)</span>
+                </label>
+                <input
+                  id="edit-challenge-hint"
+                  type="text"
+                  value={form.challenge.hint}
+                  placeholder="e.g. Consider item quantities"
+                  onChange={(e) => setChallenge("hint", e.target.value)}
+                  className={fieldClass("challenge.hint")}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="edit-challenge-starter"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Starter Code <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="edit-challenge-starter"
+                  data-testid="edit-field-challenge-starterCode"
+                  rows={4}
+                  placeholder="Starter code"
+                  value={form.challenge.starterCode}
+                  onChange={(e) => setChallenge("starterCode", e.target.value)}
+                  className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
+                />
+                {errors["challenge.starterCode"] && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors["challenge.starterCode"]}
+                  </p>
+                )}
+              </div>
+
+              {form.challenge.starterCode.trim() && (
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Preview
+                  </p>
+                  <CodeBlock
+                    code={form.challenge.starterCode}
+                    language={previewLanguage}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="edit-challenge-output"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Expected Output <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="edit-challenge-output"
+                  data-testid="edit-field-challenge-expectedOutput"
+                  rows={2}
+                  placeholder="Expected output"
+                  value={form.challenge.expectedOutput}
+                  onChange={(e) =>
+                    setChallenge("expectedOutput", e.target.value)
+                  }
+                  className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
+                />
+                {errors["challenge.expectedOutput"] && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors["challenge.expectedOutput"]}
+                  </p>
+                )}
+              </div>
+            </div>
+          </ProofOfWorkSection>
         </div>
 
         <div className="sticky bottom-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl border-t border-line bg-background px-6 py-4">
