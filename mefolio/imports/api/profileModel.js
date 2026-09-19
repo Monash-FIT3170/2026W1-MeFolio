@@ -23,6 +23,7 @@ export const defaultPortfolioProfileData = {
   theme: "minimal",
   badges: [],
   chatbotPersona: DEFAULT_CHATBOT_PERSONA,
+  certifications: [],
   recruiterInfo: {
     salaryExpectation: "",
     phoneNumber: "",

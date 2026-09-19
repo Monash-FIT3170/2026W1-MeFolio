@@ -53,6 +53,37 @@ if (Meteor.isServer) {
       expect(updated.recruiterInfo.salaryExpectation).to.equal("100k");
     });
 
+    it("normalises and persists certifications for the owner", async function () {
+      await runUpdate({ userId: ownerId }, portfolioId, {
+        certifications: [
+          {
+            title: "AWS Certified Developer",
+            issuer: "Amazon Web Services",
+            issueDate: "2025-01-15",
+            imageUrl: "https://img.example.com/badge.png",
+            verificationUrl: "https://verify.example.com/abc",
+            source: "credly",
+            verified: true,
+          },
+          { title: "Manual Cert" },
+        ],
+      });
+
+      const updated = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(updated.certifications).to.have.lengthOf(2);
+      expect(updated.certifications[0]).to.include({
+        title: "AWS Certified Developer",
+        source: "credly",
+        verified: true,
+      });
+      // Omitted fields normalise to safe defaults (manual / unverified).
+      expect(updated.certifications[1]).to.include({
+        title: "Manual Cert",
+        source: "manual",
+        verified: false,
+      });
+    });
+
     it("rejects an update from a non-owner", async function () {
       try {
         await runUpdate({ userId: otherUserId }, portfolioId, {
