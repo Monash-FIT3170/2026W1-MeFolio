@@ -35,6 +35,7 @@ import "/server/github-api.test.js";
 import "/server/challenge-methods.test.js";
 import "/server/cache-middleware.test.js";
 import "/imports/ui/Public/ViewerLocationPrompt.test.jsx";
+import "/imports/api/certifications.test.js";
 import "/imports/api/projects.test.js";
 import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
 import "/imports/ui/components/ProfileCard.test.jsx";

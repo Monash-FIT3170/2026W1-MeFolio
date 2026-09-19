@@ -12,6 +12,7 @@ import {
   isChatbotPersona,
 } from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { normalizeCertifications } from "/imports/api/certifications";
 import "/imports/api/files/resumeFiles";
 
 // oauth login
@@ -890,6 +891,7 @@ Meteor.methods({
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
       chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
+      certifications: normalizeCertifications(portfolio.certifications),
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
