@@ -115,6 +115,9 @@ export const mapAboutMe = (portfolio) => {
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    certifications: Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
       ...(portfolio.recruiterInfo || {}),
