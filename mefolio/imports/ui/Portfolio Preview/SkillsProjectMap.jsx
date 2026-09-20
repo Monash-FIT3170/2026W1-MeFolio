@@ -172,66 +172,70 @@ export const SkillsProjectMap = ({
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted sm:hidden">
             Swipe to explore the map
           </p>
-          <svg
-            role="img"
-            aria-labelledby="skills-map-title"
-            viewBox={`0 0 ${GRAPH_WIDTH} ${graphHeight}`}
-            className="mx-auto block h-auto min-w-[820px] w-full"
-          >
-            <defs>
-              <pattern
-                id="skills-map-grid"
-                width="24"
-                height="24"
-                patternUnits="userSpaceOnUse"
+          <svg role="img"
+          aria-labelledby="skills-map-title"
+          viewBox={`0 0 ${GRAPH_WIDTH} ${graphHeight}`}
+          className="mx-auto block h-auto min-w-[820px] w-full cursor-grab active:cursor-grabbing"
+          onWheel={handleWheel}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={stopDragging}
+          onPointerLeave={stopDragging}>
+            <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+              <defs>
+                <pattern
+                  id="skills-map-grid"
+                  width="24"
+                  height="24"
+                  patternUnits="userSpaceOnUse"
+                >
+                  <path
+                    d="M 24 0 L 0 0 0 24"
+                    fill="none"
+                    className="stroke-line"
+                    strokeWidth="0.5"
+                    opacity="0.35"
+                  />
+                </pattern>
+              </defs>
+              <rect
+                width={GRAPH_WIDTH}
+                height={graphHeight}
+                rx="16"
+                className="fill-background"
+              />
+              <rect
+                width={GRAPH_WIDTH}
+                height={graphHeight}
+                rx="16"
+                fill="url(#skills-map-grid)"
+              />
+              <line
+                x1="520"
+                y1="48"
+                x2="520"
+                y2={graphHeight - 32}
+                className="stroke-line"
+                strokeDasharray="4 8"
+              />
+              <text
+                x="200"
+                y="34"
+                textAnchor="middle"
+                className="fill-muted text-[11px] font-bold uppercase tracking-[0.16em]"
               >
-                <path
-                  d="M 24 0 L 0 0 0 24"
-                  fill="none"
-                  className="stroke-line"
-                  strokeWidth="0.5"
-                  opacity="0.35"
-                />
-              </pattern>
-            </defs>
-            <rect
-              width={GRAPH_WIDTH}
-              height={graphHeight}
-              rx="16"
-              className="fill-background"
-            />
-            <rect
-              width={GRAPH_WIDTH}
-              height={graphHeight}
-              rx="16"
-              fill="url(#skills-map-grid)"
-            />
-            <line
-              x1="520"
-              y1="48"
-              x2="520"
-              y2={graphHeight - 32}
-              className="stroke-line"
-              strokeDasharray="4 8"
-            />
-            <text
-              x="200"
-              y="34"
-              textAnchor="middle"
-              className="fill-muted text-[11px] font-bold uppercase tracking-[0.16em]"
-            >
-              Skills
-            </text>
-            <text
-              x="760"
-              y="34"
-              textAnchor="middle"
-              className="fill-muted text-[11px] font-bold uppercase tracking-[0.16em]"
-            >
-              Projects
-            </text>
+                Skills
+              </text>
+              <text
+                x="760"
+                y="34"
+                textAnchor="middle"
+                className="fill-muted text-[11px] font-bold uppercase tracking-[0.16em]"
+              >
+                Projects
+              </text>
 
-            {skills.flatMap((skill) =>
+              {skills.flatMap((skill) =>
               skill.projectIds.map((projectId) => {
                 const project = projectNodes.find(
                   (node) => node.id === projectId,
@@ -251,7 +255,7 @@ export const SkillsProjectMap = ({
                   />
                 );
               }),
-            )}
+            )}         
 
             {skills.map((skill) => {
               const active = isNodeActive("skill", skill);
@@ -268,6 +272,10 @@ export const SkillsProjectMap = ({
                   onMouseLeave={clearHover}
                   onFocus={() => setHoveredNode({ type: "skill", ...skill })}
                   onBlur={clearHover}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNodeClick("skill", skill);
+                  }}
                 >
                   <circle
                     cx={skill.x}
@@ -311,6 +319,10 @@ export const SkillsProjectMap = ({
                     setHoveredNode({ type: "project", ...project })
                   }
                   onBlur={clearHover}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNodeClick("project", project);
+                  }}
                 >
                   <circle
                     cx={project.x}
@@ -335,6 +347,7 @@ export const SkillsProjectMap = ({
                 </g>
               );
             })}
+            </g>
           </svg>
         </div>
       </div>
