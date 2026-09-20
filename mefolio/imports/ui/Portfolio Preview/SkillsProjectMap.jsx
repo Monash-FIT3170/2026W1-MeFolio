@@ -18,6 +18,7 @@ const normalizeSkill = (skill) => String(skill).trim().toLocaleLowerCase();
 export const SkillsProjectMap = ({
   projects = [],
   viewportMode = "desktop",
+  onHighlightedProjectsChange,
 }) => {
   const [hoveredNode, setHoveredNode] = useState(null);
 
@@ -106,7 +107,15 @@ export const SkillsProjectMap = ({
     return active ? "opacity-85" : "opacity-5";
   };
 
-  const clearHover = () => setHoveredNode(null);
+  const handleSkillHover = (skill) => {
+    setHoveredNode({ type: "skill", ...skill });
+    onHighlightedProjectsChange?.(skill.projectIds);
+  };
+
+  const clearHover = () => {
+    setHoveredNode(null);
+    onHighlightedProjectsChange?.([]);
+  };
 
   return (
     <section
@@ -231,11 +240,9 @@ export const SkillsProjectMap = ({
                   tabIndex="0"
                   aria-label={`Skill ${skill.label}, used in ${skill.projectIds.length} ${skill.projectIds.length === 1 ? "project" : "projects"}`}
                   className={`cursor-pointer transition-opacity duration-200 ${active ? "opacity-100" : "opacity-30"}`}
-                  onMouseEnter={() =>
-                    setHoveredNode({ type: "skill", ...skill })
-                  }
+                  onMouseEnter={() => handleSkillHover(skill)}
                   onMouseLeave={clearHover}
-                  onFocus={() => setHoveredNode({ type: "skill", ...skill })}
+                  onFocus={() => handleSkillHover(skill)}
                   onBlur={clearHover}
                 >
                   <circle
@@ -314,6 +321,7 @@ export const SkillsProjectMap = ({
 SkillsProjectMap.propTypes = {
   projects: PropTypes.arrayOf(PropTypes.object),
   viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
+  onHighlightedProjectsChange: PropTypes.func,
 };
 
 export default SkillsProjectMap;

@@ -47,5 +47,31 @@ if (Meteor.isClient) {
         screen.getByRole("button", { name: "Project API" }).className,
       ).to.include("opacity-30");
     });
+
+    it("reports related project IDs when a skill is hovered and clears them on mouse leave", () => {
+      const highlightedProjectIds = [];
+
+      render(
+        <SkillsProjectMap
+          projects={projects}
+          onHighlightedProjectsChange={(ids) => highlightedProjectIds.push(ids)}
+        />,
+      );
+
+      const reactNode = screen.getByRole("button", {
+        name: /Skill React, used in 2 projects/,
+      });
+
+      fireEvent.mouseEnter(reactNode);
+
+      expect(highlightedProjectIds[0]).to.deep.equal([
+        "project-1",
+        "project-2",
+      ]);
+
+      fireEvent.mouseLeave(reactNode);
+
+      expect(highlightedProjectIds[1]).to.deep.equal([]);
+    });
   });
 }
