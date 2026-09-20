@@ -94,28 +94,42 @@ export const SkillsProjectMap = ({
 
   if (!skills.length || !projectNodes.length) return null;
 
+  const activeNode = hoveredNode || selectedNode;
+
   const isNodeActive = (nodeType, node) => {
-    if (!hoveredNode) return true;
-    if (hoveredNode.type === nodeType && hoveredNode.id === node.id)
+    if (!activeNode) return true;
+    if (activeNode.type === nodeType && activeNode.id === node.id)
       return true;
 
-    if (nodeType === "skill" && hoveredNode.type === "project") {
-      return node.projectIds.includes(hoveredNode.id);
+    if (nodeType === "skill" && activeNode.type === "project") {
+      return node.projectIds.includes(activeNode.id);
     }
 
-    if (nodeType === "project" && hoveredNode.type === "skill") {
-      return node.technologies.includes(normalizeSkill(hoveredNode.label));
+    if (nodeType === "project" && activeNode.type === "skill") {
+      return node.technologies.includes(normalizeSkill(activeNode.label));
     }
 
     return false;
   };
 
   const getLinkClassName = (active) => {
-    if (!hoveredNode) return "opacity-25";
+    if (!activeNode) return "opacity-25";
     return active ? "opacity-85" : "opacity-5";
   };
 
   const clearHover = () => setHoveredNode(null);
+
+  const handleNodeClick = (type, node) => {
+    setSelectedNode(
+      (current) => current?.type === type && current?.id === node.id ? null : { type, ...node },
+    );
+  };
+
+  const handleWheel = (event) => {
+    event.preventDefault();
+    setZoom((z) => clampZoom(z - event.deltaY * 0.001));
+  };
+
   const handlePointerDown = (event) => {
     isDragging.current = true;
     lastPointer.current = { x: event.clientX, y: event.clientY };
