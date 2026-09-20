@@ -168,9 +168,23 @@ export const SkillsProjectMap = ({
           </p>
         </header>
 
-        <div className="overflow-x-auto rounded-2xl border border-line bg-surface-fill p-2 shadow-sm sm:p-3">
+        <div className="relative overflow-hidden rounded-2xl border border-line bg-surface-fill p-2 shadow-sm sm:p-3">
+          <div className="absolute right-4 top-4 z-10 flex gap-1.5">
+            <button type="button" onClick={() => setZoom((z) => clampZoom(z + ZOOM_STEP))}
+            aria-label="Zoom in"
+            className="rounded-md border border-line bg-background px-2.5 py-1 text-sm font-bold text-primary shadow-sm hover:bg-alt/50">
+              +
+            </button>
+            <button type="button" onClick={() => setZoom((z) => clampZoom(z - ZOOM_STEP))} aria-label="Zoom out" className="rounded-md border border-line bg-background px-2.5 py-1 text-sm font-bold text-primary shadow-sm hover:bg-alt/50">
+              -
+            </button>
+            <button type="button" onClick={resetView} aria-label="Reset view" className="rounded-md border border-line bg-background px-2.5 py-1 text-xs font-bold text-primary shadow-sm hover:bg-alt/50">
+            Reset
+            </button>
+          </div>
+
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted sm:hidden">
-            Swipe to explore the map
+            Pinch or drag to explore map
           </p>
           <svg role="img"
           aria-labelledby="skills-map-title"
