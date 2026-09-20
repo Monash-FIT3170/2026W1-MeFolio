@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useMemo, useState } from "react";
+import { useRef, useMemo, useState } from "react";
 
 const GRAPH_WIDTH = 1080;
 const NODE_GAP = 68;
@@ -8,6 +8,9 @@ const GRAPH_BOTTOM_PADDING = 36;
 const MIN_SKILL_RADIUS = 18;
 const MAX_SKILL_RADIUS = 30;
 const SKILL_RADIUS_STEP = 4;
+const MIN_ZOOM = 0.6;
+const MAX_ZOOM = 2.5;
+const ZOOM_STEP = 0.2;
 
 const getProjectId = (project, index) =>
   project?._id || project?.id || `project-${index}`;
@@ -20,6 +23,12 @@ export const SkillsProjectMap = ({
   viewportMode = "desktop",
 }) => {
   const [hoveredNode, setHoveredNode] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const[pan, setPan] = useState({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const lastPointer = useRef({ x: 0, y: 0 });
+  const clampZoom = (value) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
 
   const { skills, projectNodes, graphHeight } = useMemo(() => {
     const skillProjects = new Map();
@@ -107,6 +116,28 @@ export const SkillsProjectMap = ({
   };
 
   const clearHover = () => setHoveredNode(null);
+  const handlePointerDown = (event) => {
+    isDragging.current = true;
+    lastPointer.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handlePointerMove = (event) => {
+    if (!isDragging.current) return;
+    const dx = event.clientX - lastPointer.current.x;
+    const dy = event.clientY - lastPointer.current.y;
+    lastPointer.current = { x: event.clientX, y: event.clientY };
+    setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
+  };
+
+  const stopDragging = () => {
+    isDragging.current = false
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    setSelectedNode(null);
+  };
 
   return (
     <section
