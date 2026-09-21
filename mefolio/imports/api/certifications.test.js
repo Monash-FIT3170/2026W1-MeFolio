@@ -67,6 +67,15 @@ describe("normalizeCertification", function () {
     expect(normalizeCertification({ issueDate: 12345 }).issueDate).to.equal("");
   });
 
+  it("coerces an Invalid Date issueDate to an empty string without throwing", function () {
+    expect(() =>
+      normalizeCertification({ issueDate: new Date("not-a-date") }),
+    ).to.not.throw();
+    expect(
+      normalizeCertification({ issueDate: new Date("not-a-date") }).issueDate,
+    ).to.equal("");
+  });
+
   it("keeps a Date lastSyncedAt and nulls anything else", function () {
     const syncedAt = new Date();
     expect(
@@ -74,6 +83,13 @@ describe("normalizeCertification", function () {
     ).to.equal(syncedAt);
     expect(
       normalizeCertification({ lastSyncedAt: "2025-01-01" }).lastSyncedAt,
+    ).to.equal(null);
+  });
+
+  it("nulls an Invalid Date lastSyncedAt", function () {
+    expect(
+      normalizeCertification({ lastSyncedAt: new Date("not-a-date") })
+        .lastSyncedAt,
     ).to.equal(null);
   });
 });
