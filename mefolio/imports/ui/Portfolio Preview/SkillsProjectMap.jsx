@@ -11,6 +11,7 @@ const SKILL_RADIUS_STEP = 4;
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.2;
+const SKILL_RADIUS_SCALE = 0.7;
 
 const getProjectId = (project, index) =>
   project?._id || project?.id || `project-${index}`;
@@ -29,6 +30,7 @@ export const SkillsProjectMap = ({
   const isDragging = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
   const clampZoom = (value) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+  const radiusScale = viewportMode === "mobile" ? SKILL_RADIUS_SCALE : 1;
 
   const { skills, projectNodes, graphHeight } = useMemo(() => {
     const skillProjects = new Map();
@@ -62,7 +64,7 @@ export const SkillsProjectMap = ({
         radius: Math.min(
           MAX_SKILL_RADIUS,
           MIN_SKILL_RADIUS + projectIds.length * SKILL_RADIUS_STEP,
-        ),
+        ) * radiusScale,
         x: 200,
         y: GRAPH_TOP_PADDING + index * NODE_GAP,
       }));
@@ -90,7 +92,7 @@ export const SkillsProjectMap = ({
         GRAPH_TOP_PADDING +
         GRAPH_BOTTOM_PADDING,
     };
-  }, [projects]);
+  }, [projects, radiusScale]);
 
   if (!skills.length || !projectNodes.length) return null;
 
@@ -371,13 +373,13 @@ export const SkillsProjectMap = ({
                     <circle
                       cx={project.x}
                       cy={project.y}
-                      r="25"
+                      r={25 * radiusScale}
                       className="fill-alt opacity-15"
                     />
                     <circle
                       cx={project.x}
                       cy={project.y}
-                      r="18"
+                      r={18 * radiusScale}
                       className="fill-alt stroke-background"
                       strokeWidth="3"
                     />
