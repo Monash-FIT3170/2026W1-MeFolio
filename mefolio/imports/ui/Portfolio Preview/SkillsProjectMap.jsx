@@ -61,10 +61,11 @@ export const SkillsProjectMap = ({
         id: `skill-${index}`,
         label,
         projectIds,
-        radius: Math.min(
-          MAX_SKILL_RADIUS,
-          MIN_SKILL_RADIUS + projectIds.length * SKILL_RADIUS_STEP,
-        ) * radiusScale,
+        radius:
+          Math.min(
+            MAX_SKILL_RADIUS,
+            MIN_SKILL_RADIUS + projectIds.length * SKILL_RADIUS_STEP,
+          ) * radiusScale,
         x: 200,
         y: GRAPH_TOP_PADDING + index * NODE_GAP,
       }));
