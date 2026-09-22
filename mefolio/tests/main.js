@@ -40,6 +40,7 @@ import "/imports/api/projects.test.js";
 import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
 import "/imports/ui/components/ProfileCard.test.jsx";
 import "../imports/api/portfolio.test.js";
+import "/imports/ui/Portfolio Preview/CertificationsSection.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
