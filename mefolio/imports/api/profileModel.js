@@ -21,6 +21,7 @@ export const defaultPortfolioProfileData = {
   projects: [],
   theme: "minimal",
   badges: [],
+  certifications: [],
   recruiterInfo: {
     salaryExpectation: "",
     phoneNumber: "",

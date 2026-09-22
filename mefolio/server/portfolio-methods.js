@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { normalizeCertifications } from "/imports/api/certifications";
 
 // Portfolio methods kept in their own module (rather than main.js) so tests can
 // import them without pulling in the app seed and OAuth config, which need
@@ -33,6 +34,14 @@ Meteor.methods({
     delete safeUpdates.userId;
     delete safeUpdates._id;
     delete safeUpdates.username;
+
+    // Normalise certifications into the canonical stored shape so a partial or
+    // malformed client payload can't corrupt the portfolio document.
+    if (Object.prototype.hasOwnProperty.call(safeUpdates, "certifications")) {
+      safeUpdates.certifications = normalizeCertifications(
+        safeUpdates.certifications,
+      );
+    }
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: safeUpdates,
