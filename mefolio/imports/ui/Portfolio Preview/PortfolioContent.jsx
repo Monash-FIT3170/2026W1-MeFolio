@@ -4,6 +4,7 @@ import { ProjectCard } from "./ProjectCard.jsx";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import { CertificationsSection } from "./CertificationsSection.jsx";
 
 // The portfolio as its owner designed it - navbar, hero and project gallery -
 // with none of the surrounding dashboard controls. PortfolioPreview renders
@@ -177,6 +178,12 @@ export const PortfolioContent = ({
           <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
         </div>
       </section>
+        
+      {/* Certificate section */}
+      <CertificationsSection
+        certifications={portfolio?.certifications}
+        viewportMode={viewportMode}
+      />
     </div>
   );
 };
