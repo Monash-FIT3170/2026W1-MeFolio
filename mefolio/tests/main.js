@@ -31,6 +31,7 @@ import "/server/challenge-methods.test.js";
 import "/imports/api/certifications.test.js";
 import "/imports/api/projects.test.js";
 import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
+import "/imports/ui/Portfolio Preview/CertificationsSection.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {
