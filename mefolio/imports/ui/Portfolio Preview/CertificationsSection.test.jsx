@@ -12,7 +12,9 @@ if (Meteor.isClient) {
     });
 
     it("renders nothing when there are no certifications", function () {
-      const { container } = render(<CertificationsSection certifications={[]} />);
+      const { container } = render(
+        <CertificationsSection certifications={[]} />,
+      );
       expect(container.textContent).to.equal("");
     });
 
