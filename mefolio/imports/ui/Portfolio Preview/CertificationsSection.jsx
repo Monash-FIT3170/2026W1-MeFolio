@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 // Formats an ISO issueDate string for display. Certifications store dates as
@@ -162,8 +161,7 @@ export const CertificationsSection = ({
         {certifications.map((certification, index) => (
           <CertificationCard
             key={
-              certification.verificationUrl ||
-              `${certification.title}-${index}`
+              certification.verificationUrl || `${certification.title}-${index}`
             }
             certification={certification}
           />
