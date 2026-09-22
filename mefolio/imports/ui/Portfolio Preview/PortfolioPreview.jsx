@@ -11,6 +11,7 @@ import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
 import PublishButton from "./PublishButton.jsx";
+import { CertificationsSection } from "./CertificationsSection.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -445,6 +446,12 @@ export const PortfolioPreview = ({
             <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
           </div>
         </section>
+
+        {/* Certificate section */}
+        <CertificationsSection
+          certifications={portfolio?.certifications}
+          viewportMode={viewportMode}
+        />
       </div>
     </div>
   );
