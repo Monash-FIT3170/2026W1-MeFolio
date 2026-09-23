@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 
 // Formats an ISO issueDate string for display. Certifications store dates as
@@ -21,13 +22,13 @@ const CertificationCard = ({ certification }) => {
   return (
     <div className="flex flex-col justify-between rounded-xl border border-line bg-surface-fill p-4 shadow-sm transition hover:border-accent1/40">
       <div>
-        {/* Header row: Source label & Verified Badge */}
+        {/* Header row: Source label & Verified Badge using MeFolio tokens */}
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
             {certification.source === "credly" ? "Credly" : "Certification"}
           </span>
           {certification.verified && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+            <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-fill px-2 py-0.5 text-[11px] font-semibold text-accent1">
               <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -142,9 +143,9 @@ export const CertificationsSection = ({
         viewportMode === "mobile" ? "px-5 pt-8 pb-10" : "px-20 pt-10 pb-16"
       }`}
     >
-      {/* Centered header matching Featured Projects */}
+      {/* Centered header using h2 for section hierarchy */}
       <header className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-primary">Certifications</h1>
+        <h2 className="text-3xl font-bold text-primary">Certifications</h2>
         <p className="mt-2 text-sm text-muted">
           Verified credentials and industry achievements
         </p>
@@ -161,7 +162,8 @@ export const CertificationsSection = ({
         {certifications.map((certification, index) => (
           <CertificationCard
             key={
-              certification.verificationUrl || `${certification.title}-${index}`
+              certification.verificationUrl ||
+              `${certification.title}-${index}`
             }
             certification={certification}
           />
