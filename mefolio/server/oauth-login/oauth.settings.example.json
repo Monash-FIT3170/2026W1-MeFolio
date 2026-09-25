@@ -1,5 +1,9 @@
 {
   "private": {
+    "gemini": {
+      "apiKey": "GEMINI_API_KEY_HERE",
+      "model": "gemini-3.8-flash"
+    },
     "google": {
       "clientId": "GOOGLE_CLIENT_ID_HERE",
       "secret": "GOOGLE_CLIENT_SECRET_HERE"

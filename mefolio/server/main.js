@@ -30,6 +30,8 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+// register AI Twin methods
+import "./ai/chatMethods.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
