@@ -31,6 +31,8 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+// register AI Twin methods
+import "./ai/chatMethods.js";
 import { validateChallenge } from "./challenge-methods.js";
 
 // cache middleware
