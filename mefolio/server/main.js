@@ -7,7 +7,6 @@ import {
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { normalizeCertifications } from "/imports/api/certifications";
 import "/imports/api/files/resumeFiles";
 
 // oauth login

@@ -162,8 +162,7 @@ export const CertificationsSection = ({
         {certifications.map((certification, index) => (
           <CertificationCard
             key={
-              certification.verificationUrl ||
-              `${certification.title}-${index}`
+              certification.verificationUrl || `${certification.title}-${index}`
             }
             certification={certification}
           />

@@ -142,7 +142,10 @@ const CertificationModal = ({
         {/* Header */}
         <div className="flex items-start justify-between px-6 py-5 border-b border-line sticky top-0 bg-surface-fill rounded-t-2xl z-10">
           <div>
-            <h2 id="cert-modal-title" className="text-lg font-bold text-primary">
+            <h2
+              id="cert-modal-title"
+              className="text-lg font-bold text-primary"
+            >
               {isEditMode ? "Edit Certification" : "Add Certification"}
             </h2>
             <p className="text-sm text-muted mt-0.5">
@@ -291,7 +294,11 @@ const CertificationModal = ({
               disabled={saving}
               className="px-5 py-2 rounded-lg bg-button text-secondary text-sm font-semibold hover:bg-accent1 transition disabled:opacity-60"
             >
-              {saving ? "Saving…" : isEditMode ? "Save Changes" : "Add Certification"}
+              {saving
+                ? "Saving…"
+                : isEditMode
+                  ? "Save Changes"
+                  : "Add Certification"}
             </button>
           </div>
         </div>
