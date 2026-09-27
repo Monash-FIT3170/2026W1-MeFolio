@@ -34,6 +34,7 @@ import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
 import { useResponsive } from "../Contexts/ResponsiveContext";
+import CertificationsEditorSection from "./CertificationsEditorSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -554,6 +555,13 @@ const DashboardLayout = () => {
                   portfolio={selectedPortfolio}
                   userId={snapshot.user?._id}
                 />
+              ) : activeTab === "badges" ? (
+                <div className="flex flex-col gap-8">
+                  <CertificationsEditorSection
+                    portfolioId={selectedPortfolio?._id}
+                    certifications={selectedPortfolio?.certifications || []}
+                  />
+                </div>
               ) : activeTab === "themes" ? (
                 <ThemeSection
                   portfolioId={selectedPortfolio?._id}
