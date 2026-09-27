@@ -33,6 +33,12 @@ import "./portfolio-indexes.js";
 import "./github-methods.js";
 import { validateChallenge } from "./challenge-methods.js";
 
+// certifications
+import {
+  normalizeCertification,
+  normalizeCertifications,
+} from "/imports/api/certifications";
+
 Accounts.config({
   loginExpirationInDays: 1,
 });
@@ -661,6 +667,153 @@ Meteor.methods({
     };
 
     return await PortfolioCollection.insertAsync(newPortfolio);
+  },
+
+  // Certification methods
+  async "portfolios.addCertification"(portfolioId, certification) {
+    check(portfolioId, String);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to add a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const normalized = normalizeCertification({
+      ...certification,
+      source: "manual",
+      verified: false,
+      lastSyncedAt: null,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [];
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: [...existing, normalized] },
+    });
+  },
+
+  async "portfolios.updateCertification"(portfolioId, index, certification) {
+    check(portfolioId, String);
+    check(index, Number);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to update a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    const original = existing[index];
+
+    // Preserve server-owned fields
+    const normalized = normalizeCertification({
+      ...certification,
+      source: original.source,
+      verified: original.verified,
+      lastSyncedAt: original.lastSyncedAt,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    existing[index] = normalized;
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
+  },
+
+  async "portfolios.removeCertification"(portfolioId, index) {
+    check(portfolioId, String);
+    check(index, Number);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to remove a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    existing.splice(index, 1);
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
   },
 
   async "portfolios.publish"(portfolioId) {
