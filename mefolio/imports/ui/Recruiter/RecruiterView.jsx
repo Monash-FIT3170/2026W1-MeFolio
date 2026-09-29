@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RecruiterChatWindow from "./RecruiterChatWindow.jsx";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTracker } from "meteor/react-meteor-data";
 import { Meteor } from "meteor/meteor";
@@ -246,6 +247,7 @@ export function RecruiterView() {
           </section>
         </div>
       )}
+      <RecruiterChatWindow />
     </div>
   );
 }
