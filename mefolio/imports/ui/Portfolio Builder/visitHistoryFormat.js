@@ -17,9 +17,17 @@ export const formatRelativeTime = (date) => {
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
 
-  return new Intl.DateTimeFormat("en-AU", {
+  const parts = new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(timestamp);
+  }).formatToParts(timestamp);
+
+  const formattedParts = Object.fromEntries(
+    parts
+      .filter(({ type }) => type !== "literal")
+      .map(({ type, value }) => [type, value]),
+  );
+
+  return `${formattedParts.day} ${formattedParts.month} ${formattedParts.year}`;
 };

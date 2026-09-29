@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Meteor } from "meteor/meteor";
 import PropTypes from "prop-types";
 import TechStackInput from "./TechStackInput";
+import ProofOfWorkSection from "./ProofOfWorkSection";
+import CodeBlock from "./CodeBlock";
+import getLanguageFromTechStack from "./techToLanguage";
 
 const EMPTY_FORM = {
   title: "",
@@ -12,6 +15,14 @@ const EMPTY_FORM = {
   status: "live",
   media: null,
   createdAt: null,
+  proofOfWorkMode: "standard",
+  challenge: {
+    title: "",
+    language: "",
+    hint: "",
+    starterCode: "",
+    expectedOutput: "",
+  },
 };
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
@@ -118,6 +129,16 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     if (errors[k]) setErrors((e) => ({ ...e, [k]: "" }));
   };
 
+  const setChallenge = (key, value) => {
+    setForm((current) => ({
+      ...current,
+      challenge: { ...current.challenge, [key]: value },
+    }));
+    if (errors[`challenge.${key}`]) {
+      setErrors((current) => ({ ...current, [`challenge.${key}`]: "" }));
+    }
+  };
+
   const validate = () => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
@@ -126,6 +147,18 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       e.githubLink = "Enter a valid URL (starting with https://)";
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
+    if (form.proofOfWorkMode === "interactive") {
+      for (const key of [
+        "title",
+        "language",
+        "starterCode",
+        "expectedOutput",
+      ]) {
+        if (!form.challenge[key].trim()) {
+          e[`challenge.${key}`] = "This challenge field is required.";
+        }
+      }
+    }
     return e;
   };
 
@@ -149,6 +182,18 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
         status: form.status,
         createdAt: new Date(),
         portfolioId,
+        proofOfWorkMode: form.proofOfWorkMode,
+        ...(form.proofOfWorkMode === "interactive"
+          ? {
+              challenge: {
+                title: form.challenge.title.trim(),
+                language: form.challenge.language.trim(),
+                hint: form.challenge.hint.trim(),
+                starterCode: form.challenge.starterCode,
+                expectedOutput: form.challenge.expectedOutput,
+              },
+            }
+          : { challenge: null }),
       };
       Meteor.call("projects.insert", payload, (err) => {
         if (err) {
@@ -180,6 +225,8 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       focus:border-accent2 focus:ring-2 focus:ring-selected
       ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
 
+  const previewLanguage = getLanguageFromTechStack(form.technologies);
+
   return (
     <div
       ref={overlayRef}
@@ -207,6 +254,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               Fill in the details below to add it to your portfolio
             </p>
           </div>
+
           <button
             data-testid="modal-close-btn"
             onClick={handleCancel}
@@ -368,6 +416,121 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             </div>
           </div>
 
+          <hr className="border-line -mx-6" />
+
+          {/* Proof of Work */}
+          <ProofOfWorkSection
+            mode={form.proofOfWorkMode}
+            onModeChange={(m) => set("proofOfWorkMode", m)}
+          >
+            <div className="flex flex-col gap-4 rounded-xl border border-line bg-background p-4">
+              {[
+                ["title", "Challenge Description", "e.g. Add two numbers"],
+                ["language", "Language", "e.g. JavaScript"],
+              ].map(([key, label, placeholder]) => (
+                <div key={key}>
+                  <label
+                    htmlFor={`mf-challenge-${key}`}
+                    className="mb-1.5 block text-sm font-semibold text-primary"
+                  >
+                    {label} <span className="text-accent2">*</span>
+                  </label>
+                  <input
+                    id={`mf-challenge-${key}`}
+                    data-testid={`field-challenge-${key}`}
+                    type="text"
+                    placeholder={placeholder}
+                    value={form.challenge[key]}
+                    onChange={(e) => setChallenge(key, e.target.value)}
+                    className={fieldClass(`challenge.${key}`)}
+                  />
+                  {errors[`challenge.${key}`] && (
+                    <p className="text-xs text-accent2 mt-1">
+                      {errors[`challenge.${key}`]}
+                    </p>
+                  )}
+                </div>
+              ))}
+
+              <div>
+                <label
+                  htmlFor="mf-challenge-hint"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Hint <span className="text-muted">(optional)</span>
+                </label>
+                <input
+                  id="mf-challenge-hint"
+                  data-testid="field-challenge-hint"
+                  type="text"
+                  placeholder="e.g. Consider item quantities"
+                  value={form.challenge.hint}
+                  onChange={(e) => setChallenge("hint", e.target.value)}
+                  className={fieldClass("challenge.hint")}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="mf-challenge-starter"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Starter Code <span className="text-accent2">*</span>
+                </label>
+                <textarea
+                  id="mf-challenge-starter"
+                  data-testid="field-challenge-starterCode"
+                  rows={4}
+                  placeholder="const result = 2 + 2;"
+                  value={form.challenge.starterCode}
+                  onChange={(e) => setChallenge("starterCode", e.target.value)}
+                  className={`${fieldClass("challenge.starterCode")} resize-y font-mono`}
+                />
+                {errors["challenge.starterCode"] && (
+                  <p className="text-xs text-accent2 mt-1">
+                    {errors["challenge.starterCode"]}
+                  </p>
+                )}
+              </div>
+
+              {form.challenge.starterCode.trim() && (
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-muted uppercase tracking-wide">
+                    Preview
+                  </p>
+                  <CodeBlock
+                    code={form.challenge.starterCode}
+                    language={previewLanguage}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="mf-challenge-output"
+                  className="mb-1.5 block text-sm font-semibold text-primary"
+                >
+                  Expected Output <span className="text-accent2">*</span>
+                </label>
+                <textarea
+                  id="mf-challenge-output"
+                  data-testid="field-challenge-expectedOutput"
+                  rows={2}
+                  placeholder="4"
+                  value={form.challenge.expectedOutput}
+                  onChange={(e) =>
+                    setChallenge("expectedOutput", e.target.value)
+                  }
+                  className={`${fieldClass("challenge.expectedOutput")} resize-y font-mono`}
+                />
+                {errors["challenge.expectedOutput"] && (
+                  <p className="text-xs text-accent2 mt-1">
+                    {errors["challenge.expectedOutput"]}
+                  </p>
+                )}
+              </div>
+            </div>
+          </ProofOfWorkSection>
           {/* Media */}
           <div>
             <label

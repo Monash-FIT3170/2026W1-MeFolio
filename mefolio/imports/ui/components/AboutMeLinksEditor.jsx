@@ -1,63 +1,5 @@
 import { useState, useEffect } from "react";
 
-const sectionStyle = {
-  backgroundColor: "background",
-  border: "1px solid #e5e7eb",
-  borderRadius: "16px",
-  padding: "24px",
-};
-
-const headingStyle = {
-  margin: "0 0 8px",
-  fontSize: "20px",
-  fontWeight: "700",
-  color: "#111827",
-};
-
-const descriptionStyle = {
-  margin: "0 0 24px",
-  color: "muted",
-  fontSize: "14px",
-};
-
-const formGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "16px",
-};
-
-const fieldStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-};
-
-const fullWidthFieldStyle = {
-  ...fieldStyle,
-  gridColumn: "1 / -1",
-};
-
-const labelStyle = {
-  fontSize: "14px",
-  fontWeight: "600",
-  color: "muted",
-};
-
-const inputStyle = {
-  border: "1px solid #d1d5db",
-  borderRadius: "10px",
-  padding: "12px 14px",
-  fontSize: "14px",
-  color: "muted",
-  outline: "none",
-};
-
-const helperStyle = {
-  marginTop: "20px",
-  fontSize: "13px",
-  color: "#6b7280",
-};
-
 const getSafeValue = (value = {}) => ({
   contact: {
     email: value.contact?.email || "",
@@ -71,6 +13,11 @@ const getSafeValue = (value = {}) => ({
         : [{ label: "", url: "" }],
   },
 });
+
+const inputClasses =
+  "border border-muted rounded-[10px] px-[14px] py-3 text-sm text-primary outline-none";
+
+const labelClasses = "text-sm font-semibold text-primary";
 
 const AboutMeLinksEditor = ({ value, onChange }) => {
   const [localValue, setLocalValue] = useState(() => getSafeValue(value));
@@ -117,15 +64,17 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
   };
 
   return (
-    <section style={sectionStyle}>
-      <h2 style={headingStyle}>About Me Links</h2>
-      <p style={descriptionStyle}>
+    <section className="bg-surface-fill border border-muted rounded-2xl p-6">
+      <h2 className="m-0 mb-2 text-xl font-bold text-primary">
+        About Me Links
+      </h2>
+      <p className="m-0 mb-6 text-sm text-primary">
         Add the public links you want shown on your portfolio profile.
       </p>
 
-      <div style={formGridStyle}>
-        <div style={fieldStyle}>
-          <label style={labelStyle} htmlFor="about-email">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <label className={labelClasses} htmlFor="about-email">
             Email
           </label>
           <input
@@ -134,12 +83,12 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             placeholder="john@example.com"
             value={localValue.contact.email}
             onChange={(event) => updateContact("email", event.target.value)}
-            style={inputStyle}
+            className={inputClasses}
           />
         </div>
 
-        <div style={fieldStyle}>
-          <label style={labelStyle} htmlFor="about-github">
+        <div className="flex flex-col gap-2">
+          <label className={labelClasses} htmlFor="about-github">
             GitHub
           </label>
           <input
@@ -148,12 +97,12 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             placeholder="https://github.com/username"
             value={localValue.socials.github}
             onChange={(event) => updateSocial("github", event.target.value)}
-            style={inputStyle}
+            className={inputClasses}
           />
         </div>
 
-        <div style={fieldStyle}>
-          <label style={labelStyle} htmlFor="about-linkedin">
+        <div className="flex flex-col gap-2">
+          <label className={labelClasses} htmlFor="about-linkedin">
             LinkedIn
           </label>
           <input
@@ -162,12 +111,12 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             placeholder="https://linkedin.com/in/username"
             value={localValue.socials.linkedin}
             onChange={(event) => updateSocial("linkedin", event.target.value)}
-            style={inputStyle}
+            className={inputClasses}
           />
         </div>
 
-        <div style={fieldStyle}>
-          <label style={labelStyle} htmlFor="about-other-label">
+        <div className="flex flex-col gap-2">
+          <label className={labelClasses} htmlFor="about-other-label">
             Other Link Label
           </label>
           <input
@@ -176,12 +125,12 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             placeholder="Portfolio, Twitter, Blog..."
             value={otherLink.label}
             onChange={(event) => updateOtherLink("label", event.target.value)}
-            style={inputStyle}
+            className={inputClasses}
           />
         </div>
 
-        <div style={fullWidthFieldStyle}>
-          <label style={labelStyle} htmlFor="about-other-url">
+        <div className="flex flex-col gap-2 col-span-2">
+          <label className={labelClasses} htmlFor="about-other-url">
             Other Link URL
           </label>
           <input
@@ -190,12 +139,12 @@ const AboutMeLinksEditor = ({ value, onChange }) => {
             placeholder="https://example.com"
             value={otherLink.url}
             onChange={(event) => updateOtherLink("url", event.target.value)}
-            style={inputStyle}
+            className={inputClasses}
           />
         </div>
       </div>
 
-      <p style={helperStyle}>
+      <p className="mt-5 text-[13px] text-muted">
         These links will later appear as icons on the public portfolio preview.
       </p>
     </section>

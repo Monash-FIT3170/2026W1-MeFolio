@@ -4,14 +4,16 @@
  * Ensures that the ProjectCard component renders correctly and handles user interactions as expected.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { expect } from "chai";
-import { describe, it } from "mocha";
+import { describe, it, afterEach } from "mocha";
 import { Meteor } from "meteor/meteor";
 import { ProjectCard } from "./ProjectCard.jsx";
 
 if (Meteor.isClient) {
   describe("ProjectCard", () => {
+    afterEach(() => cleanup());
+
     it("renders project title, description, and tech stack", () => {
       const mockProject = {
         title: "AI Portfolio Dashboard",
@@ -48,6 +50,37 @@ if (Meteor.isClient) {
       fireEvent.click(tryButton);
 
       expect(screen.getByRole("button", { name: /try challenge/i })).to.exist;
+    });
+
+    it("reveals the interactive challenge when the project has one", () => {
+      const mockProject = {
+        _id: "proj-1",
+        title: "Challenge Project",
+        technologies: ["React"],
+        challenge: {
+          title: "Add two numbers",
+          language: "JavaScript",
+          hint: "Use +",
+          starterCode: "console.log(2 + 2);",
+        },
+      };
+
+      render(<ProjectCard project={mockProject} />);
+
+      // No placeholder, and the editor stays hidden until "Try Challenge".
+      expect(screen.queryByTestId("challenge-placeholder")).to.equal(null);
+      expect(
+        screen.queryByRole("button", { name: /submit solution/i }),
+      ).to.equal(null);
+
+      fireEvent.click(screen.getByRole("button", { name: /try challenge/i }));
+
+      expect(screen.getByText(/Add two numbers/)).to.exist;
+      expect(screen.getByText(/Use \+/)).to.exist;
+      expect(screen.getByLabelText("Challenge code").value).to.equal(
+        "console.log(2 + 2);",
+      );
+      expect(screen.getByRole("button", { name: /submit solution/i })).to.exist;
     });
 
     it("displays Voice Summary, Code, and Demo buttons", () => {
