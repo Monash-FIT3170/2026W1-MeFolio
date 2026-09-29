@@ -163,10 +163,12 @@ export const PortfolioContent = ({
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
           >
-            {displayedProjects.map((project, index) => {
+            {displayedProjects.map((project) => {
               const originalProjectIndex = projects.indexOf(project);
               const projectId =
-                project?._id || project?.id || `project-${originalProjectIndex}`;
+                project?._id ||
+                project?.id ||
+                `project-${originalProjectIndex}`;
               const hasHighlight = highlightedProjectIds.length > 0;
               const isHighlighted = highlightedProjectIds.includes(projectId);
 
