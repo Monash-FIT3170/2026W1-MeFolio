@@ -158,15 +158,14 @@ if (Meteor.isClient) {
         .exist;
       expect(screen.getByText("Builds things on the web.")).to.exist;
       expect(screen.getByText("Project Gallery")).to.exist;
-      expect(
-      screen.getByRole("heading", { name: "Weather Dashboard" }),
-    ).to.exist;
-      expect(
-      screen.getByRole("heading", { name: "Recipe Finder" }),
-    ).to.exist;
+      expect(screen.getByRole("heading", { name: "Weather Dashboard" })).to
+        .exist;
+      expect(screen.getByRole("heading", { name: "Recipe Finder" })).to.exist;
       expect(screen.getByRole("heading", { name: "Skills in practice" })).to
         .exist;
-      expect(screen.getByRole("button", { name: "Skill React, used in 1 project" })).to.exist;
+      expect(
+        screen.getByRole("button", { name: "Skill React, used in 1 project" }),
+      ).to.exist;
       expect(screen.getByRole("button", { name: "Project Weather Dashboard" }))
         .to.exist;
     });
