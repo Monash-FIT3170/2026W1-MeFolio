@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -9,7 +9,6 @@ const Navbar = ({
   portfolio: draftPortfolio = null,
   viewportMode = "desktop",
 }) => {
-  const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { portfolio: loadedPortfolio } = useTracker(() => {
@@ -81,7 +80,6 @@ const Navbar = ({
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           )}
-
         </div>
       </div>
 
