@@ -82,14 +82,6 @@ const Navbar = ({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg text-primary hover:text-alt hover:bg-background transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
         </div>
       </div>
 
