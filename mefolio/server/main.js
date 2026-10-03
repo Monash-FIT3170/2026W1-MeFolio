@@ -30,6 +30,7 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+import "./project-narration.js";
 import { validateChallenge } from "./challenge-methods.js";
 
 Accounts.config({
