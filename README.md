@@ -111,6 +111,36 @@ If you prefer not to use Docker:
    npm start
    ```
 
+### Project Text-to-Audio (Web Speech API)
+
+Project narration uses the browser's built-in Web Speech API. No API key,
+billing setup, server method or additional dependency is required.
+
+Teammates can import the client helper:
+
+```js
+import {
+   generateProjectNarration,
+   stopProjectNarration,
+} from "/imports/ui/Portfolio Preview/project-narration.js";
+
+const utterance = generateProjectNarration(projectText);
+utterance.onend = () => { /* Update playback state. */ };
+utterance.onerror = () => { /* Show a playback error. */ };
+```
+
+Call `generateProjectNarration` from a user action such as a Listen button click.
+Call `stopProjectNarration` separately from a Stop button or when leaving the page.
+Catch errors for invalid text or unsupported browsers in the calling UI.
+Pass plain project/case-study text (1-5,000 characters). Starting narration stops
+any existing speech and uses the browser's default voice. It reads the text as-is;
+it does not summarise it or modify project records.
+
+Unlike ElevenLabs, this speaks directly rather than returning an MP3 or audio URL.
+Voice availability and quality depend on the browser and operating system; some
+voices may require a network connection. Playback UI remains with the integrating
+features.
+
 ### Available NPM Scripts
 
 ```bash
