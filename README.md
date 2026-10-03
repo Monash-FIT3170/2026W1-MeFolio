@@ -111,6 +111,63 @@ If you prefer not to use Docker:
    npm start
    ```
 
+### Project Text-to-Audio (Piper)
+
+Narration is generated server-side using a private, self-hosted
+[Piper](https://github.com/OHF-Voice/piper1-gpl) service. There is no API key or
+per-request billing; hosting still uses server resources. Generation requires
+login and ownership of the supplied portfolio. Visitors do not receive scripts
+or sample audio from this method.
+
+On the machine running Meteor, install Python and set up Piper in a separate
+directory outside the repository. These PowerShell commands use a virtual
+environment and download a voice model:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install "piper-tts[http]"
+.\.venv\Scripts\python.exe -m piper.download_voices en_US-lessac-medium
+.\.venv\Scripts\python.exe -m piper.http_server -m en_US-lessac-medium --host 127.0.0.1 --port 5000
+```
+
+Keep Piper running, then start Meteor normally with `npm start` in `mefolio`.
+Piper must stay on loopback or a trusted internal network: its HTTP service is
+not authenticated, so do not expose or publish port 5000 to visitors.
+For Docker, run Piper on the same private container network and configure its
+internal URL. Do not put models or narration samples in `public/`.
+
+The default synthesis endpoint is `http://127.0.0.1:5000/synthesize`. Override it
+with `private.piper.url` in the local Meteor settings, preserving other settings:
+
+```json
+{
+   "private": {
+      "piper": { "url": "http://127.0.0.1:5000/synthesize" }
+   }
+}
+```
+
+From the authenticated portfolio owner's editor, call:
+
+```js
+const sampleAudioUrl = await Meteor.callAsync(
+   "projects.generateNarration",
+   portfolioId,
+   narrationScript,
+);
+```
+
+The result is a WAV data URL for the owner's private preview or downstream
+storage. Plain text must contain 1-5,000 characters. It is read as-is, not
+summarised. Scripts are sent only from the owner to Meteor and the private Piper
+service; this tool does not store scripts, audio or change project records.
+
+Permanent storage, publishing and playback remain separate team tasks. Store
+scripts and sample audio in owner-only storage, not publicly published project
+fields. Expose only approved final audio for public playback, without returning
+the script or sample URLs. Public audio can still be transcribed by listeners.
+Check Piper's GPL licence and the chosen voice model's licence before deployment.
+
 ### Available NPM Scripts
 
 ```bash
