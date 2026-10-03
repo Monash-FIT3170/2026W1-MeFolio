@@ -4,6 +4,7 @@ import { ProjectCard } from "./ProjectCard.jsx";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
+import SkillsProjectMap from "./SkillsProjectMap.jsx";
 
 // The portfolio as its owner designed it - navbar, hero and project gallery -
 // with none of the surrounding dashboard controls. PortfolioPreview renders
@@ -21,6 +22,7 @@ export const PortfolioContent = ({
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
+  const [highlightedProjectIds, setHighlightedProjectIds] = useState([]);
 
   // Compute unique skills from the loaded projects
   const availableSkills = useMemo(() => {
@@ -95,6 +97,12 @@ export const PortfolioContent = ({
         </div>
       </section>
 
+      <SkillsProjectMap
+        projects={projects}
+        viewportMode={viewportMode}
+        onHighlightedProjectsChange={setHighlightedProjectIds}
+      />
+
       {/* Project gallery section */}
       <section
         id="projects"
@@ -155,22 +163,34 @@ export const PortfolioContent = ({
             onMouseUp={handleMouseUp}
             onMouseMove={handleMouseMove}
           >
-            {displayedProjects.map((project) => (
-              <div
-                className={`shrink-0 ${
-                  viewportMode === "mobile"
-                    ? "w-[330px] max-w-full"
-                    : "w-[380px]"
-                }`}
-                key={project._id}
-              >
-                <ProjectCard
-                  project={project}
-                  portfolioId={portfolioId}
-                  dataTheme={portfolio.theme || "default"}
-                />
-              </div>
-            ))}
+            {displayedProjects.map((project) => {
+              const originalProjectIndex = projects.indexOf(project);
+              const projectId =
+                project?._id ||
+                project?.id ||
+                `project-${originalProjectIndex}`;
+              const hasHighlight = highlightedProjectIds.length > 0;
+              const isHighlighted = highlightedProjectIds.includes(projectId);
+
+              return (
+                <div
+                  className={`shrink-0 transition-all duration-200 ${
+                    viewportMode === "mobile"
+                      ? "w-[330px] max-w-full"
+                      : "w-[380px]"
+                  } ${
+                    hasHighlight
+                      ? isHighlighted
+                        ? "opacity-100 scale-[1.02]"
+                        : "opacity-35"
+                      : "opacity-100"
+                  }`}
+                  key={projectId}
+                >
+                  <ProjectCard project={project} portfolioId={portfolioId} />
+                </div>
+              );
+            })}
             <div className="flex-none w-8" />
           </div>
 

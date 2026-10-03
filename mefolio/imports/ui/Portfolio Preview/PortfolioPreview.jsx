@@ -11,6 +11,7 @@ import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
 import PublishButton from "./PublishButton.jsx";
+import SkillsProjectMap from "./SkillsProjectMap.jsx";
 
 const getUserEmail = (user) =>
   user?.email ||
@@ -362,6 +363,8 @@ export const PortfolioPreview = ({
             </div>
           </div>
         </section>
+
+        <SkillsProjectMap projects={projects} viewportMode={viewportMode} />
 
         {/* Project gallery section */}
         <section

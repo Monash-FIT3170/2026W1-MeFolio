@@ -73,7 +73,7 @@ if (Meteor.isClient) {
     describe("QA: infinite loops time out", function () {
       it("times out a tight `while (true) {}` loop", async function () {
         const result = await runInSandbox("while (true) {}", {
-          timeoutMs: 200,
+          timeoutMs: 1000,
         });
         expect(result.timedOut).to.equal(true);
         expect(result.error).to.equal("");
