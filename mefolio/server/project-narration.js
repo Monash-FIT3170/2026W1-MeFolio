@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { Buffer } from "buffer";
+import { env } from "process";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
 export async function generateProjectNarration(text) {
@@ -14,7 +15,9 @@ export async function generateProjectNarration(text) {
   }
 
   const url =
-    Meteor.settings?.private?.piper?.url || "http://127.0.0.1:5000/synthesize";
+    Meteor.settings?.private?.piper?.url ||
+    env.PIPER_URL ||
+    "http://127.0.0.1:5000/synthesize";
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
 

@@ -13,6 +13,17 @@ services:
       timeout: 5s
       retries: 10
 
+  piper:
+    build: ./piper
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/voices', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 60s
+
   app:
     build: .
     ports:
@@ -26,9 +37,12 @@ services:
       PORT: 3000
       MONGO_URL: mongodb://mongo:27017/meteor
       MONGO_OPLOG_URL: ""
+      PIPER_URL: http://piper:5000/synthesize
       METEOR_WATCH_FORCE_POLLING: "true"
     depends_on:
       mongo:
+        condition: service_healthy
+      piper:
         condition: service_healthy
     restart: unless-stopped
 

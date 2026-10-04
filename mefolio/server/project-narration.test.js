@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { Buffer } from "buffer";
+import { env } from "process";
 import assert from "assert";
 import sinon from "sinon";
 import { generateProjectNarration } from "./project-narration.js";
@@ -11,6 +12,7 @@ if (Meteor.isServer) {
     let fetchStub;
     let portfolioStub;
     let originalPrivateSettings;
+    let originalPiperUrl;
     let audio;
 
     const callMethod = (
@@ -27,6 +29,8 @@ if (Meteor.isServer) {
     beforeEach(function () {
       sandbox = sinon.createSandbox();
       originalPrivateSettings = Meteor.settings.private;
+      originalPiperUrl = env.PIPER_URL;
+      delete env.PIPER_URL;
       Meteor.settings.private = { ...originalPrivateSettings, piper: {} };
       audio = Buffer.alloc(46);
       audio.write("RIFF", 0);
@@ -47,6 +51,11 @@ if (Meteor.isServer) {
     afterEach(function () {
       sandbox.restore();
       Meteor.settings.private = originalPrivateSettings;
+      if (originalPiperUrl === undefined) {
+        delete env.PIPER_URL;
+      } else {
+        env.PIPER_URL = originalPiperUrl;
+      }
     });
 
     it("returns WAV audio only after checking portfolio ownership", async function () {
@@ -101,12 +110,19 @@ if (Meteor.isServer) {
     });
 
     it("uses the private server endpoint setting", async function () {
+      env.PIPER_URL = "http://environment-piper:5000/synthesize";
       Meteor.settings.private.piper.url = "http://piper:5000/synthesize";
       await callMethod("owner");
       assert.strictEqual(
         fetchStub.firstCall.args[0],
         "http://piper:5000/synthesize",
       );
+    });
+
+    it("uses the Docker environment endpoint without manual settings", async function () {
+      env.PIPER_URL = "http://piper:5000/synthesize";
+      await callMethod("owner");
+      assert.strictEqual(fetchStub.firstCall.args[0], env.PIPER_URL);
     });
 
     it("does not return provider errors containing private text", async function () {
