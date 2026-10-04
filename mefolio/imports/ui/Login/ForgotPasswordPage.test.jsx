@@ -47,9 +47,7 @@ if (Meteor.isClient) {
       fireEvent.change(screen.getByLabelText("Email Address"), {
         target: { value: "user@example.com" },
       });
-      fireEvent.click(
-        screen.getByRole("button", { name: /send reset link/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /send reset link/i }));
 
       expect(calledWith).to.deep.equal({ email: "user@example.com" });
       expect(screen.getByText("Check your inbox")).to.exist;
@@ -64,9 +62,7 @@ if (Meteor.isClient) {
       fireEvent.change(screen.getByLabelText("Email Address"), {
         target: { value: "nobody@example.com" },
       });
-      fireEvent.click(
-        screen.getByRole("button", { name: /send reset link/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /send reset link/i }));
 
       expect(screen.getByText("Check your inbox")).to.exist;
     });
@@ -80,9 +76,7 @@ if (Meteor.isClient) {
       fireEvent.change(screen.getByLabelText("Email Address"), {
         target: { value: "user@example.com" },
       });
-      fireEvent.click(
-        screen.getByRole("button", { name: /send reset link/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /send reset link/i }));
 
       expect(screen.getByText("Failed to send email")).to.exist;
     });

@@ -65,9 +65,7 @@ if (Meteor.isClient) {
 
       renderAt("tok-abc");
       fillPasswords("Password1");
-      fireEvent.click(
-        screen.getByRole("button", { name: /reset password/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /reset password/i }));
 
       expect(args).to.deep.equal({ token: "tok-abc", password: "Password1" });
       expect(screen.getByText("Password updated")).to.exist;
@@ -79,9 +77,7 @@ if (Meteor.isClient) {
 
       renderAt();
       fillPasswords("Password1");
-      fireEvent.click(
-        screen.getByRole("button", { name: /reset password/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /reset password/i }));
 
       expect(screen.getByText("Token expired")).to.exist;
     });
@@ -94,9 +90,7 @@ if (Meteor.isClient) {
 
       renderAt();
       fillPasswords("Password1", "Password2");
-      fireEvent.click(
-        screen.getByRole("button", { name: /reset password/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /reset password/i }));
 
       expect(called).to.be.false;
       expect(screen.getByText("Passwords do not match")).to.exist;
@@ -110,9 +104,7 @@ if (Meteor.isClient) {
 
       renderAt();
       fillPasswords("weak");
-      fireEvent.click(
-        screen.getByRole("button", { name: /reset password/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /reset password/i }));
 
       expect(called).to.be.false;
     });

@@ -81,9 +81,7 @@ export function ResetPasswordPage() {
             <h2 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight">
               Password updated
             </h2>
-            <p className="text-gray-500 text-lg">
-              Redirecting you to sign in…
-            </p>
+            <p className="text-gray-500 text-lg">Redirecting you to sign in…</p>
           </div>
         ) : (
           <>

@@ -40,7 +40,6 @@ export function ForgotPasswordPage({ onBackToLogin }) {
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans relative">
-      {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -80,16 +79,13 @@ export function ForgotPasswordPage({ onBackToLogin }) {
         </div>
       </div>
 
-      {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-2 mb-10">
             <Sparkles className="w-8 h-8 text-indigo-600" />
             <span className="text-3xl font-bold text-gray-900">MeFolio</span>
           </div>
 
-          {/* Back Button */}
           <button
             onClick={onBackToLogin}
             className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors mb-8 group"
@@ -99,7 +95,6 @@ export function ForgotPasswordPage({ onBackToLogin }) {
           </button>
 
           {sent ? (
-            // Generic confirmation - does not reveal whether the email exists.
             <div>
               <div className="mb-6 flex items-center gap-3 text-green-600">
                 <CheckCircle2 className="w-10 h-10" />
@@ -169,7 +164,6 @@ export function ForgotPasswordPage({ onBackToLogin }) {
             </>
           )}
 
-          {/* Help Text */}
           <p className="mt-8 text-center text-gray-500 text-sm">
             Remember your password?{" "}
             <button
