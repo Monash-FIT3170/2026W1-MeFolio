@@ -1,5 +1,6 @@
 {
   "private": {
+    "MAIL_URL": "smtp://USERNAME:PASSWORD@sandbox.smtp.mailtrap.io:587",
     "google": {
       "clientId": "GOOGLE_CLIENT_ID_HERE",
       "secret": "GOOGLE_CLIENT_SECRET_HERE"
