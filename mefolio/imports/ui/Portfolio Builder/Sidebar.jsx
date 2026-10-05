@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import PublishButton from "../Portfolio Preview/PublishButton";
+import ShareButton from "./ShareButton";
 import ProfileSummary from "./ProfileSummary";
 import { useResponsive } from "../Contexts/ResponsiveContext";
 
@@ -14,6 +15,7 @@ const Sidebar = ({
   isPreview = false,
   portfolio,
   projects = [],
+  hasUnpublishedChanges = false,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMobile } = useResponsive();
@@ -21,7 +23,7 @@ const Sidebar = ({
   // Sidebar content component (reused for both desktop and mobile)
   const renderSidebarContent = () => (
     <>
-      <div className="p-6 border-b border-primary">
+      <div className="shrink-0 p-6 border-b border-primary">
         <div className="text-2xl font-extrabold text-primary mb-4">MeFolio</div>
         <div className="flex flex-col gap-2">
           <button
@@ -44,10 +46,15 @@ const Sidebar = ({
               setIsMobileMenuOpen(false);
             }}
           />
+          <ShareButton
+            portfolio={portfolio}
+            hasUnpublishedChanges={hasUnpublishedChanges}
+            isMobile={isMobile}
+          />
         </div>
       </div>
 
-      <nav className="flex-1 p-4 flex flex-col gap-1">
+      <nav className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-1">
         {items.map((item) => (
           <button
             key={item.id}
@@ -133,6 +140,7 @@ Sidebar.propTypes = {
   isPreview: PropTypes.bool,
   portfolio: PropTypes.object,
   projects: PropTypes.arrayOf(PropTypes.object),
+  hasUnpublishedChanges: PropTypes.bool,
 };
 
 export default Sidebar;
