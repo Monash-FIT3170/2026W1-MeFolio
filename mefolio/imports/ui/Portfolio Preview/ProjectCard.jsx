@@ -13,6 +13,7 @@ import {
 import { trackProjectClick } from "../../api/projectClickTracking";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 import { ProjectChallenge } from "./ProjectChallenge";
+import { NarrationPlayer } from "./NarrationPlayer";
 
 export function ProjectCard({
   project,
@@ -41,8 +42,9 @@ export function ProjectCard({
       }).format(new Date(githubStats.updatedAt))
     : "-";
 
+  const projectId = data._id || data.id;
+
   const handleProjectClick = (target) => {
-    const projectId = data._id || data.id;
     if (!portfolioId || !projectId) return;
 
     try {
@@ -119,13 +121,17 @@ export function ProjectCard({
           ))}
         </div>
 
-        <button
-          disabled
-          className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
-        >
-          <Mic className="w-4 h-4" />
-          Voice Summary
-        </button>
+        {portfolioId && projectId ? (
+          <NarrationPlayer portfolioId={portfolioId} projectId={projectId} />
+        ) : (
+          <button
+            disabled
+            className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
+          >
+            <Mic className="w-4 h-4" />
+            Voice Summary
+          </button>
+        )}
 
         <div className="p-4 mb-5 bg-background border border-accent2 rounded-2xl">
           <div className="flex items-center mb-1">
