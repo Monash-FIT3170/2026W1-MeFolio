@@ -111,6 +111,118 @@ If you prefer not to use Docker:
    npm start
    ```
 
+### Project Text-to-Audio (Piper)
+
+Narration is generated server-side using a private, self-hosted
+[Piper](https://github.com/OHF-Voice/piper1-gpl) service. There is no API key or
+per-request billing; hosting still uses server resources. Generation requires
+login and ownership of the supplied portfolio. Visitors do not receive scripts
+or sample audio from this method.
+
+#### Start Everything
+
+Install and open Docker Desktop. From `mefolio`, run:
+
+```powershell
+docker compose up --build -d
+docker compose ps
+```
+
+The first build installs Piper and downloads its voice model automatically;
+it needs internet access and may take several minutes. Later starts reuse the
+image. Wait for `piper` and `mongo` to show `healthy`, then open
+http://localhost:3000. If Meteor is still starting, check `docker compose logs app`.
+The app waits for Piper's readiness check before starting.
+
+No Python installation, API key or Piper settings edit is needed. Compose sets
+`PIPER_URL` automatically. Piper's port is not published to the host or internet.
+Do not add a public port mapping: Piper itself has no authentication and may
+retain the most recent script in its internal status endpoint.
+
+If running Meteor without Docker, the service URL is resolved in this order:
+`private.piper.url` in Meteor settings, `PIPER_URL` in the server environment,
+then `http://127.0.0.1:5000/synthesize`. A separate Piper service must be running
+for that workflow. Do not put models or narration samples in `public/`.
+
+#### Manually Test Real Audio
+
+There is no narration UI yet. This tests the real server method without editing
+any app code:
+
+1. Open http://localhost:3000 and log in as the portfolio owner. Open their
+   portfolio editor so you know which portfolio you are testing.
+2. Open browser developer tools (F12), select Console and run `Meteor.userId()`.
+   Copy the returned user ID. It must not be `null`.
+3. In a terminal in `mefolio`, run `docker compose exec mongo mongosh meteor`.
+   At the Mongo shell prompt, paste this query with your actual user ID:
+   ```js
+   db.portfolios.find(
+      { userId: "YOUR_USER_ID" },
+      { _id: 1, title: 1 }
+   ).toArray()
+   ```
+   Copy the `_id` for the portfolio you own. Type `exit` to leave the Mongo shell.
+   If there are no results, create a portfolio in the app and repeat the query.
+4. Back in the browser Console, paste the following using that portfolio ID:
+   ```js
+   var sampleAudioUrl = await Meteor.callAsync(
+      "projects.generateNarration",
+      "YOUR_PORTFOLIO_ID",
+      "I built a portfolio website using React and Meteor."
+   );
+   var samplePlayer = new Audio(sampleAudioUrl);
+   samplePlayer.controls = true;
+   document.body.prepend(samplePlayer);
+   ```
+5. Click Play on the audio controls at the top of the page. You should hear the
+   sentence. Using the Play control avoids browser autoplay restrictions.
+6. Log out and repeat only the `Meteor.callAsync` call using the same portfolio
+   ID. It must fail with `not-authorized`. Log in with a different account and
+   repeat it: it must also fail. These checks must not generate audio.
+
+Refresh the page to remove the temporary player. If synthesis fails, check
+`docker compose ps` and `docker compose logs piper`. For a startup/network error,
+ensure Docker Desktop is running and the `piper` service is healthy.
+
+#### Automated Tests
+
+With Meteor installed locally, run the focused mocked tests from `mefolio`:
+
+```powershell
+$env:MOCHA_GREP = "project narration"
+$env:TEST_CLIENT = "0"
+$env:TEST_SERVER = "1"
+meteor test --once --driver-package meteortesting:mocha --port 3100
+Remove-Item Env:MOCHA_GREP, Env:TEST_CLIENT, Env:TEST_SERVER
+```
+
+These verify ownership, validation, endpoint selection, failures and timeouts;
+they do not require Piper or prove audible output. Use the manual test above
+for real synthesis.
+
+#### Integration Contract
+
+From the authenticated portfolio owner's editor, call:
+
+```js
+const sampleAudioUrl = await Meteor.callAsync(
+   "projects.generateNarration",
+   portfolioId,
+   narrationScript,
+);
+```
+
+The result is a WAV data URL for the owner's private preview or downstream
+storage. Plain text must contain 1-5,000 characters. It is read as-is, not
+summarised. Scripts are sent only from the owner to Meteor and the private Piper
+service; this tool does not store scripts, audio or change project records.
+
+Permanent storage, publishing and playback remain separate team tasks. Store
+scripts and sample audio in owner-only storage, not publicly published project
+fields. Expose only approved final audio for public playback, without returning
+the script or sample URLs. Public audio can still be transcribed by listeners.
+Check Piper's GPL licence and the chosen voice model's licence before deployment.
+
 ### Available NPM Scripts
 
 ```bash
