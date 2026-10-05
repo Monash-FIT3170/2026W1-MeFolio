@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { ModeSwitch } from "../Portfolio Preview/ModeButton";
+import PublishButton from "../Portfolio Preview/PublishButton";
 import ProfileSummary from "./ProfileSummary";
 import { useResponsive } from "../Contexts/ResponsiveContext";
 
@@ -11,25 +11,52 @@ const Sidebar = ({
   onTabChange,
   profile,
   onPreviewToggle,
+  isPreview = false,
+  portfolio,
+  projects = [],
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMobile } = useResponsive();
 
   // Sidebar content component (reused for both desktop and mobile)
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <>
       <div className="p-6 border-b border-primary">
         <div className="text-2xl font-extrabold text-primary mb-4">MeFolio</div>
-        <ModeSwitch onToggle={onPreviewToggle} />
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              onPreviewToggle(!isPreview);
+              setIsMobileMenuOpen(false);
+            }}
+            aria-pressed={isPreview}
+            className="w-full rounded-xl border border-alt/50 bg-selected px-4 py-3 text-sm font-semibold text-alt transition-colors hover:bg-alt/50 hover:text-secondary"
+          >
+            {isPreview ? "Back to Builder" : "View Portfolio"}
+          </button>
+          <PublishButton
+            portfolio={portfolio}
+            projects={projects}
+            sidebar
+            onGoToDashboard={() => {
+              onPreviewToggle(false);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+        </div>
       </div>
 
       <nav className="flex-1 p-4 flex flex-col gap-1">
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => {
+              onTabChange(item.id);
+              setIsMobileMenuOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors ${
-              activeTab === item.id
+              !isPreview && activeTab === item.id
                 ? "bg-selected text-alt"
                 : "text-primary bg-surface-fill hover:bg-selected/50 hover:text-alt/50"
             }`}
@@ -73,7 +100,7 @@ const Sidebar = ({
                 <X className="w-5 h-5 text-primary" />
               </button>
             </div>
-            <SidebarContent />
+            {renderSidebarContent()}
           </aside>
         </>
       )}
@@ -81,7 +108,7 @@ const Sidebar = ({
       {/* Desktop Sidebar - Only shows on desktop/tablet */}
       {!isMobile && (
         <aside className="w-64 h-screen sticky z-99 top-0 bg-surface-fill border-r border-line flex flex-col shrink-0">
-          <SidebarContent />
+          {renderSidebarContent()}
         </aside>
       )}
     </>
@@ -103,6 +130,9 @@ Sidebar.propTypes = {
     email: PropTypes.string,
   }).isRequired,
   onPreviewToggle: PropTypes.func.isRequired,
+  isPreview: PropTypes.bool,
+  portfolio: PropTypes.object,
+  projects: PropTypes.arrayOf(PropTypes.object),
 };
 
 export default Sidebar;

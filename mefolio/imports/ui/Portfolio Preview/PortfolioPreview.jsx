@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useRef, useState, useMemo, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
@@ -10,7 +10,6 @@ import { ProjectCollection } from "../../api/projects.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
-import PublishButton from "./PublishButton.jsx";
 import SkillsProjectMap from "./SkillsProjectMap.jsx";
 
 const getUserEmail = (user) =>
@@ -24,7 +23,7 @@ export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
   portfolioId: providedPortfolioId,
   projects: draftProjects = null,
-  isStaging = false,
+  viewportMode = "desktop",
   isPublishedView = false,
 }) => {
   const { portfolioId: routePortfolioId } = useParams();
@@ -214,9 +213,7 @@ export const PortfolioPreview = ({
     };
   }, [isPublicView, routePortfolioId, ready]);
 
-  const navigate = useNavigate();
   const scrollRef = useRef(null);
-  const [viewportMode, setViewportMode] = useState("desktop");
 
   if (isPublicView) {
     return null;
@@ -268,67 +265,6 @@ export const PortfolioPreview = ({
 
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
-      {/* Dashboard chrome — full-width border, padded content */}
-      <div className="border-b border-line bg-surface-fill">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-base font-bold text-primary m-0">
-              {isPublishedView
-                ? "Published portfolio"
-                : isStaging
-                  ? "Draft preview"
-                  : "Project preview"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className="flex rounded-lg border border-line bg-background p-1"
-              role="group"
-              aria-label="Preview viewport"
-            >
-              <button
-                type="button"
-                onClick={() => setViewportMode("desktop")}
-                aria-pressed={viewportMode === "desktop"}
-                aria-label="Show desktop preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "desktop"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Desktop
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewportMode("mobile")}
-                aria-pressed={viewportMode === "mobile"}
-                aria-label="Show mobile preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "mobile"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Mobile
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-background"
-            >
-              Back to Dashboard
-            </button>
-
-            {isStaging && <PublishButton portfolio={portfolio} />}
-          </div>
-        </div>
-      </div>
-
       {/* Full-width navbar */}
       <div
         className={`mx-auto overflow-hidden bg-background transition-all duration-300 ${
@@ -457,6 +393,6 @@ PortfolioPreview.propTypes = {
   portfolio: PropTypes.object,
   portfolioId: PropTypes.string,
   projects: PropTypes.arrayOf(PropTypes.object),
-  isStaging: PropTypes.bool,
+  viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
   isPublishedView: PropTypes.bool,
 };

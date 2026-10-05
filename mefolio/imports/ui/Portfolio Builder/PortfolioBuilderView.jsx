@@ -30,9 +30,10 @@ import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
-import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
+import { useResponsive } from "../Contexts/ResponsiveContext";
+import PublishButton from "../Portfolio Preview/PublishButton";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -181,6 +182,8 @@ const useDashboardData = () =>
   });
 
 const DashboardLayout = () => {
+  const [isPreview, setIsPreview] = useState(false);
+  const { isMobile } = useResponsive();
   const [activeTab, setActiveTab] = useState("overview");
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
@@ -188,7 +191,6 @@ const DashboardLayout = () => {
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
   const [syncingProjectId, setSyncingProjectId] = useState(null);
   const [actionError, setActionError] = useState(null);
@@ -427,160 +429,176 @@ const DashboardLayout = () => {
       <Sidebar
         items={sidebarItems}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setIsPreview(false);
+          setActiveTab(tab);
+        }}
         profile={profile}
+        portfolio={selectedPortfolio}
+        projects={orderedProjects}
+        isPreview={isPreview}
         onPreviewToggle={(isPreview) => {
-          if (isPreview) navigate("/preview");
+          if (isPreview && isMobile) navigate("/preview");
+          else setIsPreview(isPreview);
         }}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-primary">
-            {currentTab.label}
-          </h1>
+      <main
+        key={isPreview ? "preview" : "builder"}
+        className="min-w-0 flex-1 overflow-y-auto"
+      >
+        {isPreview ? (
+          <PortfolioPreview
+            portfolio={selectedPortfolio}
+            projects={orderedProjects}
+          />
+        ) : (
+          <>
+            <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
+              <h1 className="text-2xl font-extrabold text-primary">
+                {currentTab.label}
+              </h1>
 
-          <div className="flex items-center gap-3">
-            {!isConnected && hasLoadedOnce && (
-              <span className="text-xs font-medium text-amber-600">
-                Reconnecting… showing your last saved data
-              </span>
-            )}
+              <div className="flex items-center gap-3">
+                {!isConnected && hasLoadedOnce && (
+                  <span className="text-xs font-medium text-amber-600">
+                    Reconnecting… showing your last saved data
+                  </span>
+                )}
 
-            <DraftStatusIndicator
-              status={draftStatus}
-              onReview={() => setIsComparisonOpen(true)}
-            />
+                <DraftStatusIndicator status={draftStatus} />
 
-            <button
-              type="button"
-              data-testid="copy-public-link-btn"
-              onClick={handleCopyLink}
-              disabled={
-                !selectedPortfolio?._id || !selectedPortfolio?.isPublished
-              }
-              title={
-                selectedPortfolio?.isPublished
-                  ? "Copy public portfolio link"
-                  : "Publish your portfolio before sharing it"
-              }
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {copyLinkStatus === "copied"
-                ? "Link Copied!"
-                : copyLinkStatus === "error"
-                  ? "Copy Failed"
-                  : "Copy Link"}
-            </button>
+                <button
+                  type="button"
+                  data-testid="copy-public-link-btn"
+                  onClick={handleCopyLink}
+                  disabled={
+                    !selectedPortfolio?._id || !selectedPortfolio?.isPublished
+                  }
+                  title={
+                    selectedPortfolio?.isPublished
+                      ? "Copy public portfolio link"
+                      : "Publish your portfolio before sharing it"
+                  }
+                  className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {copyLinkStatus === "copied"
+                    ? "Link Copied!"
+                    : copyLinkStatus === "error"
+                      ? "Copy Failed"
+                      : "Copy Link"}
+                </button>
 
-            {activeTab === "settings" && <LogoutButton />}
+                {activeTab === "settings" && <LogoutButton />}
 
-            {activeTab === "projects" && (
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
-              >
-                Add Project
-              </button>
-            )}
-          </div>
-        </header>
+                {activeTab === "projects" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(true)}
+                    className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
+                  >
+                    Add Project
+                  </button>
+                )}
+              </div>
+            </header>
 
-        {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
+            {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
             save/reorder/sync/delete. Dismissible, and auto-clears itself. */}
-        {actionError && (
-          <div
-            role="alert"
-            className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            <span>{actionError}</span>
-            <button
-              type="button"
-              onClick={() => setActionError(null)}
-              className="shrink-0 font-semibold text-red-700 hover:underline"
-            >
-              Dismiss
-            </button>
-          </div>
+            {actionError && (
+              <div
+                role="alert"
+                className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              >
+                <span>{actionError}</span>
+                <button
+                  type="button"
+                  onClick={() => setActionError(null)}
+                  className="shrink-0 font-semibold text-red-700 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            <div className="p-8">
+              {activeTab === "overview" ? (
+                <OverviewSection
+                  stats={overviewStats}
+                  portfolioId={selectedPortfolio?._id}
+                  onViewAllVisitors={() => setActiveTab("visitors")}
+                />
+              ) : activeTab === "about-me" ? (
+                <AboutMeLinksEditor
+                  value={aboutMe}
+                  onChange={(updatedValue) => {
+                    const portfolioId = selectedPortfolio?._id;
+
+                    if (!portfolioId) return;
+
+                    Meteor.call(
+                      "portfolios.update",
+                      portfolioId,
+                      {
+                        contact: updatedValue.contact,
+                        socials: updatedValue.socials,
+                      },
+                      (error) => {
+                        if (error) {
+                          console.error("Failed to save portfolio:", error);
+                          // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
+                          // from here once `value` is passed down, so the
+                          // user's typed changes aren't lost - just flag that
+                          // they weren't persisted.
+                          showActionError(
+                            "Couldn't save your About Me changes. Please try again.",
+                          );
+                        }
+                      },
+                    );
+                  }}
+                />
+              ) : activeTab === "settings" ? (
+                <ProfileSettings
+                  profile={profile}
+                  aboutMe={aboutMe}
+                  portfolioId={selectedPortfolio?._id}
+                />
+              ) : activeTab === "projects" ? (
+                <ProjectsSection
+                  projects={orderedProjects}
+                  onEdit={handleEditProject}
+                  syncingProjectId={syncingProjectId}
+                  onSync={handleSyncProject}
+                  draggedProjectIndex={draggedProjectIndex}
+                  onDragStart={handleProjectDragStart}
+                  onDragOver={handleProjectDragOver}
+                  onDrop={handleProjectDrop}
+                  onDragEnd={handleProjectDragEnd}
+                />
+              ) : activeTab === "analytics" ? (
+                <AnalyticsSection
+                  projects={orderedProjects}
+                  engagements={snapshot.engagements}
+                />
+              ) : activeTab === "visitors" ? (
+                <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
+              ) : activeTab === "recruiter" ? (
+                <RecruiterPortal
+                  portfolio={selectedPortfolio}
+                  userId={snapshot.user?._id}
+                />
+              ) : activeTab === "themes" ? (
+                <ThemeSection
+                  portfolioId={selectedPortfolio?._id}
+                  currentActiveTheme={selectedPortfolio?.theme}
+                />
+              ) : (
+                <PlaceholderSection title={currentTab.label} />
+              )}
+            </div>
+          </>
         )}
-
-        <div className="p-8">
-          {activeTab === "overview" ? (
-            <OverviewSection
-              stats={overviewStats}
-              portfolioId={selectedPortfolio?._id}
-              onViewAllVisitors={() => setActiveTab("visitors")}
-            />
-          ) : activeTab === "about-me" ? (
-            <AboutMeLinksEditor
-              value={aboutMe}
-              onChange={(updatedValue) => {
-                const portfolioId = selectedPortfolio?._id;
-
-                if (!portfolioId) return;
-
-                Meteor.call(
-                  "portfolios.update",
-                  portfolioId,
-                  {
-                    contact: updatedValue.contact,
-                    socials: updatedValue.socials,
-                  },
-                  (error) => {
-                    if (error) {
-                      console.error("Failed to save portfolio:", error);
-                      // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
-                      // from here once `value` is passed down, so the
-                      // user's typed changes aren't lost - just flag that
-                      // they weren't persisted.
-                      showActionError(
-                        "Couldn't save your About Me changes. Please try again.",
-                      );
-                    }
-                  },
-                );
-              }}
-            />
-          ) : activeTab === "settings" ? (
-            <ProfileSettings
-              profile={profile}
-              aboutMe={aboutMe}
-              portfolioId={selectedPortfolio?._id}
-            />
-          ) : activeTab === "projects" ? (
-            <ProjectsSection
-              projects={orderedProjects}
-              onEdit={handleEditProject}
-              syncingProjectId={syncingProjectId}
-              onSync={handleSyncProject}
-              draggedProjectIndex={draggedProjectIndex}
-              onDragStart={handleProjectDragStart}
-              onDragOver={handleProjectDragOver}
-              onDrop={handleProjectDrop}
-              onDragEnd={handleProjectDragEnd}
-            />
-          ) : activeTab === "analytics" ? (
-            <AnalyticsSection
-              projects={orderedProjects}
-              engagements={snapshot.engagements}
-            />
-          ) : activeTab === "visitors" ? (
-            <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
-          ) : activeTab === "recruiter" ? (
-            <RecruiterPortal
-              portfolio={selectedPortfolio}
-              userId={snapshot.user?._id}
-            />
-          ) : activeTab === "themes" ? (
-            <ThemeSection
-              portfolioId={selectedPortfolio?._id}
-              currentActiveTheme={selectedPortfolio?.theme}
-            />
-          ) : (
-            <PlaceholderSection title={currentTab.label} />
-          )}
-        </div>
       </main>
 
       <AddProjectModal
@@ -597,16 +615,13 @@ const DashboardLayout = () => {
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
       />
-      <DraftComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        status={draftStatus}
-      />
     </div>
   );
 };
 
 const OwnerPreviewRoute = () => {
+  const navigate = useNavigate();
+  const { isMobile } = useResponsive();
   const {
     isLoading,
     portfolios,
@@ -636,11 +651,26 @@ const OwnerPreviewRoute = () => {
   }
 
   return (
-    <PortfolioPreview
-      portfolio={selectedPortfolio}
-      projects={databaseProjects}
-      isStaging
-    />
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-primary"
+        >
+          Back to Builder
+        </button>
+        <PublishButton
+          portfolio={selectedPortfolio}
+          projects={databaseProjects}
+        />
+      </div>
+      <PortfolioPreview
+        portfolio={selectedPortfolio}
+        projects={databaseProjects}
+        viewportMode={isMobile ? "mobile" : "desktop"}
+      />
+    </>
   );
 };
 
