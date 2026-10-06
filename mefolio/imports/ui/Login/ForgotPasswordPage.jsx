@@ -5,13 +5,10 @@ import {
   Mail,
   Lock,
   Sparkles,
-  Shield,
   ArrowLeft,
   Github,
 } from "lucide-react";
 import PropTypes from "prop-types";
-import { Meteor } from "meteor/meteor";
-import { Accounts } from "meteor/accounts-base";
 
 /**
  * FEAT-01: User Authentication UI
@@ -95,33 +92,6 @@ export function ForgotPasswordPage({ onBackToLogin, onPasswordReset }) {
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans relative">
-      {/* Dev Bypass - Top Right Corner */}
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          onClick={() => {
-            // Mock login for development bypass
-            Meteor.loginWithPassword("test@example.com", "password", (err) => {
-              if (err) {
-                Accounts.createUser(
-                  {
-                    email: "test@example.com",
-                    password: "password",
-                    profile: { name: "Test User" },
-                  },
-                  () => onBackToLogin(),
-                );
-              } else {
-                onBackToLogin();
-              }
-            });
-          }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-xs font-bold transition-colors border border-slate-200"
-        >
-          <Shield className="w-3.5 h-3.5" />
-          Dev Bypass
-        </button>
-      </div>
-
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 relative overflow-hidden">
         <div className="absolute inset-0">
