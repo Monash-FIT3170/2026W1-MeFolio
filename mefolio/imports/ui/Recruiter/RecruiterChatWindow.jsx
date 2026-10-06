@@ -16,8 +16,10 @@ export function RecruiterChatWindow({ portfolioId }) {
   const nextMessageId = useRef(0);
   const dialogRef = useRef(null);
   const inputRef = useRef(null);
+  const conversationRef = useRef(null);
 
   useEffect(() => {
+    // Open or close the dialog based on the isOpen state
     const dialog = dialogRef.current;
     if (!dialog) return;
 
@@ -28,6 +30,14 @@ export function RecruiterChatWindow({ portfolioId }) {
       dialog.close();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    // Keep the conversation scrolled to the bottom when new messages are added or when pendingCount changes
+    const conversation = conversationRef.current;
+    if (conversation) {
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+  }, [messages, pendingCount]);
 
   const handleSend = (text = message) => {
     const trimmedMessage = text.trim();
@@ -91,8 +101,8 @@ export function RecruiterChatWindow({ portfolioId }) {
         }}
         className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-visible border-0 bg-transparent p-0 backdrop:bg-black/50"
       >
-        <section className="flex max-h-[85vh] flex-col overflow-hidden rounded-2xl border border-line bg-surface-fill shadow-2xl">
-          <div className="flex items-start justify-between gap-4 border-b border-line p-5">
+        <section className="flex h-[85vh] max-h-[42rem] flex-col overflow-hidden rounded-2xl border border-line bg-surface-fill shadow-2xl">
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line p-5">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-button p-2">
                 <Sparkles className="h-5 w-5 text-accent1" aria-hidden="true" />
@@ -125,7 +135,13 @@ export function RecruiterChatWindow({ portfolioId }) {
             </button>
           </div>
 
-          <div className="min-h-0 overflow-y-auto p-5">
+          <div
+            ref={conversationRef}
+            className="min-h-0 flex-1 overflow-y-auto p-5"
+            role={messages.length > 0 ? "region" : undefined}
+            aria-label={messages.length > 0 ? "Chat messages" : undefined}
+            tabIndex={messages.length > 0 ? 0 : undefined}
+          >
             {messages.length === 0 ? (
               <div>
                 <p className="text-sm font-medium text-primary mb-3">
@@ -187,7 +203,7 @@ export function RecruiterChatWindow({ portfolioId }) {
             )}
           </div>
 
-          <div className="border-t border-line p-4">
+          <div className="shrink-0 border-t border-line p-4">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
