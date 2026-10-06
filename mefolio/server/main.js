@@ -47,7 +47,11 @@ if (!process.env.MAIL_URL && Meteor.settings.private?.MAIL_URL) {
 }
 
 Accounts.emailTemplates.siteName = "MeFolio";
-Accounts.emailTemplates.from = "MeFolio <no-reply@mefolio.app>";
+// The sender must match the provider's authenticated/verified address or real
+// mail will be rejected or spam-filtered, so read it from settings and fall
+// back to a generic address only when none is configured.
+Accounts.emailTemplates.from =
+  Meteor.settings.private?.MAIL_FROM || "MeFolio <no-reply@mefolio.app>";
 
 // Point the reset link at our in-app react-router route (not Meteor's default
 // hash URL) so /reset-password/:token renders the ResetPasswordPage.
