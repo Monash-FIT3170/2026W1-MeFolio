@@ -72,7 +72,7 @@ export function RecruiterChatWindow({ portfolioId }) {
         aria-haspopup="dialog"
         aria-controls="recruiter-chat-dialog"
         aria-expanded={isOpen}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-button px-5 py-3 font-bold text-secondary shadow-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 border border-muted rounded-full bg- px-5 py-3 font-bold text-secondary shadow-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
       >
         <MessageCircle className="h-5 w-5" aria-hidden="true" />
         Ask AI
@@ -94,7 +94,7 @@ export function RecruiterChatWindow({ portfolioId }) {
         <section className="flex max-h-[85vh] flex-col overflow-hidden rounded-2xl border border-line bg-surface-fill shadow-2xl">
           <div className="flex items-start justify-between gap-4 border-b border-line p-5">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-selected p-2">
+              <div className="rounded-lg bg-button p-2">
                 <Sparkles className="h-5 w-5 text-accent1" aria-hidden="true" />
               </div>
 
@@ -162,13 +162,13 @@ export function RecruiterChatWindow({ portfolioId }) {
                     }`}
                   >
                     <div
-                      className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                      className={`max-w-[80%] border px-4 py-2 rounded-2xl ${
                         chatMessage.role === "recruiter"
-                          ? "bg-button text-secondary rounded-br-md"
+                          ? "border-secondary bg-button text-secondary rounded-br-md"
                           : `bg-selected rounded-bl-md ${
                               chatMessage.isError
-                                ? "text-red-700"
-                                : "text-primary"
+                                ? "border-red-700 text-red-700"
+                                : "border-primary text-primary"
                             }`
                       }`}
                     >
@@ -178,7 +178,7 @@ export function RecruiterChatWindow({ portfolioId }) {
                 ))}
                 {pendingCount > 0 && (
                   <div role="status" className="flex justify-start">
-                    <div className="rounded-2xl rounded-bl-md bg-selected px-4 py-2 text-muted">
+                    <div className="rounded-2xl rounded-bl-md border border-muted bg-selected px-4 py-2 text-muted">
                       <p className="text-sm">Thinking…</p>
                     </div>
                   </div>
