@@ -421,7 +421,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh md:h-screen bg-background">
       {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
       <RecruiterVisitAlert />
       <Sidebar
@@ -434,13 +434,13 @@ const DashboardLayout = () => {
         }}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-primary">
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        <header className="flex flex-col gap-4 border-b border-line bg-surface-fill px-4 py-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:px-8 md:py-6">
+          <h1 className="flex min-h-[48px] min-w-0 items-center pl-16 text-2xl font-extrabold text-primary break-words md:min-h-0 md:pl-0">
             {currentTab.label}
           </h1>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             {!isConnected && hasLoadedOnce && (
               <span className="text-xs font-medium text-amber-600">
                 Reconnecting… showing your last saved data
@@ -464,7 +464,7 @@ const DashboardLayout = () => {
                   ? "Copy public portfolio link"
                   : "Publish your portfolio before sharing it"
               }
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-[44px] rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
             >
               {copyLinkStatus === "copied"
                 ? "Link Copied!"
@@ -479,7 +479,7 @@ const DashboardLayout = () => {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
+                className="min-h-[44px] rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
               >
                 Add Project
               </button>
@@ -492,7 +492,7 @@ const DashboardLayout = () => {
         {actionError && (
           <div
             role="alert"
-            className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mx-4 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 md:mx-8"
           >
             <span>{actionError}</span>
             <button
@@ -505,7 +505,7 @@ const DashboardLayout = () => {
           </div>
         )}
 
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {activeTab === "overview" ? (
             <OverviewSection
               stats={overviewStats}

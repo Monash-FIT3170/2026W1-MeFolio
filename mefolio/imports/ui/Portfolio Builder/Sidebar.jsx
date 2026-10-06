@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ModeSwitch } from "../Portfolio Preview/ModeButton";
 import ProfileSummary from "./ProfileSummary";
@@ -13,21 +13,49 @@ const Sidebar = ({
   onPreviewToggle,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
   const { isMobile } = useResponsive();
+
+  const closeMenu = () => {
+    setIsMobileMenuOpen(false);
+    menuButtonRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!isMobile || !isMobileMenuOpen) return;
+
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMobile, isMobileMenuOpen]);
 
   // Sidebar content component (reused for both desktop and mobile)
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-primary">
         <div className="text-2xl font-extrabold text-primary mb-4">MeFolio</div>
-        <ModeSwitch onToggle={onPreviewToggle} />
+        <ModeSwitch onToggle={(isPreview) => {
+          closeMenu();
+          onPreviewToggle(isPreview);
+        }} />
       </div>
 
-      <nav className="flex-1 p-4 flex flex-col gap-1">
+      <nav aria-label="Dashboard sections" className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-1">
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => {
+              onTabChange(item.id);
+              closeMenu();
+            }}
+            aria-current={activeTab === item.id ? "page" : undefined}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left transition-colors ${
               activeTab === item.id
                 ? "bg-selected text-alt"
@@ -48,9 +76,13 @@ const Sidebar = ({
       {/* Mobile Menu Button - Only shows on mobile */}
       {isMobile && (
         <button
+          ref={menuButtonRef}
+          type="button"
           onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-button text-secondary p-3 rounded-full shadow-lg hover:bg-accent1 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="fixed top-4 left-4 z-40 bg-button text-secondary p-3 rounded-lg shadow-lg hover:bg-accent1 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Open menu"
+          aria-expanded={isMobileMenuOpen}
+          aria-controls={isMobileMenuOpen ? "dashboard-mobile-menu" : undefined}
         >
           <Menu className="w-6 h-6" />
         </button>
@@ -61,13 +93,16 @@ const Sidebar = ({
         <>
           <div
             className="fixed inset-0 bg-primary/50 z-40"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={closeMenu}
           />
-          <aside className="fixed top-0 left-0 h-full w-80 bg-surface-fill border-r border-line z-50 flex flex-col shadow-xl">
+          <aside id="dashboard-mobile-menu" aria-label="Dashboard menu" className="fixed top-0 left-0 h-dvh w-80 max-w-full bg-surface-fill border-r border-line z-50 flex flex-col shadow-xl">
             <div className="p-4 border-b border-line flex justify-between items-center">
               <span className="font-bold text-lg text-primary">Menu</span>
               <button
-                onClick={() => setIsMobileMenuOpen(false)}
+                ref={closeButtonRef}
+                type="button"
+                aria-label="Close menu"
+                onClick={closeMenu}
                 className="p-2 rounded-lg hover:bg-selected transition-colors min-h-[44px] min-w-[44px]"
               >
                 <X className="w-5 h-5 text-primary" />
