@@ -11,6 +11,7 @@ import "/imports/api/projectClickTracking.test.js";
 import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
 import "/imports/ui/Portfolio Preview/PortfolioPreview.test.jsx";
 import "/imports/ui/Portfolio Preview/ProjectChallenge.test.jsx";
+import "/imports/ui/Portfolio Preview/NarrationPlayer.test.jsx";
 import "/imports/ui/Portfolio Preview/runInSandbox.test.js";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
