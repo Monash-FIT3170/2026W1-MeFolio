@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import { MessageCircle, Send, Sparkles, X } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 const SAMPLE_QUESTIONS = [
   "What are this candidate's strongest skills?",
@@ -189,7 +190,13 @@ export function RecruiterChatWindow({ portfolioId }) {
                             }`
                       }`}
                     >
-                      <p className="text-sm">{chatMessage.text}</p>
+                      {chatMessage.role === "recruiter" ? (
+                        <p className="text-sm">{chatMessage.text}</p>
+                      ) : (
+                        <div className="text-sm [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1">
+                          <ReactMarkdown>{chatMessage.text}</ReactMarkdown>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
