@@ -59,8 +59,9 @@ if (Meteor.isClient) {
       await screen.findByRole("button", { name: /pause narration/i });
       sinon.assert.calledOnceWithExactly(loadAudio, "portfolio-1", "project-1");
       sinon.assert.calledOnce(playStub);
-      expect(screen.getByTestId("narration-player").querySelector("audio").src)
-        .to.equal(AUDIO_URL);
+      expect(
+        screen.getByTestId("narration-player").querySelector("audio").src,
+      ).to.equal(AUDIO_URL);
     });
 
     it("pauses and resumes without requesting the audio again", async () => {
@@ -84,7 +85,9 @@ if (Meteor.isClient) {
       fireEvent.click(screen.getByRole("button", { name: /play narration/i }));
       await screen.findByRole("button", { name: /pause narration/i });
 
-      const audio = screen.getByTestId("narration-player").querySelector("audio");
+      const audio = screen
+        .getByTestId("narration-player")
+        .querySelector("audio");
       fireEvent.click(screen.getByRole("button", { name: /stop narration/i }));
 
       expect(audio.currentTime).to.equal(0);
@@ -115,12 +118,14 @@ if (Meteor.isClient) {
 
     it("shows the server error message when audio cannot be generated", async () => {
       renderPlayer(
-        sinon.stub().rejects(
-          new Meteor.Error(
-            "narration-request-failed",
-            "Piper could not generate project audio.",
+        sinon
+          .stub()
+          .rejects(
+            new Meteor.Error(
+              "narration-request-failed",
+              "Piper could not generate project audio.",
+            ),
           ),
-        ),
       );
 
       fireEvent.click(screen.getByRole("button", { name: /play narration/i }));
