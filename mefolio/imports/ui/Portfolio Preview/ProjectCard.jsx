@@ -79,12 +79,14 @@ export function ProjectCard({
           </span>
         )}
 
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
-          <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
-          <span className="text-xs font-extrabold text-primary">
-            {githubStarsToDisplay}
-          </span>
-        </div>
+        {data.githubLink && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
+            <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
+            <span className="text-xs font-extrabold text-primary">
+              {githubStarsToDisplay}
+            </span>
+          </div>
+        )}
       </div>
 
       <CardHeader className="p-5 pb-2">
@@ -94,16 +96,18 @@ export function ProjectCard({
         <p className="mt-1 text-sm text-primary line-clamp-2">
           {data.description}
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <GitBranch className="h-3.5 w-3.5 text-accent1" />
-            {githubStats?.commits ?? data.commits ?? "-"} commits
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Clock3 className="h-3.5 w-3.5 text-alt" />
-            Updated {lastUpdated}
-          </span>
-        </div>
+        {data.githubLink && (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <GitBranch className="h-3.5 w-3.5 text-accent1" />
+              {githubStats?.commits ?? data.commits ?? "-"} commits
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock3 className="h-3.5 w-3.5 text-alt" />
+              Updated {lastUpdated}
+            </span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="project-card-content">
