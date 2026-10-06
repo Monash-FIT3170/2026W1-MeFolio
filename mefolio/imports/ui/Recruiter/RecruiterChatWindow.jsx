@@ -1,6 +1,5 @@
-import { useRef, useState } from "react";
-import { Meteor } from "meteor/meteor";
-import { Send, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 const SAMPLE_QUESTIONS = [
   "What are this candidate's strongest skills?",
@@ -10,10 +9,25 @@ const SAMPLE_QUESTIONS = [
 ];
 
 export function RecruiterChatWindow({ portfolioId }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const nextMessageId = useRef(0);
+  const dialogRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isOpen && !dialog.open) {
+      dialog.showModal();
+      inputRef.current?.focus();
+    } else if (!isOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
 
   const handleSend = (text = message) => {
     const trimmedMessage = text.trim();
@@ -51,109 +65,162 @@ export function RecruiterChatWindow({ portfolioId }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-6 pb-12">
-      <section className="bg-surface-fill border border-line rounded-2xl overflow-hidden">
-        <div className="border-b border-line p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-selected">
-              <Sparkles className="w-5 h-5 text-accent1" />
-            </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-haspopup="dialog"
+        aria-controls="recruiter-chat-dialog"
+        aria-expanded={isOpen}
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-button px-5 py-3 font-bold text-secondary shadow-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
+      >
+        <MessageCircle className="h-5 w-5" aria-hidden="true" />
+        Ask AI
+      </button>
 
-            <div>
-              <h2 className="text-lg font-bold text-primary">
-                AI Portfolio Twin
-              </h2>
-              <p className="text-sm text-muted">
-                Ask questions about this candidate&apos;s experience, skills and
-                projects.
-              </p>
-            </div>
-          </div>
-        </div>
+      <dialog
+        ref={dialogRef}
+        id="recruiter-chat-dialog"
+        aria-labelledby="recruiter-chat-title"
+        aria-describedby="recruiter-chat-description"
+        onClose={() => setIsOpen(false)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            dialogRef.current?.close();
+          }
+        }}
+        className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-lg max-h-[85vh] overflow-visible border-0 bg-transparent p-0 backdrop:bg-black/50"
+      >
+        <section className="flex max-h-[85vh] flex-col overflow-hidden rounded-2xl border border-line bg-surface-fill shadow-2xl">
+          <div className="flex items-start justify-between gap-4 border-b border-line p-5">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-selected p-2">
+                <Sparkles className="h-5 w-5 text-accent1" aria-hidden="true" />
+              </div>
 
-        <div className="p-5">
-          {messages.length === 0 ? (
-            <div>
-              <p className="text-sm font-medium text-primary mb-3">
-                Try asking:
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {SAMPLE_QUESTIONS.map((question) => (
-                  <button
-                    key={question}
-                    onClick={() => handleSend(question)}
-                    className="text-left text-sm px-3 py-2 border border-line rounded-lg text-primary hover:bg-selected transition-colors"
-                  >
-                    {question}
-                  </button>
-                ))}
+              <div>
+                <h2
+                  id="recruiter-chat-title"
+                  className="text-lg font-bold text-primary"
+                >
+                  AI Portfolio Twin
+                </h2>
+                <p
+                  id="recruiter-chat-description"
+                  className="text-sm text-muted"
+                >
+                  Ask questions about this candidate&apos;s experience, skills
+                  and projects.
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="space-y-3 max-h-72 overflow-y-auto">
-              {messages.map((chatMessage) => (
-                <div
-                  key={chatMessage.id}
-                  className={`flex ${
-                    chatMessage.role === "recruiter"
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] px-4 py-2 rounded-2xl ${
-                      chatMessage.role === "recruiter"
-                        ? "bg-button text-secondary rounded-br-md"
-                        : `bg-selected rounded-bl-md ${
-                            chatMessage.isError
-                              ? "text-red-700"
-                              : "text-primary"
-                          }`
-                    }`}
-                  >
-                    <p className="text-sm">{chatMessage.text}</p>
-                  </div>
-                </div>
-              ))}
-              {pendingCount > 0 && (
-                <div className="flex justify-start">
-                  <div className="bg-selected text-muted px-4 py-2 rounded-2xl rounded-bl-md">
-                    <p className="text-sm">Thinking…</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-line p-4">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleSend();
-            }}
-            className="flex gap-2"
-          >
-            <input
-              type="text"
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ask about this candidate..."
-              className="flex-1 px-4 py-3 border border-line rounded-xl bg-background text-primary placeholder:text-muted focus:outline-none"
-            />
 
             <button
-              type="submit"
-              disabled={!message.trim()}
-              className="inline-flex items-center justify-center px-4 py-3 bg-button text-secondary rounded-xl disabled:opacity-40 hover:opacity-90 transition-opacity"
+              type="button"
+              onClick={() => dialogRef.current?.close()}
+              aria-label="Close AI Portfolio Twin chat"
+              className="shrink-0 rounded-lg p-2 text-muted hover:bg-selected hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
             >
-              <Send className="w-4 h-4" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
-          </form>
-        </div>
-      </section>
-    </div>
+          </div>
+
+          <div className="min-h-0 overflow-y-auto p-5">
+            {messages.length === 0 ? (
+              <div>
+                <p className="text-sm font-medium text-primary mb-3">
+                  Try asking:
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  {SAMPLE_QUESTIONS.map((question) => (
+                    <button
+                      key={question}
+                      onClick={() => handleSend(question)}
+                      className="text-left text-sm px-3 py-2 border border-line rounded-lg text-primary hover:bg-selected transition-colors"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div
+                role="log"
+                aria-label="Chat conversation"
+                aria-live="polite"
+                aria-relevant="additions text"
+                className="space-y-3"
+              >
+                {messages.map((chatMessage) => (
+                  <div
+                    key={chatMessage.id}
+                    className={`flex ${
+                      chatMessage.role === "recruiter"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                        chatMessage.role === "recruiter"
+                          ? "bg-button text-secondary rounded-br-md"
+                          : `bg-selected rounded-bl-md ${
+                              chatMessage.isError
+                                ? "text-red-700"
+                                : "text-primary"
+                            }`
+                      }`}
+                    >
+                      <p className="text-sm">{chatMessage.text}</p>
+                    </div>
+                  </div>
+                ))}
+                {pendingCount > 0 && (
+                  <div role="status" className="flex justify-start">
+                    <div className="rounded-2xl rounded-bl-md bg-selected px-4 py-2 text-muted">
+                      <p className="text-sm">Thinking…</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-line p-4">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleSend();
+              }}
+              className="flex gap-2"
+            >
+              <label className="sr-only" htmlFor="recruiter-chat-input">
+                Ask a question about this portfolio
+              </label>
+              <input
+                ref={inputRef}
+                id="recruiter-chat-input"
+                type="text"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Ask about this candidate..."
+                className="min-w-0 flex-1 rounded-xl border border-line bg-background px-4 py-3 text-primary placeholder:text-muted focus:outline focus:outline-2 focus:outline-accent1"
+              />
+
+              <button
+                type="submit"
+                disabled={!message.trim()}
+                aria-label="Send message"
+                className="inline-flex items-center justify-center rounded-xl bg-button px-4 py-3 text-secondary transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+        </section>
+      </dialog>
+    </>
   );
 }
 
