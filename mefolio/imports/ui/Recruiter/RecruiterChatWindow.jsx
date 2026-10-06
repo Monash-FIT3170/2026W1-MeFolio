@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Meteor } from "meteor/meteor";
 import { Send, Sparkles } from "lucide-react";
 
 const SAMPLE_QUESTIONS = [
@@ -8,25 +9,45 @@ const SAMPLE_QUESTIONS = [
   "Can you summarise this candidate's experience?",
 ];
 
-export function RecruiterChatWindow() {
+export function RecruiterChatWindow({ portfolioId }) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const nextMessageId = useRef(0);
 
   const handleSend = (text = message) => {
     const trimmedMessage = text.trim();
 
     if (!trimmedMessage) return;
 
+    const userMessageId = nextMessageId.current++;
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: userMessageId,
         role: "recruiter",
         text: trimmedMessage,
       },
     ]);
-
     setMessage("");
+    setPendingCount((count) => count + 1);
+
+    Meteor.call(
+      "chat.send",
+      { portfolioId, message: trimmedMessage },
+      (error, result) => {
+        setPendingCount((count) => count - 1);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextMessageId.current++,
+            role: "assistant",
+            text: error ? error.reason || error.message : result.answer,
+            isError: Boolean(error),
+          },
+        ]);
+      },
+    );
   };
 
   return (
@@ -74,13 +95,34 @@ export function RecruiterChatWindow() {
               {messages.map((chatMessage) => (
                 <div
                   key={chatMessage.id}
-                  className="flex justify-end"
+                  className={`flex ${
+                    chatMessage.role === "recruiter"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
                 >
-                  <div className="max-w-[80%] bg-button text-secondary px-4 py-2 rounded-2xl rounded-br-md">
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                      chatMessage.role === "recruiter"
+                        ? "bg-button text-secondary rounded-br-md"
+                        : `bg-selected rounded-bl-md ${
+                            chatMessage.isError
+                              ? "text-red-700"
+                              : "text-primary"
+                          }`
+                    }`}
+                  >
                     <p className="text-sm">{chatMessage.text}</p>
                   </div>
                 </div>
               ))}
+              {pendingCount > 0 && (
+                <div className="flex justify-start">
+                  <div className="bg-selected text-muted px-4 py-2 rounded-2xl rounded-bl-md">
+                    <p className="text-sm">Thinking…</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
