@@ -27,7 +27,6 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
-import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
@@ -402,7 +401,7 @@ const DashboardLayout = () => {
       {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
       <RecruiterVisitAlert />
       <Sidebar
-        items={sidebarItems}
+        items={sidebarItems.filter((item) => item.id !== "settings")}
         activeTab={activeTab}
         onTabChange={(tab) => {
           setIsPreview(false);
@@ -443,8 +442,6 @@ const DashboardLayout = () => {
                 )}
 
                 <DraftStatusIndicator status={draftStatus} />
-
-                {activeTab === "settings" && <LogoutButton />}
 
                 {activeTab === "projects" && (
                   <button

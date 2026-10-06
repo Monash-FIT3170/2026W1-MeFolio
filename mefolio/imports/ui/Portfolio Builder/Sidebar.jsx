@@ -73,7 +73,13 @@ const Sidebar = ({
         ))}
       </nav>
 
-      <ProfileSummary profile={profile} />
+      <ProfileSummary
+        profile={profile}
+        onAccountSettings={() => {
+          onTabChange("settings");
+          setIsMobileMenuOpen(false);
+        }}
+      />
     </>
   );
 
