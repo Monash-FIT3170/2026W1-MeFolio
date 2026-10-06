@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Meteor } from "meteor/meteor";
 import { MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 const SAMPLE_QUESTIONS = [
