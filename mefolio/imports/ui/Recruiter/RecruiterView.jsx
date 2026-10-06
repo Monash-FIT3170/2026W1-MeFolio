@@ -247,7 +247,7 @@ export function RecruiterView() {
           </section>
         </div>
       )}
-      <RecruiterChatWindow />
+      <RecruiterChatWindow portfolioId={portfolioId} />
     </div>
   );
 }
