@@ -143,8 +143,32 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
     if (!form.description.trim()) e.description = "Description is required.";
-    if (form.githubLink && !/^https?:\/\/.+/.test(form.githubLink))
-      e.githubLink = "Enter a valid URL (starting with https://)";
+    const githubLink = form.githubLink.trim();
+    if (githubLink) {
+      try {
+        const url = new URL(githubLink);
+        const parts = url.pathname.split("/").filter(Boolean);
+        const repository = parts[1]?.replace(/\.git$/, "");
+
+        if (
+          url.protocol !== "https:" ||
+          !["github.com", "www.github.com"].includes(url.hostname) ||
+          url.port ||
+          url.username ||
+          url.password ||
+          url.search ||
+          url.hash ||
+          parts.length !== 2 ||
+          !parts[0] ||
+          !repository
+        ) {
+          throw new Error("Invalid repository URL");
+        }
+      } catch {
+        e.githubLink =
+          "Enter the main GitHub repository URL, e.g., https://github.com/owner/repo";
+      }
+    }
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
     if (form.proofOfWorkMode === "interactive") {
@@ -223,7 +247,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
   const fieldClass = (key) =>
     `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition
       focus:border-accent2 focus:ring-2 focus:ring-selected
-      ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
+      ${errors[key] ? "border-red-400 bg-red-50" : "border-line"}`;
 
   const previewLanguage = getLanguageFromTechStack(form.technologies);
 
@@ -288,7 +312,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             {errors.title && (
               <p
                 data-testid="error-title"
-                className="text-xs text-accent2 mt-1"
+                className="mt-1 text-xs text-red-500"
               >
                 {errors.title}
               </p>
@@ -383,7 +407,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               {errors.githubLink && (
                 <p
                   data-testid="error-githubLink"
-                  className="text-xs text-accent2 mt-1"
+                  className="mt-1 text-xs text-red-500"
                 >
                   {errors.githubLink}
                 </p>
