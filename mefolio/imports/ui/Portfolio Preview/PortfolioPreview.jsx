@@ -438,6 +438,7 @@ export const PortfolioPreview = ({
                   <ProjectCard
                     project={project}
                     portfolioId={trackingPortfolioId}
+                    draftPortfolioId={isStaging ? portfolio?._id : undefined}
                     dataTheme={portfolio.theme || "default"}
                   />
                 </div>
