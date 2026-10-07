@@ -4,6 +4,7 @@ import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { Buffer } from "buffer";
 import { env } from "process";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { buildNarrationText } from "/imports/api/projectNarration";
 
 export async function generateProjectNarration(text) {
   check(text, String);
@@ -111,10 +112,7 @@ export async function getPublishedNarrationAudio(portfolioId, projectId) {
     );
   }
 
-  const text = [project.title, project.description]
-    .filter((part) => typeof part === "string" && part.trim())
-    .map((part) => part.trim())
-    .join(". ");
+  const text = buildNarrationText(project);
   if (!text) {
     throw new Meteor.Error(
       "narration-not-available",

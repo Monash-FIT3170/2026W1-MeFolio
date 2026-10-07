@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { Meteor } from "meteor/meteor";
 import {
   Github,
   ExternalLink,
@@ -11,6 +12,7 @@ import {
   Mic,
 } from "lucide-react";
 import { trackProjectClick } from "../../api/projectClickTracking";
+import { buildNarrationText } from "../../api/projectNarration";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 import { ProjectChallenge } from "./ProjectChallenge";
 import { NarrationPlayer } from "./NarrationPlayer";
@@ -18,6 +20,7 @@ import { NarrationPlayer } from "./NarrationPlayer";
 export function ProjectCard({
   project,
   portfolioId,
+  draftPortfolioId,
   onProjectClick = trackProjectClick,
   dataTheme = "default",
 }) {
@@ -43,6 +46,13 @@ export function ProjectCard({
     : "-";
 
   const projectId = data._id || data.id;
+  const draftNarrationText = draftPortfolioId ? buildNarrationText(data) : "";
+  const loadDraftAudio = (ownerPortfolioId) =>
+    Meteor.callAsync(
+      "projects.generateNarration",
+      ownerPortfolioId,
+      draftNarrationText,
+    );
 
   const handleProjectClick = (target) => {
     if (!portfolioId || !projectId) return;
@@ -123,6 +133,14 @@ export function ProjectCard({
 
         {portfolioId && projectId ? (
           <NarrationPlayer portfolioId={portfolioId} projectId={projectId} />
+        ) : draftPortfolioId && projectId && draftNarrationText ? (
+          // Remount on edits so the owner never hears stale draft audio.
+          <NarrationPlayer
+            key={draftNarrationText}
+            portfolioId={draftPortfolioId}
+            projectId={projectId}
+            loadAudio={loadDraftAudio}
+          />
         ) : (
           <button
             disabled
@@ -238,6 +256,7 @@ ProjectCard.propTypes = {
     }),
   }),
   portfolioId: PropTypes.string,
+  draftPortfolioId: PropTypes.string,
   onProjectClick: PropTypes.func,
   dataTheme: PropTypes.string,
 };
