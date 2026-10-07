@@ -166,5 +166,74 @@ if (Meteor.isClient) {
       expect(screen.getByRole("button", { name: /voice summary/i }).disabled).to
         .be.true;
     });
+
+    describe("in the draft preview", () => {
+      const draftProject = {
+        _id: "project-1",
+        title: " MeFolio ",
+        description: "Draft story.",
+      };
+      let callStub;
+
+      beforeEach(() => {
+        callStub = sinon.stub(Meteor, "callAsync").resolves(AUDIO_URL);
+      });
+
+      it("plays the owner's draft text instead of the published version", async () => {
+        render(
+          <ProjectCard project={draftProject} draftPortfolioId="draft-1" />,
+        );
+
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
+        );
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        sinon.assert.calledOnceWithExactly(
+          callStub,
+          "projects.generateNarration",
+          "draft-1",
+          "MeFolio. Draft story.",
+        );
+      });
+
+      it("requests fresh audio after the draft text is edited", async () => {
+        const { rerender } = render(
+          <ProjectCard project={draftProject} draftPortfolioId="draft-1" />,
+        );
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
+        );
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        rerender(
+          <ProjectCard
+            project={{ ...draftProject, description: "Edited story." }}
+            draftPortfolioId="draft-1"
+          />,
+        );
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
+        );
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        sinon.assert.calledTwice(callStub);
+        expect(callStub.secondCall.args[2]).to.equal("MeFolio. Edited story.");
+      });
+
+      it("keeps the placeholder when the draft has no text to read", () => {
+        render(
+          <ProjectCard
+            project={{ _id: "project-1", title: " " }}
+            draftPortfolioId="draft-1"
+          />,
+        );
+
+        expect(screen.queryByTestId("narration-player")).to.equal(null);
+        expect(screen.getByRole("button", { name: /voice summary/i }).disabled)
+          .to.be.true;
+        sinon.assert.notCalled(callStub);
+      });
+    });
   });
 }
