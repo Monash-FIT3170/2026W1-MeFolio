@@ -47,7 +47,9 @@ const CertificationCard = ({ certification }) => {
             {certification.imageUrl && !imageError ? (
               <img
                 src={certification.imageUrl}
-                alt=""
+                alt={certification.name || certification.title || ""}
+                loading="lazy"
+                decoding="async"
                 onError={() => setImageError(true)}
                 className="h-full w-full object-contain"
               />
