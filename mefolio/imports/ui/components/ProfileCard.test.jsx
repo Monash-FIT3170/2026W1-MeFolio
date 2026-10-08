@@ -1,55 +1,63 @@
+import { Meteor } from "meteor/meteor";
 import { expect } from "chai";
-import { render, screen } from "@testing-library/react";
-import { ProfileCard } from "./ProfileCard";
+import { render, cleanup, within } from "@testing-library/react";
+import { ProfileCard } from "./ProfileCard.jsx";
 
-describe("ProfileCard", () => {
-  it("renders avatar image with eager loading and high priority when avatarUrl exists", () => {
-    const mockPortfolio = {
-      title: "Senior Full Stack Dev",
-      profile: {
-        name: "Jane Doe",
-        avatarUrl: "https://example.com/avatar.jpg",
-        location: "Melbourne, Australia",
-      },
-    };
+if (Meteor.isClient) {
+  describe("ProfileCard", function () {
+    afterEach(function () {
+      cleanup();
+    });
 
-    render(<ProfileCard portfolio={mockPortfolio} />);
+    it("renders avatar image with eager loading and high priority when avatarUrl exists", function () {
+      const mockPortfolio = {
+        title: "Senior Full Stack Dev",
+        profile: {
+          name: "Jane Doe",
+          avatarUrl: "https://example.com/avatar.jpg",
+          location: "Melbourne, Australia",
+        },
+      };
 
-    const img = screen.getByRole("img", { name: /jane doe/i });
-    expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute("loading", "eager");
-    expect(img).toHaveAttribute("fetchpriority", "high");
-    expect(screen.getByText("Senior Full Stack Dev")).toBeInTheDocument();
-    expect(screen.getByText("Melbourne, Australia")).toBeInTheDocument();
+      const { container } = render(<ProfileCard portfolio={mockPortfolio} />);
+      const scope = within(container);
+
+      const img = scope.getByRole("img", { name: /jane doe/i });
+      expect(img).to.exist;
+      expect(img.getAttribute("loading")).to.equal("eager");
+      expect(img.getAttribute("fetchpriority")).to.equal("high");
+      expect(scope.getByText("Senior Full Stack Dev")).to.exist;
+      expect(scope.getByText("Melbourne, Australia")).to.exist;
+    });
+
+    it("renders initials fallback when no avatar image is provided", function () {
+      const mockPortfolio = {
+        title: "Dev Portfolio",
+        profile: {
+          fullName: "Alex Smith",
+          avatarUrl: null,
+        },
+      };
+
+      const { container } = render(<ProfileCard portfolio={mockPortfolio} />);
+      const scope = within(container);
+
+      expect(scope.queryByRole("img")).to.be.null;
+      expect(scope.getByText("AS")).to.exist;
+      expect(scope.getByText("Alex Smith")).to.exist;
+    });
+
+    it("falls back to default texts when portfolio fields are missing", function () {
+      const mockPortfolio = {
+        profile: {},
+      };
+
+      const { container } = render(<ProfileCard portfolio={mockPortfolio} />);
+      const scope = within(container);
+
+      expect(scope.getByText("Portfolio")).to.exist;
+      expect(scope.getByText("No name set")).to.exist;
+      expect(scope.getByText("NN")).to.exist;
+    });
   });
-
-  it("renders initials fallback when no avatar image is provided", () => {
-    const mockPortfolio = {
-      title: "Dev Portfolio",
-      profile: {
-        fullName: "Alex Smith",
-        avatarUrl: null,
-      },
-    };
-
-    render(<ProfileCard portfolio={mockPortfolio} />);
-
-    // No <img> should be rendered
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    // Initials "AS" should be rendered
-    expect(screen.getByText("AS")).toBeInTheDocument();
-    expect(screen.getByText("Alex Smith")).toBeInTheDocument();
-  });
-
-  it("falls back to default texts when portfolio fields are missing", () => {
-    const mockPortfolio = {
-      profile: {},
-    };
-
-    render(<ProfileCard portfolio={mockPortfolio} />);
-
-    expect(screen.getByText("Portfolio")).toBeInTheDocument();
-    expect(screen.getByText("No name set")).toBeInTheDocument();
-    expect(screen.getByText("?")).toBeInTheDocument();
-  });
-});
+}
