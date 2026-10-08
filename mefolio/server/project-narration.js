@@ -4,7 +4,6 @@ import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { Buffer } from "buffer";
 import { env } from "process";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { buildNarrationText } from "/imports/api/projectNarration";
 
 export async function generateProjectNarration(text) {
   check(text, String);
@@ -95,24 +94,22 @@ export async function getPublishedNarrationAudio(portfolioId, projectId) {
   check(projectId, String);
 
   const portfolio = await PortfolioCollection.findOneAsync(portfolioId, {
-    fields: { isPublished: 1, "publishedContent.projects": 1 },
+    fields: {
+      isPublished: 1,
+      publishedNarrations: 1,
+    },
   });
-  const project =
+
+  const narration =
     portfolio?.isPublished === true &&
-    Array.isArray(portfolio.publishedContent?.projects)
-      ? portfolio.publishedContent.projects.find(
-          (publishedProject) => publishedProject?._id === projectId,
+    Array.isArray(portfolio.publishedNarrations)
+      ? portfolio.publishedNarrations.find(
+          (publishedNarration) => publishedNarration?.projectId === projectId,
         )
       : undefined;
 
-  if (!project) {
-    throw new Meteor.Error(
-      "narration-not-available",
-      "This project does not have audio available.",
-    );
-  }
+  const text = typeof narration?.text === "string" ? narration.text.trim() : "";
 
-  const text = buildNarrationText(project);
   if (!text) {
     throw new Meteor.Error(
       "narration-not-available",

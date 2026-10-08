@@ -13,6 +13,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    caseStudyNarrative: "",
     technologies: [],
     status: "live",
     githubLink: "",
@@ -37,6 +38,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     setForm({
       title: project.title || "",
       description: project.description || "",
+      caseStudyNarrative: project.caseStudyNarrative || "",
       technologies: project.technologies || [],
       status: project.status || "live",
       githubLink: project.githubLink || "",
@@ -145,6 +147,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     onSave(project._id, {
       title: form.title.trim(),
       description: form.description.trim(),
+      caseStudyNarrative: form.caseStudyNarrative.trim(),
       technologies: form.technologies,
       status: form.status,
       githubLink: form.githubLink.trim(),
@@ -257,6 +260,30 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
                 {errors.description}
               </p>
             )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-case-study-narrative"
+              className="mb-1.5 block text-sm font-semibold text-primary"
+            >
+              Case Study Narration
+            </label>
+
+            <textarea
+              id="edit-case-study-narrative"
+              data-testid="edit-field-case-study-narrative"
+              rows={5}
+              value={form.caseStudyNarrative}
+              onChange={(e) => set("caseStudyNarrative", e.target.value)}
+              className={`${fieldClass("caseStudyNarrative")} resize-y leading-relaxed`}
+              placeholder="Write the project story you want recruiters to hear..."
+            />
+
+            <p className="mt-1 text-xs text-muted">
+              This text is used to generate the project's voice narration and is
+              not shown publicly.
+            </p>
           </div>
 
           <div>

@@ -170,8 +170,9 @@ if (Meteor.isClient) {
     describe("in the draft preview", () => {
       const draftProject = {
         _id: "project-1",
-        title: " MeFolio ",
-        description: "Draft story.",
+        title: "MeFolio",
+        description: "Visible project description.",
+        caseStudyNarrative: "Draft case study narration.",
       };
       let callStub;
 
@@ -193,7 +194,7 @@ if (Meteor.isClient) {
           callStub,
           "projects.generateNarration",
           "draft-1",
-          "MeFolio. Draft story.",
+          "Draft case study narration.",
         );
       });
 
@@ -208,7 +209,10 @@ if (Meteor.isClient) {
 
         rerender(
           <ProjectCard
-            project={{ ...draftProject, description: "Edited story." }}
+            project={{
+              ...draftProject,
+              caseStudyNarrative: "Edited case study narration.",
+            }}
             draftPortfolioId="draft-1"
           />,
         );
@@ -218,13 +222,19 @@ if (Meteor.isClient) {
         await screen.findByRole("button", { name: /pause narration/i });
 
         sinon.assert.calledTwice(callStub);
-        expect(callStub.secondCall.args[2]).to.equal("MeFolio. Edited story.");
+        expect(callStub.secondCall.args[2]).to.equal(
+          "Edited case study narration.",
+        );
       });
 
       it("keeps the placeholder when the draft has no text to read", () => {
         render(
           <ProjectCard
-            project={{ _id: "project-1", title: " " }}
+            project={{
+              _id: "project-1",
+              title: "MeFolio",
+              description: "A normal public project description.",
+            }}
             draftPortfolioId="draft-1"
           />,
         );

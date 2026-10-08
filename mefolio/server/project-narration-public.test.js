@@ -32,15 +32,12 @@ if (Meteor.isServer) {
       portfolio = {
         _id: "portfolio-1",
         isPublished: true,
-        publishedContent: {
-          projects: [
-            {
-              _id: "project-1",
-              title: "MeFolio",
-              description: "A portfolio builder.",
-            },
-          ],
-        },
+        publishedNarrations: [
+          {
+            projectId: "project-1",
+            text: "A dedicated case study about building MeFolio.",
+          },
+        ],
       };
       sandbox
         .stub(PortfolioCollection, "findOneAsync")
@@ -59,7 +56,7 @@ if (Meteor.isServer) {
         `data:audio/wav;base64,${audio.toString("base64")}`,
       );
       assert.deepStrictEqual(JSON.parse(fetchStub.firstCall.args[1].body), {
-        text: "MeFolio. A portfolio builder.",
+        text: "A dedicated case study about building MeFolio.",
       });
     });
 
@@ -80,20 +77,20 @@ if (Meteor.isServer) {
     });
 
     it("rejects projects with no text to narrate", async function () {
-      portfolio.publishedContent.projects[0] = {
-        _id: "project-1",
-        title: "  ",
+      portfolio.publishedNarrations[0] = {
+        projectId: "project-1",
+        text: "  ",
       };
       await assert.rejects(callMethod(), { error: "narration-not-available" });
       sinon.assert.notCalled(fetchStub);
     });
 
-    it("reuses cached audio until the project text changes", async function () {
+    it("reuses cached audio until the published narration changes", async function () {
       await callMethod();
       await callMethod();
       sinon.assert.calledOnce(fetchStub);
 
-      portfolio.publishedContent.projects[0].description = "Edited story.";
+      portfolio.publishedNarrations[0].text = "Updated case study narration.";
       await callMethod();
       sinon.assert.calledTwice(fetchStub);
     });

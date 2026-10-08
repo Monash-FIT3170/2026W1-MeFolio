@@ -282,8 +282,28 @@ Meteor.startup(async () => {
   }
 });
 
-Meteor.publish("projects.all", function () {
-  return ProjectCollection.find({}, { sort: { createdAt: -1 } });
+Meteor.publish("projects.all", async function () {
+  if (!this.userId) return this.ready();
+
+  const portfolios = await PortfolioCollection.find(
+    { userId: this.userId },
+    { fields: { projects: 1 } },
+  ).fetchAsync();
+
+  const projectIds = [
+    ...new Set(
+      portfolios.flatMap((portfolio) =>
+        Array.isArray(portfolio.projects) ? portfolio.projects : [],
+      ),
+    ),
+  ];
+
+  if (!projectIds.length) return this.ready();
+
+  return ProjectCollection.find(
+    { _id: { $in: projectIds } },
+    { sort: { createdAt: -1 } },
+  );
 });
 
 // Private portfolio fields that must never reach a client that does not own
@@ -291,7 +311,10 @@ Meteor.publish("projects.all", function () {
 // phone, personal note) and the access code itself, so it is only sent to the
 // owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
 // publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  publishedNarrations: 0,
+};
 const activeViewerConnections = new Map();
 
 const getViewerData = async (publication) => {
@@ -545,6 +568,10 @@ Meteor.methods({
     const normalized = {
       title: projectData.title ?? "",
       description: projectData.description ?? "",
+      caseStudyNarrative:
+        typeof projectData.caseStudyNarrative === "string"
+          ? projectData.caseStudyNarrative.trim()
+          : "",
       technologies: projectData.technologies ?? projectData.stack ?? [],
       githubLink: projectData.githubLink ?? projectData.github ?? "",
       liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
@@ -613,6 +640,18 @@ Meteor.methods({
   async "projects.update"(projectId, updates) {
     const normalizedUpdates = { ...updates };
     const unset = {};
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "caseStudyNarrative",
+      )
+    ) {
+      normalizedUpdates.caseStudyNarrative =
+        typeof normalizedUpdates.caseStudyNarrative === "string"
+          ? normalizedUpdates.caseStudyNarrative.trim()
+          : "";
+    }
 
     if (
       Object.prototype.hasOwnProperty.call(normalizedUpdates, "proofOfWorkMode")
@@ -757,6 +796,20 @@ Meteor.methods({
       );
     }
 
+    const publishedNarrations = projectIds
+      .map((projectId) =>
+        projectRecords.find((project) => project._id === projectId),
+      )
+      .filter(Boolean)
+      .map((project) => ({
+        projectId: project._id,
+        text:
+          typeof project.caseStudyNarrative === "string"
+            ? project.caseStudyNarrative.trim()
+            : "",
+      }))
+      .filter((narration) => narration.text);
+
     const publishedContent = {
       title: portfolio.title,
       bio: portfolio.bio,
@@ -773,6 +826,7 @@ Meteor.methods({
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedNarrations,
         isPublished: true,
         publishedAt: new Date(),
       },
