@@ -329,7 +329,7 @@ Meteor.startup(async () => {
   await PortfolioCollection.updateAsync(
     { viewers: { $exists: true, $not: { $size: 0 } } },
     { $set: { viewers: [] } },
-    { multi: true }
+    { multi: true },
   );
 
   // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
@@ -344,7 +344,7 @@ Meteor.startup(async () => {
             viewers: { lastSeenAt: { $lt: expirationThreshold } },
           },
         },
-        { multi: true }
+        { multi: true },
       );
     } catch (err) {
       console.error("Failed to prune stale live visitors:", err);
@@ -429,7 +429,9 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
 
   // Pull existing session by connectionId, or by userId if logged in, to prevent duplicates
   const pullFilter = viewer.userId
-    ? { $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }] }
+    ? {
+        $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }],
+      }
     : { connectionId: viewer.connectionId };
 
   await PortfolioCollection.updateAsync(portfolioId, {
