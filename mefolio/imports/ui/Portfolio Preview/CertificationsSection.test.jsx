@@ -123,6 +123,25 @@ if (Meteor.isClient) {
       expect(scope.getByText("Untitled certification")).to.exist;
     });
 
+    it("renders certification badge image with lazy loading and async decoding", function () {
+      const { container } = render(
+        <CertificationsSection
+          certifications={[
+            {
+              title: "AWS Certified Developer",
+              imageUrl: "https://images.credly.com/sample-badge.png",
+            },
+          ]}
+        />,
+      );
+      const scope = within(container);
+
+      const img = scope.getByRole("img", { name: "AWS Certified Developer" });
+      expect(img).to.exist;
+      expect(img.getAttribute("loading")).to.equal("lazy");
+      expect(img.getAttribute("decoding")).to.equal("async");
+    });
+
     it("renders every certification in the list", function () {
       const certifications = [
         { title: "Cert One" },
