@@ -279,6 +279,33 @@ Meteor.startup(async () => {
       ),
     );
   }
+
+  // BUG-02: Flush lingering visitor presence state from prior container
+  // sessions or abrupt restarts. When the server boots, no active client connections exist.
+  await PortfolioCollection.updateAsync(
+    { viewers: { $exists: true, $not: { $size: 0 } } },
+    { $set: { viewers: [] } },
+    { multi: true }
+  );
+
+  // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
+  // Heartbeats occur every 10s from PublicPortfolioPage; expire after 30s of inactivity.
+  Meteor.setInterval(async () => {
+    try {
+      const expirationThreshold = new Date(Date.now() - 30 * 1000);
+      await PortfolioCollection.updateAsync(
+        { "viewers.lastSeenAt": { $lt: expirationThreshold } },
+        {
+          $pull: {
+            viewers: { lastSeenAt: { $lt: expirationThreshold } },
+          },
+        },
+        { multi: true }
+      );
+    } catch (err) {
+      console.error("Failed to prune stale live visitors:", err);
+    }
+  }, 15 * 1000);
 });
 
 Meteor.publish("projects.all", function () {
@@ -345,8 +372,13 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
     viewer,
   });
 
+  // Pull existing session by connectionId, or by userId if logged in, to prevent duplicates
+  const pullFilter = viewer.userId
+    ? { $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }] }
+    : { connectionId: viewer.connectionId };
+
   await PortfolioCollection.updateAsync(portfolioId, {
-    $pull: { viewers: { connectionId: viewer.connectionId } },
+    $pull: { viewers: pullFilter },
   });
 
   await PortfolioCollection.updateAsync(portfolioId, {
