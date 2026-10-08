@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import { render, screen } from "@testing-library/react";
 import { ProfileCard } from "./ProfileCard";
 
