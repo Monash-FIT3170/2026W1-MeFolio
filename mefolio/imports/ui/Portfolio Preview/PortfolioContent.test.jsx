@@ -29,7 +29,7 @@ if (Meteor.isClient) {
         screen
           .getByTestId("narration-switch-thumb")
           .className.split(" ")
-          .includes("translate-x-5"),
+          .includes("translate-x-3"),
       ).to.equal(true);
       expect(screen.getAllByTestId("narration-player")).to.have.lengthOf(2);
 
