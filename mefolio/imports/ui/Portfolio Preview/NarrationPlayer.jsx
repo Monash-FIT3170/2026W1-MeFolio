@@ -21,7 +21,11 @@ export function NarrationPlayer({
 
   useEffect(() => {
     const audio = audioRef.current;
-    return () => audio?.pause();
+    return () => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    };
   }, []);
 
   const handlePlay = async () => {

@@ -10,6 +10,7 @@ import "/imports/api/session.test.js";
 import "/imports/api/projectClickTracking.test.js";
 import "/imports/ui/Portfolio Preview/ProjectCard.test.jsx";
 import "/imports/ui/Portfolio Preview/PortfolioPreview.test.jsx";
+import "/imports/ui/Portfolio Preview/PortfolioContent.test.jsx";
 import "/imports/ui/Portfolio Preview/ProjectChallenge.test.jsx";
 import "/imports/ui/Portfolio Preview/NarrationPlayer.test.jsx";
 import "/imports/ui/Portfolio Preview/runInSandbox.test.js";
