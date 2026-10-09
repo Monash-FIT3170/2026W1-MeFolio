@@ -397,7 +397,7 @@ export const PortfolioPreview = ({
               <select
                 value={selectedSkill}
                 onChange={(e) => setSelectedSkill(e.target.value)}
-                className={`h-10 w-44 rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
+                className={`h-10 min-h-0 w-44 rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
                   viewportMode === "mobile" ? "w-full" : ""
                 }`}
               >
