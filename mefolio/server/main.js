@@ -7,6 +7,7 @@ import {
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import { isProjectNarrationEnabled } from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
 
 // oauth login
@@ -774,6 +775,10 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        narrationAvailable:
+          isProjectNarrationEnabled() &&
+          typeof project.caseStudyNarrative === "string" &&
+          Boolean(project.caseStudyNarrative.trim()),
         proofOfWorkMode: project.proofOfWorkMode || "standard",
         ...(project.challenge
           ? {
@@ -796,19 +801,21 @@ Meteor.methods({
       );
     }
 
-    const publishedNarrations = projectIds
-      .map((projectId) =>
-        projectRecords.find((project) => project._id === projectId),
-      )
-      .filter(Boolean)
-      .map((project) => ({
-        projectId: project._id,
-        text:
-          typeof project.caseStudyNarrative === "string"
-            ? project.caseStudyNarrative.trim()
-            : "",
-      }))
-      .filter((narration) => narration.text);
+    const publishedNarrations = isProjectNarrationEnabled()
+      ? projectIds
+          .map((projectId) =>
+            projectRecords.find((project) => project._id === projectId),
+          )
+          .filter(Boolean)
+          .map((project) => ({
+            projectId: project._id,
+            text:
+              typeof project.caseStudyNarrative === "string"
+                ? project.caseStudyNarrative.trim()
+                : "",
+          }))
+          .filter((narration) => narration.text)
+      : [];
 
     const publishedContent = {
       title: portfolio.title,

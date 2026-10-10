@@ -4,6 +4,7 @@ import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { Buffer } from "buffer";
 import { env } from "process";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { isProjectNarrationEnabled } from "/imports/api/projectNarration";
 
 export async function generateProjectNarration(text) {
   check(text, String);
@@ -133,10 +134,22 @@ if (Meteor.isServer) {
 
   Meteor.methods({
     async "projects.getNarrationAudio"(portfolioId, projectId) {
+      if (!isProjectNarrationEnabled()) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Project narration is currently unavailable.",
+        );
+      }
       return getPublishedNarrationAudio(portfolioId, projectId);
     },
 
     async "projects.generateNarration"(portfolioId, text) {
+      if (!isProjectNarrationEnabled()) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Project narration is currently unavailable.",
+        );
+      }
       if (!this.userId) {
         throw new Meteor.Error(
           "not-authorized",

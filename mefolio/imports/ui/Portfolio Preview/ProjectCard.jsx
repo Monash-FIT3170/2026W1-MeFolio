@@ -12,7 +12,10 @@ import {
   Mic,
 } from "lucide-react";
 import { trackProjectClick } from "../../api/projectClickTracking";
-import { buildNarrationText } from "../../api/projectNarration";
+import {
+  buildNarrationText,
+  isProjectNarrationEnabled,
+} from "../../api/projectNarration";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 import { ProjectChallenge } from "./ProjectChallenge";
 import { NarrationPlayer } from "./NarrationPlayer";
@@ -23,6 +26,7 @@ export function ProjectCard({
   draftPortfolioId,
   onProjectClick = trackProjectClick,
   dataTheme = "default",
+  narrationEnabled = true,
 }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
   const [, setImageError] = useState(false);
@@ -46,6 +50,7 @@ export function ProjectCard({
     : "-";
 
   const projectId = data._id || data.id;
+  const showNarration = narrationEnabled && isProjectNarrationEnabled();
   const draftNarrationText = draftPortfolioId ? buildNarrationText(data) : "";
   const loadDraftAudio = (ownerPortfolioId) =>
     Meteor.callAsync(
@@ -135,25 +140,42 @@ export function ProjectCard({
           ))}
         </div>
 
-        {portfolioId && projectId ? (
-          <NarrationPlayer portfolioId={portfolioId} projectId={projectId} />
-        ) : draftPortfolioId && projectId && draftNarrationText ? (
-          // Remount on edits so the owner never hears stale draft audio.
-          <NarrationPlayer
-            key={draftNarrationText}
-            portfolioId={draftPortfolioId}
-            projectId={projectId}
-            loadAudio={loadDraftAudio}
-          />
-        ) : (
-          <button
-            disabled
-            className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
-          >
-            <Mic className="w-4 h-4" />
-            Voice Summary
-          </button>
-        )}
+        {showNarration &&
+          (draftPortfolioId && !draftNarrationText ? (
+            <div
+              role="status"
+              className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-background px-4 py-3 text-sm text-muted"
+            >
+              <Mic className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>No narration added for this project.</span>
+            </div>
+          ) : data.narrationAvailable === false ? (
+            <div
+              role="status"
+              className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-background px-4 py-3 text-sm text-muted"
+            >
+              <Mic className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>No narration available for this project.</span>
+            </div>
+          ) : portfolioId && projectId ? (
+            <NarrationPlayer portfolioId={portfolioId} projectId={projectId} />
+          ) : draftPortfolioId && projectId && draftNarrationText ? (
+            // Remount on edits so the owner never hears stale draft audio.
+            <NarrationPlayer
+              key={draftNarrationText}
+              portfolioId={draftPortfolioId}
+              projectId={projectId}
+              loadAudio={loadDraftAudio}
+            />
+          ) : (
+            <button
+              disabled
+              className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
+            >
+              <Mic className="w-4 h-4" />
+              No narration available
+            </button>
+          ))}
 
         <div className="p-4 mb-5 bg-background border border-accent2 rounded-2xl">
           <div className="flex items-center mb-1">
@@ -263,4 +285,5 @@ ProjectCard.propTypes = {
   draftPortfolioId: PropTypes.string,
   onProjectClick: PropTypes.func,
   dataTheme: PropTypes.string,
+  narrationEnabled: PropTypes.bool,
 };

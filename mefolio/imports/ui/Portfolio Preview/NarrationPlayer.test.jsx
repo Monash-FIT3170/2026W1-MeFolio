@@ -167,6 +167,38 @@ if (Meteor.isClient) {
         .be.true;
     });
 
+    it("explains when a draft project has no narration text", () => {
+      render(
+        <ProjectCard
+          project={{ _id: "project-1", title: "MeFolio" }}
+          draftPortfolioId="draft-1"
+        />,
+      );
+
+      expect(screen.getByRole("status").textContent).to.equal(
+        "No narration added for this project.",
+      );
+      expect(screen.queryByTestId("narration-player")).to.equal(null);
+    });
+
+    it("explains when a published project has no narration", () => {
+      render(
+        <ProjectCard
+          project={{
+            _id: "project-1",
+            title: "MeFolio",
+            narrationAvailable: false,
+          }}
+          portfolioId="portfolio-1"
+        />,
+      );
+
+      expect(screen.getByRole("status").textContent).to.equal(
+        "No narration available for this project.",
+      );
+      expect(screen.queryByTestId("narration-player")).to.equal(null);
+    });
+
     describe("in the draft preview", () => {
       const draftProject = {
         _id: "project-1",

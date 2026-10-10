@@ -5,6 +5,7 @@ import TechStackInput from "./TechStackInput";
 import ProofOfWorkSection from "./ProofOfWorkSection";
 import CodeBlock from "./CodeBlock";
 import getLanguageFromTechStack from "./techToLanguage";
+import { isProjectNarrationEnabled } from "../../api/projectNarration";
 
 const EMPTY_FORM = {
   title: "",
@@ -348,29 +349,31 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="case-study-narrative"
-              className="mb-1.5 block text-sm font-semibold text-primary"
-            >
-              Case Study Narration
-            </label>
+          {isProjectNarrationEnabled() && (
+            <div>
+              <label
+                htmlFor="case-study-narrative"
+                className="mb-1.5 block text-sm font-semibold text-primary"
+              >
+                Case Study Narration
+              </label>
 
-            <textarea
-              id="case-study-narrative"
-              data-testid="field-case-study-narrative"
-              rows={5}
-              value={form.caseStudyNarrative}
-              onChange={(e) => set("caseStudyNarrative", e.target.value)}
-              className={`${fieldClass("caseStudyNarrative")} resize-y leading-relaxed`}
-              placeholder="Write the project story you want recruiters to hear..."
-            />
+              <textarea
+                id="case-study-narrative"
+                data-testid="field-case-study-narrative"
+                rows={5}
+                value={form.caseStudyNarrative}
+                onChange={(e) => set("caseStudyNarrative", e.target.value)}
+                className={`${fieldClass("caseStudyNarrative")} resize-y leading-relaxed`}
+                placeholder="Write the project story you want recruiters to hear..."
+              />
 
-            <p className="mt-1 text-xs text-muted">
-              This text is used to generate the project's voice narration and is
-              not shown publicly.
-            </p>
-          </div>
+              <p className="mt-1 text-xs text-muted">
+                This text is used to generate the project's voice narration and
+                is not shown publicly.
+              </p>
+            </div>
+          )}
 
           {/* Tech Stack */}
           <div>
