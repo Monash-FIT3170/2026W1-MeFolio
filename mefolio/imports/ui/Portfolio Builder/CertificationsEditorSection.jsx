@@ -1,14 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Meteor } from "meteor/meteor";
 import PropTypes from "prop-types";
-import { Award, Plus, Pencil, Trash2 } from "lucide-react";
+import { Award, Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import CertificationModal from "./CertificationModal";
 
-const CertificationsEditorSection = ({ portfolioId, certifications = [] }) => {
+const CertificationsEditorSection = ({
+  portfolioId,
+  certifications = [],
+  credlyUsername = "",
+}) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmingRemove, setConfirmingRemove] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [editingCredlyUsername, setEditingCredlyUsername] = useState(false);
+  const [credlyUsernameDraft, setCredlyUsernameDraft] =
+    useState(credlyUsername);
+  const [credlyAction, setCredlyAction] = useState("");
+  const [credlyMessage, setCredlyMessage] = useState(null);
+
+  useEffect(() => {
+    setCredlyUsernameDraft(credlyUsername);
+  }, [credlyUsername]);
 
   const openAdd = () => {
     setEditing(null);
@@ -32,6 +45,54 @@ const CertificationsEditorSection = ({ portfolioId, certifications = [] }) => {
     });
   };
 
+  const handleSaveCredlyUsername = () => {
+    const username = credlyUsernameDraft.trim();
+    if (!username) {
+      setCredlyMessage({
+        type: "error",
+        text: "Enter a Credly username to continue.",
+      });
+      return;
+    }
+
+    setCredlyAction("save");
+    setCredlyMessage(null);
+    Meteor.call("users.setCredlyUsername", username, (error) => {
+      setCredlyAction("");
+      if (error) {
+        setCredlyMessage({
+          type: "error",
+          text: error.reason || "Could not save the Credly username.",
+        });
+        return;
+      }
+
+      setCredlyUsernameDraft(username);
+      setEditingCredlyUsername(false);
+      setCredlyMessage({ type: "success", text: "Credly username saved." });
+    });
+  };
+
+  const handleSyncCredly = () => {
+    setCredlyAction("sync");
+    setCredlyMessage(null);
+    Meteor.call("users.syncCredlyCertifications", (error, importedCount) => {
+      setCredlyAction("");
+      if (error) {
+        setCredlyMessage({
+          type: "error",
+          text: error.reason || "Could not sync Credly certifications.",
+        });
+        return;
+      }
+
+      setCredlyMessage({
+        type: "success",
+        text: `Synced ${importedCount} Credly certification${importedCount === 1 ? "" : "s"}.`,
+      });
+    });
+  };
+
   return (
     <section className="rounded-2xl border border-line bg-surface-fill p-6">
       <header className="flex items-start justify-between gap-4 mb-4">
@@ -51,6 +112,105 @@ const CertificationsEditorSection = ({ portfolioId, certifications = [] }) => {
           Add Certification
         </button>
       </header>
+
+      <div className="mb-5 rounded-xl border border-line bg-background p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {editingCredlyUsername ? (
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <label className="sr-only" htmlFor="credly-username">
+                Credly username
+              </label>
+              <input
+                id="credly-username"
+                data-testid="credly-username-input"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Credly username"
+                value={credlyUsernameDraft}
+                onChange={(event) => setCredlyUsernameDraft(event.target.value)}
+                disabled={credlyAction === "save"}
+                className="min-w-48 flex-1 rounded-lg border border-line bg-surface-fill px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-accent2 disabled:opacity-60"
+              />
+              <button
+                type="button"
+                data-testid="credly-save-btn"
+                onClick={handleSaveCredlyUsername}
+                disabled={credlyAction === "save"}
+                className="rounded-lg bg-button px-4 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1 disabled:cursor-wait disabled:opacity-60"
+              >
+                {credlyAction === "save" ? "Saving..." : "Save"}
+              </button>
+              {credlyUsername && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCredlyUsernameDraft(credlyUsername);
+                    setEditingCredlyUsername(false);
+                    setCredlyMessage(null);
+                  }}
+                  disabled={credlyAction === "save"}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted transition hover:text-primary disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="min-w-0 flex-1 text-sm text-muted">
+                {credlyUsername ? (
+                  <>
+                    Credly username: <span className="font-medium text-primary">{credlyUsername}</span>
+                  </>
+                ) : (
+                  "Link a Credly username to import your public certifications."
+                )}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  data-testid="credly-edit-btn"
+                  onClick={() => {
+                    setCredlyUsernameDraft(credlyUsername);
+                    setEditingCredlyUsername(true);
+                    setCredlyMessage(null);
+                  }}
+                  disabled={Boolean(credlyAction)}
+                  className="rounded-lg border border-line bg-surface-fill px-4 py-2 text-sm font-semibold text-primary transition hover:bg-selected disabled:opacity-60"
+                >
+                  {credlyUsername
+                    ? "Edit Credly username"
+                    : "Add a Credly username"}
+                </button>
+                {credlyUsername && (
+                  <button
+                    type="button"
+                    data-testid="credly-sync-btn"
+                    onClick={handleSyncCredly}
+                    disabled={Boolean(credlyAction)}
+                    className="flex items-center gap-2 rounded-lg bg-button px-4 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${credlyAction === "sync" ? "animate-spin" : ""}`}
+                    />
+                    {credlyAction === "sync" ? "Syncing..." : "Sync"}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+        {credlyMessage && (
+          <p
+            data-testid="credly-message"
+            role={credlyMessage.type === "error" ? "alert" : "status"}
+            className={`mt-2 text-sm ${credlyMessage.type === "error" ? "text-accent2" : "text-muted"}`}
+          >
+            {credlyMessage.text}
+          </p>
+        )}
+      </div>
 
       {certifications.length === 0 ? (
         <p
@@ -164,6 +324,7 @@ CertificationsEditorSection.propTypes = {
       verified: PropTypes.bool,
     }),
   ),
+  credlyUsername: PropTypes.string,
 };
 
 export default CertificationsEditorSection;

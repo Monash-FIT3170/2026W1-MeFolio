@@ -41,6 +41,7 @@ import "./portfolio-indexes.js";
 import "./github-methods.js";
 // register AI Twin methods
 import "./ai/chatMethods.js";
+import "./credly-methods.js";
 import { validateChallenge } from "./challenge-methods.js";
 
 // cache middleware

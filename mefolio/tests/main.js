@@ -32,6 +32,8 @@ import "/server/portfolio-indexes.test.js";
 import "/server/github-methods.test.js";
 import "/server/portfolios.byUsername.test.js";
 import "/server/github-api.test.js";
+import "/server/credly-api.test.js";
+import "/server/credly-methods.test.js";
 import "/server/challenge-methods.test.js";
 import "/server/cache-middleware.test.js";
 import "/imports/ui/Public/ViewerLocationPrompt.test.jsx";
