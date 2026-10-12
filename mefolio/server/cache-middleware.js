@@ -1,4 +1,5 @@
-export const PUBLIC_PORTFOLIO_PATH_REGEX = /^\/(u\/[^/?#]+|[a-zA-Z0-9]{17}\/view)(\/|\?|#|$)/;
+export const PUBLIC_PORTFOLIO_PATH_REGEX =
+  /^\/(u\/[^/?#]+|[a-zA-Z0-9]{17}\/view)(\/|\?|#|$)/;
 
 export const shouldCachePortfolioView = (req) => {
   return (
