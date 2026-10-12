@@ -8,9 +8,21 @@ import {
   isPortfolioNarrationEnabled,
   isProjectNarrationEnabled,
 } from "/imports/api/projectNarration";
+import { NARRATION_VOICES, DEFAULT_VOICE_ID } from "/imports/api/narrationVoices";
 
-export async function generateProjectNarration(text) {
+function resolveVoiceId(voiceId) {
+  if (voiceId === undefined || voiceId === null) return DEFAULT_VOICE_ID;
+  if (
+    typeof voiceId !== "string" || !NARRATION_VOICES.some((voice) => voice.id === voiceId)
+  ) {
+    throw new Meteor.Error("invalid-voice", "That voice is not available.");
+  }
+  return voiceId
+}
+
+export async function generateProjectNarration(text, voiceId) {
   check(text, String);
+  const voice = resolveVoiceId(voiceId);
   const narrationText = text.trim();
   if (!narrationText || narrationText.length > 5000) {
     throw new Meteor.Error(
@@ -30,7 +42,7 @@ export async function generateProjectNarration(text) {
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "audio/wav" },
-      body: JSON.stringify({ text: narrationText }),
+      body: JSON.stringify({ text: narrationText, voice }),
       signal: controller.signal,
     });
 
@@ -79,21 +91,23 @@ export function clearNarrationCache() {
 }
 
 // Keyed by the narrated text, so editing the project produces fresh audio.
-function getCachedNarration(text) {
-  if (!narrationCache.has(text)) {
+function getCachedNarration(text, voiceId) {
+  const voice = resolveVoiceId(voiceId);
+  const key = `${voice}::${text}`;
+  if (!narrationCache.has(key)) {
     if (narrationCache.size >= MAX_CACHED_NARRATIONS) {
       narrationCache.delete(narrationCache.keys().next().value);
     }
-    const pending = generateProjectNarration(text).catch((error) => {
-      narrationCache.delete(text);
+    const pending = generateProjectNarration(text, voice).catch((error) => {
+      narrationCache.delete(key);
       throw error;
     });
-    narrationCache.set(text, pending);
+    narrationCache.set(key, pending);
   }
-  return narrationCache.get(text);
+  return narrationCache.get(key);
 }
 
-export async function getPublishedNarrationAudio(portfolioId, projectId) {
+export async function getPublishedNarrationAudio(portfolioId, projectId, voiceId) {
   check(portfolioId, String);
   check(projectId, String);
 
@@ -123,7 +137,7 @@ export async function getPublishedNarrationAudio(portfolioId, projectId) {
     );
   }
 
-  return getCachedNarration(text);
+  return getCachedNarration(text, voiceId);
 }
 
 if (Meteor.isServer) {
@@ -138,17 +152,17 @@ if (Meteor.isServer) {
   );
 
   Meteor.methods({
-    async "projects.getNarrationAudio"(portfolioId, projectId) {
+    async "projects.getNarrationAudio"(portfolioId, projectId, voiceId) {
       if (!isProjectNarrationEnabled()) {
         throw new Meteor.Error(
           "feature-disabled",
           "Project narration is currently unavailable.",
         );
       }
-      return getPublishedNarrationAudio(portfolioId, projectId);
+      return getPublishedNarrationAudio(portfolioId, projectId, voiceId);
     },
 
-    async "projects.generateNarration"(portfolioId, text) {
+    async "projects.generateNarration"(portfolioId, text, voiceId) {
       if (!isProjectNarrationEnabled()) {
         throw new Meteor.Error(
           "feature-disabled",
@@ -181,7 +195,7 @@ if (Meteor.isServer) {
         );
       }
 
-      return generateProjectNarration(text);
+      return generateProjectNarration(text, voiceId);
     },
   });
 }
