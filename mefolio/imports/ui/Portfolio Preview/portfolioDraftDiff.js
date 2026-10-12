@@ -53,10 +53,14 @@ export const diffPortfolioFields = (draft, live) => {
       .map(([path, label]) => ({
         path,
         label,
-        from: undefined,
+        from: FIELD_DEFAULTS[path],
         to: getByPath(draft, path),
       }))
-      .filter((change) => formatDiffValue(change.to) !== "(empty)");
+      .filter(
+        (change) =>
+          formatDiffValue(change.to) !== "(empty)" &&
+          !valuesAreEqual(change.from, change.to),
+      );
   }
   return Object.entries(FIELD_LABELS)
     .map(([path, label]) => ({
