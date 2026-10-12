@@ -44,7 +44,6 @@ export const mapLiveVisitors = (portfolios) => {
       name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
-      location: viewer.userId ? "Signed in" : "Guest",
       duration,
       active: true,
     };

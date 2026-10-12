@@ -24,9 +24,6 @@ const VisitorCard = ({ visitor }) => {
         <p className="mt-1 text-sm font-medium text-primary">
           {visitor.activity}
         </p>
-        <span className="mt-1 block text-xs text-primary">
-          {visitor.location}
-        </span>
       </div>
 
       <div className="text-sm font-semibold text-primary">
@@ -82,7 +79,6 @@ VisitorCard.propTypes = {
     name: PropTypes.string,
     email: PropTypes.string,
     activity: PropTypes.string,
-    location: PropTypes.string,
     duration: PropTypes.string,
     active: PropTypes.bool,
   }).isRequired,
