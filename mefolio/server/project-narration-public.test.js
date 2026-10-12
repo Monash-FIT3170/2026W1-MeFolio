@@ -3,7 +3,10 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 import { Buffer } from "buffer";
 import assert from "assert";
 import sinon from "sinon";
-import { DEFAULT_VOICE_ID, NARRATION_VOICES } from "/imports/api/narrationVoices";
+import {
+  DEFAULT_VOICE_ID,
+  NARRATION_VOICES,
+} from "/imports/api/narrationVoices";
 import { clearNarrationCache } from "./project-narration.js";
 
 if (Meteor.isServer) {
@@ -71,13 +74,10 @@ if (Meteor.isServer) {
       for (const voice of NARRATION_VOICES) {
         clearNarrationCache();
         await callMethod("portfolio-1", "project-1", voice.id);
-        assert.deepStrictEqual(
-          JSON.parse(fetchStub.lastCall.args[1].body),
-          {
-            text: "A dedicated case study about building MeFolio.",
-            voice: voice.id,
-          },
-        );
+        assert.deepStrictEqual(JSON.parse(fetchStub.lastCall.args[1].body), {
+          text: "A dedicated case study about building MeFolio.",
+          voice: voice.id,
+        });
       }
       sinon.assert.calledThrice(fetchStub);
     });

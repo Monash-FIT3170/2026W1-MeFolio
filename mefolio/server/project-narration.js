@@ -8,16 +8,20 @@ import {
   isPortfolioNarrationEnabled,
   isProjectNarrationEnabled,
 } from "/imports/api/projectNarration";
-import { NARRATION_VOICES, DEFAULT_VOICE_ID } from "/imports/api/narrationVoices";
+import {
+  NARRATION_VOICES,
+  DEFAULT_VOICE_ID,
+} from "/imports/api/narrationVoices";
 
 function resolveVoiceId(voiceId) {
   if (voiceId === undefined || voiceId === null) return DEFAULT_VOICE_ID;
   if (
-    typeof voiceId !== "string" || !NARRATION_VOICES.some((voice) => voice.id === voiceId)
+    typeof voiceId !== "string" ||
+    !NARRATION_VOICES.some((voice) => voice.id === voiceId)
   ) {
     throw new Meteor.Error("invalid-voice", "That voice is not available.");
   }
-  return voiceId
+  return voiceId;
 }
 
 export async function generateProjectNarration(text, voiceId) {
@@ -107,7 +111,11 @@ function getCachedNarration(text, voiceId) {
   return narrationCache.get(key);
 }
 
-export async function getPublishedNarrationAudio(portfolioId, projectId, voiceId) {
+export async function getPublishedNarrationAudio(
+  portfolioId,
+  projectId,
+  voiceId,
+) {
   check(portfolioId, String);
   check(projectId, String);
 

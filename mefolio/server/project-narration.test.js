@@ -74,7 +74,8 @@ if (Meteor.isServer) {
       assert.strictEqual(options.method, "POST");
       assert.strictEqual(options.headers.Accept, "audio/wav");
       assert.deepStrictEqual(JSON.parse(options.body), {
-        text: "Private case study.", voice: "en_US-lessac-medium"
+        text: "Private case study.",
+        voice: "en_US-lessac-medium",
       });
       assert.ok(options.signal instanceof AbortSignal);
     });

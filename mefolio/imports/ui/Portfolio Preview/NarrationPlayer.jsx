@@ -10,15 +10,20 @@ const readSavedVoice = () => {
   try {
     const saved = window.localStorage.getItem(VOICE_STORAGE_KEY);
     return NARRATION_VOICES.some((voice) => voice.id === saved)
-  ? saved
-  : DEFAULT_VOICE_ID;
+      ? saved
+      : DEFAULT_VOICE_ID;
   } catch {
     return DEFAULT_VOICE_ID;
   }
 };
 
 const requestNarration = (portfolioId, projectId, voiceId) =>
-  Meteor.callAsync("projects.getNarrationAudio", portfolioId, projectId, voiceId);
+  Meteor.callAsync(
+    "projects.getNarrationAudio",
+    portfolioId,
+    projectId,
+    voiceId,
+  );
 
 // Formats seconds as m:ss. Durations the browser can't report yet (NaN or
 // Infinity before metadata loads) show as 0:00.
@@ -136,18 +141,19 @@ export function NarrationPlayer({
         <span className="flex-1 text-sm font-bold text-primary">
           {isLoading ? "Loading audio..." : "Voice Summary"}
         </span>
-        <select aria-label="Narration voice"
-        value={voiceId}
-        onChange={handleVoiceChange}
-        disabled={isLoading}
-        className="h-9 rounded-lg border border-line bg-background px-2 text-xs font-semibold text-primary disabled:cursor-wait disabled:opacity-50"
+        <select
+          aria-label="Narration voice"
+          value={voiceId}
+          onChange={handleVoiceChange}
+          disabled={isLoading}
+          className="h-9 rounded-lg border border-line bg-background px-2 text-xs font-semibold text-primary disabled:cursor-wait disabled:opacity-50"
         >
           {NARRATION_VOICES.map((voice) => (
             <option key={voice.id} value={voice.id}>
               {voice.label}
-              </option>
-            ))}
-            </select>
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={isPlaying ? handlePause : handlePlay}
