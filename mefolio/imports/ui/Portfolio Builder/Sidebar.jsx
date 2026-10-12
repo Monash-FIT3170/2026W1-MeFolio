@@ -5,6 +5,7 @@ import PublishButton from "../Portfolio Preview/PublishButton";
 import ShareButton from "./ShareButton";
 import ProfileSummary from "./ProfileSummary";
 import { useResponsive } from "../Contexts/ResponsiveContext";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({
   items,
@@ -19,6 +20,7 @@ const Sidebar = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isMobile } = useResponsive();
+  const navigate = useNavigate();
 
   // Sidebar content component (reused for both desktop and mobile)
   const renderSidebarContent = () => (
@@ -37,6 +39,25 @@ const Sidebar = ({
           >
             {isPreview ? "Back to Builder" : "View Portfolio"}
           </button>
+          {isPreview && (
+            <button
+              type="button"
+              data-testid="view-published-link"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                navigate("/published");
+              }}
+              disabled={!portfolio?.isPublished}
+              title={
+                !portfolio?.isPublished
+                  ? "Publish your portfolio first"
+                  : undefined
+              }
+              className="w-full rounded-xl border border-alt/50 px-4 py-3 text-sm font-semibold text-alt transition-colors hover:bg-selected disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              View published portfolio
+            </button>
+          )}
           <PublishButton
             portfolio={portfolio}
             projects={projects}
@@ -89,7 +110,7 @@ const Sidebar = ({
       {isMobile && (
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-button text-secondary p-3 rounded-full shadow-lg hover:bg-accent1 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="fixed top-6 left-4 z-50 bg-button text-secondary p-3 rounded-full shadow-lg hover:bg-accent1 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />

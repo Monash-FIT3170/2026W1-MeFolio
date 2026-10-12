@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -13,7 +14,7 @@ import {
   createDashboardViewModel,
   getCurrentTab,
 } from "../../models/portfolioBuilderViewModel";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
@@ -32,7 +33,6 @@ import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
 import { useResponsive } from "../Contexts/ResponsiveContext";
-import PublishButton from "../Portfolio Preview/PublishButton";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -181,9 +181,12 @@ const useDashboardData = () =>
   });
 
 const DashboardLayout = () => {
+  const location = useLocation();
   const [isPreview, setIsPreview] = useState(false);
   const { isMobile } = useResponsive();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "overview",
+  );
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -420,16 +423,20 @@ const DashboardLayout = () => {
 
       <main
         key={isPreview ? "preview" : "builder"}
-        className="min-w-0 flex-1 overflow-y-auto"
+        className="relative z-0 min-w-0 flex-1 overflow-y-auto"
       >
         {isPreview ? (
           <PortfolioPreview
             portfolio={selectedPortfolio}
             projects={orderedProjects}
+            viewportMode={isMobile ? "mobile" : "desktop"}
+            hasBuilderMenu
           />
         ) : (
           <>
-            <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
+            <header
+              className={`flex items-center justify-between border-b border-line bg-surface-fill py-6 ${isMobile ? "flex-wrap gap-3 pl-20 pr-4" : "px-8"}`}
+            >
               <h1 className="text-2xl font-extrabold text-primary">
                 {currentTab.label}
               </h1>
@@ -571,8 +578,43 @@ const DashboardLayout = () => {
   );
 };
 
-const OwnerPreviewRoute = () => {
+const OwnerPortfolioShell = ({ portfolio, projects, user, children }) => {
   const navigate = useNavigate();
+  const { sidebarItems, profile } = createDashboardViewModel({
+    portfolios: portfolio ? [portfolio] : [],
+    projects,
+    user,
+  });
+  const draftStatus = getDraftStatus({ portfolio, projects });
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar
+        items={sidebarItems.filter((item) => item.id !== "settings")}
+        activeTab=""
+        onTabChange={(activeTab) => navigate("/", { state: { activeTab } })}
+        profile={profile}
+        portfolio={portfolio}
+        projects={projects}
+        hasUnpublishedChanges={draftStatus.hasUnpublishedChanges}
+        isPreview
+        onPreviewToggle={() => navigate("/")}
+      />
+      <main className="relative z-0 min-w-0 flex-1 overflow-y-auto">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+OwnerPortfolioShell.propTypes = {
+  portfolio: PropTypes.object,
+  projects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  user: PropTypes.object,
+  children: PropTypes.node.isRequired,
+};
+
+const OwnerPreviewRoute = () => {
   const { isMobile } = useResponsive();
   const {
     isLoading,
@@ -603,39 +645,38 @@ const OwnerPreviewRoute = () => {
   }
 
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-primary"
-        >
-          Back to Builder
-        </button>
-        <PublishButton
-          portfolio={selectedPortfolio}
-          projects={databaseProjects}
-        />
-      </div>
+    <OwnerPortfolioShell
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      user={snapshot.user}
+    >
       <PortfolioPreview
         portfolio={selectedPortfolio}
         projects={databaseProjects}
         viewportMode={isMobile ? "mobile" : "desktop"}
+        hasBuilderMenu
       />
-    </>
+    </OwnerPortfolioShell>
   );
 };
 
 // Renders the snapshot taken at publish time rather than the live draft, so
 // the owner can see exactly what was published.
 const PublishedPortfolioRoute = () => {
-  const { isLoading, portfolios, user } = useDashboardData();
+  const {
+    isLoading,
+    portfolios,
+    user,
+    projectDocuments,
+    projectOrderDocuments,
+  } = useDashboardData();
+  const { isMobile } = useResponsive();
   const navigate = useNavigate();
 
   const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
     isLoading,
-    () => ({ portfolios, user }),
-    [portfolios, user],
+    () => ({ portfolios, user, projectDocuments, projectOrderDocuments }),
+    [portfolios, user, projectDocuments, projectOrderDocuments],
   );
 
   const selectedPortfolio = getSelectedPortfolio(
@@ -643,6 +684,11 @@ const PublishedPortfolioRoute = () => {
     snapshot.user,
   );
   const publishedContent = selectedPortfolio?.publishedContent;
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
+  );
 
   if (isLoading && !hasLoadedOnce) {
     return <p className="p-8 text-lg">Loading published portfolio...</p>;
@@ -650,18 +696,24 @@ const PublishedPortfolioRoute = () => {
 
   if (!publishedContent) {
     return (
-      <div className="flex flex-col items-start gap-4 p-8">
-        <p className="text-lg text-primary">
-          This portfolio has not been published yet.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate("/preview")}
-          className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
-        >
-          Back to draft preview
-        </button>
-      </div>
+      <OwnerPortfolioShell
+        portfolio={selectedPortfolio}
+        projects={databaseProjects}
+        user={snapshot.user}
+      >
+        <div className="flex flex-col items-start gap-4 p-8">
+          <p className="text-lg text-primary">
+            This portfolio has not been published yet.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/preview")}
+            className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+          >
+            Back to draft preview
+          </button>
+        </div>
+      </OwnerPortfolioShell>
     );
   }
 
@@ -673,17 +725,25 @@ const PublishedPortfolioRoute = () => {
   // inherited: they are declared once on the app shell, where the draft theme
   // is in scope, and an inherited font-family arrives already resolved.
   return (
-    <div
-      data-theme={getPublishedTheme(publishedContent.theme)}
-      className="min-h-screen bg-background font-main"
+    <OwnerPortfolioShell
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      user={snapshot.user}
     >
-      <PortfolioPreview
-        portfolio={publishedContent}
-        portfolioId={selectedPortfolio?._id}
-        projects={publishedContent.projects || []}
-        isPublishedView
-      />
-    </div>
+      <div
+        data-theme={getPublishedTheme(publishedContent.theme)}
+        className="min-h-screen bg-background font-main"
+      >
+        <PortfolioPreview
+          portfolio={publishedContent}
+          portfolioId={selectedPortfolio?._id}
+          projects={publishedContent.projects || []}
+          isPublishedView
+          viewportMode={isMobile ? "mobile" : "desktop"}
+          hasBuilderMenu
+        />
+      </div>
+    </OwnerPortfolioShell>
   );
 };
 

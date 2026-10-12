@@ -25,6 +25,7 @@ export const PortfolioPreview = ({
   projects: draftProjects = null,
   viewportMode = "desktop",
   isPublishedView = false,
+  hasBuilderMenu = false,
 }) => {
   const { portfolioId: routePortfolioId } = useParams();
   const isPublicView = Boolean(routePortfolioId);
@@ -266,14 +267,12 @@ export const PortfolioPreview = ({
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
       {/* Full-width navbar */}
-      <div
-        className={`mx-auto overflow-hidden bg-background transition-all duration-300 ${
-          viewportMode === "mobile"
-            ? "w-[390px] max-w-full border border-line shadow-xl rounded-b-2xl"
-            : "w-full"
-        }`}
-      >
-        <Navbar portfolio={portfolio} viewportMode={viewportMode} />
+      <div className="w-full overflow-hidden bg-background">
+        <Navbar
+          portfolio={portfolio}
+          viewportMode={viewportMode}
+          hasBuilderMenu={hasBuilderMenu}
+        />
 
         {/* Hero section — about + profile card */}
         <section className="bg-background border-b border-line">
@@ -395,4 +394,5 @@ PortfolioPreview.propTypes = {
   projects: PropTypes.arrayOf(PropTypes.object),
   viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
   isPublishedView: PropTypes.bool,
+  hasBuilderMenu: PropTypes.bool,
 };
