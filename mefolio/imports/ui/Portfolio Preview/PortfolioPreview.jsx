@@ -7,7 +7,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
-import { isProjectNarrationEnabled } from "../../api/projectNarration.js";
+import { isPortfolioNarrationEnabled } from "../../api/projectNarration.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
@@ -230,7 +230,7 @@ export const PortfolioPreview = ({
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
-  const narrationFeatureEnabled = isProjectNarrationEnabled();
+  const narrationFeatureEnabled = isPortfolioNarrationEnabled(portfolio);
   const [narrationEnabled, setNarrationEnabled] = useState(true);
 
   // Compute unique skills from the loaded projects
@@ -450,7 +450,9 @@ export const PortfolioPreview = ({
                     project={project}
                     portfolioId={trackingPortfolioId}
                     draftPortfolioId={isStaging ? portfolio?._id : undefined}
-                    narrationEnabled={narrationEnabled}
+                    narrationEnabled={
+                      narrationFeatureEnabled && narrationEnabled
+                    }
                     dataTheme={portfolio.theme || "default"}
                   />
                 </div>

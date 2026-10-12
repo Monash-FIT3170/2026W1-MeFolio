@@ -87,6 +87,16 @@ if (Meteor.isServer) {
       });
     }
 
+    it("rejects owners who turned narration off without contacting Piper", async function () {
+      portfolioStub.callsFake(async () => ({
+        _id: "owner-portfolio",
+        userId: "owner",
+        narrationEnabled: false,
+      }));
+      await assert.rejects(callMethod("owner"), { error: "feature-disabled" });
+      sinon.assert.notCalled(fetchStub);
+    });
+
     it("rejects a missing or different portfolio without contacting Piper", async function () {
       await assert.rejects(callMethod("owner", "another-portfolio"), {
         error: "not-authorized",

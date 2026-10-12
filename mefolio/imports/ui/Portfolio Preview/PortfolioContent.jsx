@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useRef, useState, useMemo } from "react";
-import { isProjectNarrationEnabled } from "../../api/projectNarration";
+import { isPortfolioNarrationEnabled } from "../../api/projectNarration";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { NarrationToggle } from "./NarrationToggle.jsx";
 import About from "../components/About.jsx";
@@ -21,7 +21,7 @@ export const PortfolioContent = ({
   viewportMode = "desktop",
 }) => {
   const scrollRef = useRef(null);
-  const narrationFeatureEnabled = isProjectNarrationEnabled();
+  const narrationFeatureEnabled = isPortfolioNarrationEnabled(portfolio);
   const [narrationEnabled, setNarrationEnabled] = useState(true);
 
   // Skill filter state
@@ -201,7 +201,9 @@ export const PortfolioContent = ({
                   <ProjectCard
                     project={project}
                     portfolioId={portfolioId}
-                    narrationEnabled={narrationEnabled}
+                    narrationEnabled={
+                      narrationFeatureEnabled && narrationEnabled
+                    }
                   />
                 </div>
               );

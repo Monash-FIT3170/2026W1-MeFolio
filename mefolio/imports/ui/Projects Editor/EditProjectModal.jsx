@@ -10,7 +10,14 @@ const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
 // Modal form for editing an existing project's details. Pre-fills from the
 // given project and reports the updated fields back through onSave.
-const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
+const EditProjectModal = ({
+  isOpen,
+  project,
+  onClose,
+  onSave,
+  onDelete,
+  narrationEnabled = true,
+}) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -263,7 +270,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
             )}
           </div>
 
-          {isProjectNarrationEnabled() && (
+          {narrationEnabled && isProjectNarrationEnabled() && (
             <div>
               <label
                 htmlFor="edit-case-study-narrative"
@@ -585,6 +592,7 @@ EditProjectModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   onDelete: PropTypes.func,
+  narrationEnabled: PropTypes.bool,
 };
 
 export default EditProjectModal;

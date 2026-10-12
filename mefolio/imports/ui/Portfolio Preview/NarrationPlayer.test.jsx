@@ -163,8 +163,10 @@ if (Meteor.isClient) {
 
       render(<ProjectCard project={project} />);
       expect(screen.queryByTestId("narration-player")).to.equal(null);
-      expect(screen.getByRole("button", { name: /voice summary/i }).disabled).to
-        .be.true;
+      expect(
+        screen.getByRole("button", { name: /no narration available/i })
+          .disabled,
+      ).to.be.true;
     });
 
     it("explains when a draft project has no narration text", () => {
@@ -272,8 +274,9 @@ if (Meteor.isClient) {
         );
 
         expect(screen.queryByTestId("narration-player")).to.equal(null);
-        expect(screen.getByRole("button", { name: /voice summary/i }).disabled)
-          .to.be.true;
+        expect(screen.getByRole("status").textContent).to.equal(
+          "No narration added for this project.",
+        );
         sinon.assert.notCalled(callStub);
       });
     });
