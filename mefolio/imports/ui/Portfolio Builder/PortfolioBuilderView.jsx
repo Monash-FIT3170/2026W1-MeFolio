@@ -29,6 +29,7 @@ import RecruiterPortal from "../RecruiterPortal";
 import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
+import AiTwinConfiguration from "./AiTwinConfiguration.jsx";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
@@ -567,6 +568,11 @@ const DashboardLayout = () => {
             />
           ) : activeTab === "visitors" ? (
             <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
+          ) : activeTab === "ai-twin" ? (
+            <AiTwinConfiguration
+              portfolioId={selectedPortfolio?._id}
+              configuration={selectedPortfolio?.aiTwinConfiguration}
+            />
           ) : activeTab === "recruiter" ? (
             <RecruiterPortal
               portfolio={selectedPortfolio}
