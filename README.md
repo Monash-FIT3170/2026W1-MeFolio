@@ -341,7 +341,7 @@ Sometimes the CI test runner shows "CLIENT FAILURES: 1" without displaying the e
 
 ### Deployment Strategy
 
-Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy. The Galaxy account logs in with the MeFolio admin email; billing is handed over by adding the incoming owner's company card to that account (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#billing-handover)). Confirm live app URLs and database backup settings in the Galaxy dashboard. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
+Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy. The Galaxy account logs in with the MeFolio admin email; billing is currently on an outgoing team member's card and is handed over by adding the incoming owner's company card to that account, then removing the outgoing card. As agreed with the tutor (12 Oct 2026), the incoming owner is not named in advance (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#billing-handover)). Confirm live app URLs and database backup settings in the Galaxy dashboard. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
 
 
 #### Staging Environment

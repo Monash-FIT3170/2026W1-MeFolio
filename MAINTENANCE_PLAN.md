@@ -6,12 +6,12 @@ Prepared: 12 October 2026. Scope: the repository at the time of this update and 
 
 This plan describes how student contributions will end, how MeFolio can remain maintainable, and what must happen to production services after Week 12. Students have no obligation to provide ongoing development, support, on-call coverage or funding after the project ends.
 
-The operating model is **continued hosting (Option A), handed over by changing the billing card on the MeFolio admin account; controlled shutdown (Option B) is the fallback** if no one takes over billing. It is not a promise of indefinite availability. Remaining billing details must be confirmed with the project stakeholder before Week 12 ends.
+The operating model is **continued hosting (Option A), handed over by changing the billing card on the MeFolio admin account; controlled shutdown (Option B) is the fallback** if no one takes over billing. It is not a promise of indefinite availability. As agreed with the tutor (12 Oct 2026), the incoming owner is not named in advance, because it cannot be known who will take over deployment. The remaining open items are practical details: the monthly cost, live URLs and database backup settings.
 
 | Decision | Status |
 | --- | --- |
 | Code maintainers | Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02), recorded in [CODEOWNERS](.github/CODEOWNERS) |
-| Accountable project owner and billing payer | Pending: the incoming owner adds their company card to the hosting account (see section 5) |
+| Accountable project owner and billing payer | Agreed with the tutor (12 Oct 2026): the incoming owner is not named in advance. Billing transfers when they add their company card to the hosting account (see section 5) |
 | Hosting and database | Meteor Galaxy hosts the app and its MongoDB database. Production/staging URLs and backup settings to be checked in the Galaxy dashboard |
 | Hosting, database, storage and domain costs; renewal dates | Pending: record the plan and monthly cost from the Galaxy billing page |
 | Continue hosting or shut down, and the effective date | Continue hosting, subject to billing being transferred by the end of Week 12 |
@@ -86,16 +86,16 @@ Shutdown preserves the ability to restart from source and authorised backups; it
 
 ### Billing Handover
 
-The Meteor Galaxy account (app hosting and database) logs in with the MeFolio admin email, and its costs are charged to the card on that account. To hand over billing:
+The Meteor Galaxy account (app hosting and database) logs in with the MeFolio admin email, and its costs are currently charged to an outgoing team member's card. As agreed with the tutor (12 Oct 2026), the incoming owner is deliberately left unnamed: whoever takes over deployment takes over billing. To hand over billing:
 
 1. Give the incoming owner access to the MeFolio admin email and Galaxy account through a secure channel, never through Git or a shared document. Move the admin email's recovery details and multi-factor authentication to the incoming owner.
 2. The incoming owner adds themselves as an account administrator and adds their company card as the billing method.
-3. Remove the previous card once the new one is active, then change the account password.
+3. Remove the outgoing team member's card once the new one is active, then change the account password. This step is required: the outgoing card must not stay on the account after handover.
 4. Set a billing alert or spending cap and record the alert recipient here.
 
 Card numbers, passwords and invoices must not be recorded in this repository.
 
-The outgoing students are **not committing to bear future costs**. The accepting stakeholder/organisation should bear approved costs, but no named payer or funding agreement is verified here. Existing account holders must check their present billing liability with their providers and transfer or cancel it explicitly; this plan does not itself change a billing contract.
+The outgoing students are **not committing to bear future costs**. Costs are borne by whoever takes over the account as the incoming owner; as agreed with the tutor (12 Oct 2026), that payer is intentionally not named in advance. Existing account holders must check their present billing liability with their providers and transfer or cancel it explicitly; this plan does not itself change a billing contract.
 
 Before approval, calculate the recurring total from actual subscriptions (hosting + database + storage/backups + applicable domain/CI costs), record currency/taxes, expiry dates and a spending cap, and nominate a billing-alert recipient. If no payer accepts those costs, use Option B. No unverified price estimate is presented as a current bill.
 
@@ -117,7 +117,9 @@ For a failed release, stop further deployment and redeploy the last verified rel
 
 ## 7. Handover Acceptance Checklist
 
-- [ ] Named owner, maintainer, payer and support contact recorded and accepted.
+- [ ] Code maintainers recorded in [CODEOWNERS](.github/CODEOWNERS).
+- [ ] Incoming owner added as account administrator, with their company card as the billing method.
+- [ ] Outgoing team member's card removed and the account password changed.
 - [ ] Continue/shutdown decision, effective dates and approved budget documented.
 - [ ] Account/service inventory and access transferred securely; departing access removed.
 - [ ] Production sample-account/seeding risk resolved, or service remains offline.
