@@ -2,6 +2,10 @@ import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
+import {
+  ProjectEngagement,
+  PROJECT_ENGAGEMENT_PUBLICATION,
+} from "../../api/projectEngagement.js";
 import { mapLiveVisitors } from "../../models/portfolioBuilderViewModel.js";
 
 // Reusable card for a single dashboard statistic.
@@ -55,26 +59,86 @@ const VisitorCard = ({ visitor }) => {
 };
 
 // Overview tab content that displays summary stats and recent visitor activity.
-const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
-  const visitors = useTracker(() => {
-    if (!portfolioId) return [];
+const OverviewSection = ({ portfolioId, onViewAllVisitors }) => {
+  const { visitors, totalViews, interactions } = useTracker(() => {
+    if (!portfolioId) {
+      return { visitors: [], totalViews: 0, interactions: 0 };
+    }
 
-    const handle = Meteor.subscribe("portfolios.liveVisitors", portfolioId);
-    if (!handle.ready()) return [];
+    const visitorsHandle = Meteor.subscribe(
+      "portfolios.liveVisitors",
+      portfolioId,
+    );
+    const engagementsHandle = Meteor.subscribe(
+      PROJECT_ENGAGEMENT_PUBLICATION,
+      portfolioId,
+    );
 
     const portfolio = PortfolioCollection.findOne(
       { _id: portfolioId },
-      { fields: { viewers: 1 } },
+      { fields: { viewers: 1, totalViews: 1 } },
     );
+    const visitors = visitorsHandle.ready()
+      ? mapLiveVisitors(portfolio ? [portfolio] : [])
+      : [];
+    const clickEvents = engagementsHandle.ready()
+      ? ProjectEngagement.find(
+          { portfolioId },
+          { fields: { clicks: 1 } },
+        ).fetch()
+      : [];
 
-    return mapLiveVisitors(portfolio ? [portfolio] : []);
+    return {
+      visitors,
+      totalViews: portfolio?.totalViews || 0,
+      interactions: clickEvents.reduce(
+        (total, event) =>
+          total + (Number.isFinite(event.clicks) ? event.clicks : 0),
+        0,
+      ),
+    };
   }, [portfolioId]);
+  const stats = [
+    {
+      id: "total-views",
+      value: totalViews,
+      label: "Total Views",
+      change: "",
+    },
+    {
+      id: "visitors-now",
+      value: visitors.length,
+      label: "Visitors Right Now",
+      change: "",
+    },
+    {
+      id: "interactions",
+      value: interactions,
+      label: "Interactions",
+      change: "",
+    },
+    {
+      id: "ai-used",
+      value: "",
+      label: "AI Chatbots Used",
+      change: "",
+    },
+  ];
 
   return (
     <>
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <StatCard key={stat.id} stat={stat} />
+          <StatCard
+            key={stat.id}
+            stat={{
+              ...stat,
+              value:
+                typeof stat.value === "number"
+                  ? stat.value.toLocaleString("en-US")
+                  : stat.value,
+            }}
+          />
         ))}
       </section>
 
@@ -91,7 +155,7 @@ const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
           </button>
         </div>
         <p className="mt-1 block text-xs text-primary">
-          Showing 3 of {visitors.length}
+          Showing {Math.min(3, visitors.length)} of {visitors.length}
         </p>
 
         <div>
@@ -134,7 +198,6 @@ VisitorCard.propTypes = {
 };
 
 OverviewSection.propTypes = {
-  stats: PropTypes.arrayOf(PropTypes.object).isRequired,
   portfolioId: PropTypes.string,
   onViewAllVisitors: PropTypes.func,
 };

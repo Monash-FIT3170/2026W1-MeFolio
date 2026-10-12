@@ -150,7 +150,6 @@ const DashboardLayout = () => {
     isLoading: viewModelLoading,
     sidebarItems,
     overviewStats,
-    liveVisitors,
     profile,
     aboutMe,
     portfolio,
@@ -234,7 +233,10 @@ const DashboardLayout = () => {
 
         <div className="builder-content">
           {activeTab === "overview" ? (
-            <OverviewSection stats={overviewStats} visitors={liveVisitors} />
+            <OverviewSection
+              stats={overviewStats}
+              portfolioId={currentPortfolio?._id}
+            />
           ) : activeTab === "about-me" ? (
             <AboutMeSection
               linksValue={aboutMeLinks}

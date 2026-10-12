@@ -435,12 +435,15 @@ Meteor.publish("portfolios.viewer", function (portfolioId) {
   const connectionId = publication.connection?.id;
 
   PortfolioCollection.findOneAsync({ _id: portfolioId, isPublished: true })
-    .then((portfolio) => {
+    .then(async (portfolio) => {
       if (!portfolio) return null;
-      return getViewerData(publication);
-    })
-    .then((viewer) => {
+      const viewer = await getViewerData(publication);
       if (!viewer) return null;
+      const viewRecorded = await PortfolioCollection.updateAsync(
+        { _id: portfolioId, isPublished: true },
+        { $inc: { totalViews: 1 } },
+      );
+      if (!viewRecorded) return null;
       return addPortfolioViewer(portfolioId, viewer);
     })
     .catch(console.error);
