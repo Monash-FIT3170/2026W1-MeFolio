@@ -5,6 +5,7 @@ import "meteor/accounts-password";
 
 import "/imports/ui/Login/LoginPage.test.jsx";
 import "/imports/ui/Login/ForgotPasswordPage.test.jsx";
+import "/imports/ui/Login/ResetPasswordPage.test.jsx";
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
 import "/imports/api/projectClickTracking.test.js";

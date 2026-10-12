@@ -3,6 +3,7 @@ import { Meteor } from "meteor/meteor";
 import { LoginPage } from "./Login/LoginPage.jsx";
 import { SignUpPage } from "./Login/SignUpPage.jsx";
 import { ForgotPasswordPage } from "./Login/ForgotPasswordPage.jsx";
+import { ResetPasswordPage } from "./Login/ResetPasswordPage.jsx";
 import { TermsOfServicePage } from "./Terms & Conditions/TermsOfServicePage.jsx";
 import { PrivacyPolicyPage } from "./Terms & Conditions/PrivacyPolicyPage.jsx";
 import { PortfolioBuilderView } from "./Portfolio Builder/PortfolioBuilderView.jsx";
@@ -63,12 +64,11 @@ export const App = () => {
         <Route
           path="/forgot"
           element={
-            <ForgotPasswordPage
-              onBackToLogin={() => navigate("/login")}
-              onPasswordReset={() => navigate("/login")}
-            />
+            <ForgotPasswordPage onBackToLogin={() => navigate("/login")} />
           }
         />
+        {/* BUG-01: landing page for the emailed password-reset link. */}
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route
           path="/terms"
           element={<TermsOfServicePage onBack={() => navigate("/signup")} />}
