@@ -19,7 +19,7 @@ Meteor.methods({
 
     const portfolio = await PortfolioCollection.findOneAsync(
       { _id: portfolioId, isPublished: true },
-      { fields: { publishedContent: 1 } },
+      { fields: { publishedContent: 1, aiTwinConfiguration: 1 } },
     );
 
     if (!portfolio?.publishedContent) {
@@ -32,6 +32,7 @@ Meteor.methods({
     try {
       const answer = await answerPortfolioQuestion({
         portfolio: portfolio.publishedContent,
+        documents: portfolio.aiTwinConfiguration?.documents || [],
         question: trimmedMessage,
       });
 
