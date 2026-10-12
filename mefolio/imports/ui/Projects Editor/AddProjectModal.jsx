@@ -103,7 +103,13 @@ const MediaUpload = ({ file, onChange }) => {
   );
 };
 
-const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
+const AddProjectModal = ({
+  isOpen,
+  onClose,
+  onAdd: _onAdd,
+  portfolioId,
+  narrationEnabled = true,
+}) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const overlayRef = useRef(null);
@@ -349,7 +355,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             )}
           </div>
 
-          {isProjectNarrationEnabled() && (
+          {narrationEnabled && isProjectNarrationEnabled() && (
             <div>
               <label
                 htmlFor="case-study-narrative"
@@ -659,6 +665,7 @@ AddProjectModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onAdd: PropTypes.func.isRequired,
+  narrationEnabled: PropTypes.bool,
 };
 
 export default AddProjectModal;

@@ -4,7 +4,10 @@ import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { Buffer } from "buffer";
 import { env } from "process";
 import { PortfolioCollection } from "/imports/api/portfolio";
-import { isProjectNarrationEnabled } from "/imports/api/projectNarration";
+import {
+  isPortfolioNarrationEnabled,
+  isProjectNarrationEnabled,
+} from "/imports/api/projectNarration";
 
 export async function generateProjectNarration(text) {
   check(text, String);
@@ -98,11 +101,13 @@ export async function getPublishedNarrationAudio(portfolioId, projectId) {
     fields: {
       isPublished: 1,
       publishedNarrations: 1,
+      "publishedContent.narrationEnabled": 1,
     },
   });
 
   const narration =
     portfolio?.isPublished === true &&
+    isPortfolioNarrationEnabled(portfolio.publishedContent) &&
     Array.isArray(portfolio.publishedNarrations)
       ? portfolio.publishedNarrations.find(
           (publishedNarration) => publishedNarration?.projectId === projectId,
@@ -167,6 +172,12 @@ if (Meteor.isServer) {
         throw new Meteor.Error(
           "not-authorized",
           "You can only generate audio for your own portfolio.",
+        );
+      }
+      if (!isPortfolioNarrationEnabled(portfolio)) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Narration is turned off for this portfolio.",
         );
       }
 

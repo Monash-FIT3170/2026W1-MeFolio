@@ -6,6 +6,16 @@ import { Loader2, Mic, Pause, Play, Square } from "lucide-react";
 const requestNarration = (portfolioId, projectId) =>
   Meteor.callAsync("projects.getNarrationAudio", portfolioId, projectId);
 
+// Formats seconds as m:ss. Durations the browser can't report yet (NaN or
+// Infinity before metadata loads) show as 0:00.
+export const formatNarrationTime = (seconds) => {
+  const total =
+    Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  const minutes = Math.floor(total / 60);
+  const remainder = String(total % 60).padStart(2, "0");
+  return `${minutes}:${remainder}`;
+};
+
 /**
  * Custom audio player that lets visitors listen to a project's story.
  * Audio is only requested on the first Play so cards stay lightweight.
@@ -18,6 +28,8 @@ export function NarrationPlayer({
   const audioRef = useRef(null);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -56,11 +68,25 @@ export function NarrationPlayer({
     const audio = audioRef.current;
     audio.pause();
     audio.currentTime = 0;
+    setCurrentTime(0);
+    setStatus("idle");
+  };
+
+  const handleTimeUpdate = (event) => setCurrentTime(event.target.currentTime);
+  const handleDurationChange = (event) => {
+    const { duration: audioDuration } = event.target;
+    setDuration(Number.isFinite(audioDuration) ? audioDuration : 0);
+  };
+  const handleEnded = () => {
+    setCurrentTime(0);
     setStatus("idle");
   };
 
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
+  const showProgress = status === "playing" || status === "paused";
+  const progressPercent =
+    duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
     <div className="mb-4" data-testid="narration-player">
@@ -95,6 +121,31 @@ export function NarrationPlayer({
           <Square className="h-4 w-4" />
         </button>
       </div>
+      {showProgress && (
+        <div className="mt-2 flex items-center gap-2 px-1">
+          <div
+            role="progressbar"
+            aria-label="Narration progress"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatNarrationTime(currentTime)} of ${formatNarrationTime(duration)}`}
+            className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/30"
+          >
+            <div
+              data-testid="narration-progress-fill"
+              className="h-full rounded-full bg-accent1 transition-[width] duration-200"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <span
+            data-testid="narration-time"
+            className="shrink-0 text-xs font-semibold tabular-nums text-muted"
+          >
+            {formatNarrationTime(currentTime)} / {formatNarrationTime(duration)}
+          </span>
+        </div>
+      )}
       {error && (
         <p role="alert" className="mt-2 text-xs font-semibold text-accent2">
           {error}
@@ -103,7 +154,10 @@ export function NarrationPlayer({
       <audio
         ref={audioRef}
         preload="none"
-        onEnded={() => setStatus("idle")}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleDurationChange}
+        onDurationChange={handleDurationChange}
+        onEnded={handleEnded}
         hidden
       />
     </div>

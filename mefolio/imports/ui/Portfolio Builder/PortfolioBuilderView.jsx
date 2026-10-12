@@ -33,6 +33,11 @@ import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
+import { NarrationToggle } from "../Portfolio Preview/NarrationToggle";
+import {
+  isPortfolioNarrationEnabled,
+  isProjectNarrationEnabled,
+} from "../../api/projectNarration";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -308,6 +313,32 @@ const DashboardLayout = () => {
 
   const handleEditProject = (project) => setEditingProject(project);
 
+  // Owner-level switch for the whole narration feature. Piper is an external
+  // service, so this lets the owner turn narration off without touching the
+  // rest of the portfolio. It applies to the draft preview straight away and
+  // to the live portfolio on the next publish.
+  const portfolioNarrationEnabled =
+    isPortfolioNarrationEnabled(selectedPortfolio);
+
+  const handleNarrationToggle = (enabled) => {
+    const portfolioId = selectedPortfolio?._id;
+    if (!portfolioId) return;
+
+    Meteor.call(
+      "portfolios.update",
+      portfolioId,
+      { narrationEnabled: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+        }
+      },
+    );
+  };
+
   const handleSaveProject = (projectId, updates) => {
     Meteor.call("projects.update", projectId, updates, (error) => {
       if (error) {
@@ -475,6 +506,13 @@ const DashboardLayout = () => {
 
             {activeTab === "settings" && <LogoutButton />}
 
+            {activeTab === "projects" && isProjectNarrationEnabled() && (
+              <NarrationToggle
+                enabled={portfolioNarrationEnabled}
+                onChange={handleNarrationToggle}
+              />
+            )}
+
             {activeTab === "projects" && (
               <button
                 type="button"
@@ -588,6 +626,7 @@ const DashboardLayout = () => {
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
         portfolioId={selectedPortfolio?._id}
+        narrationEnabled={portfolioNarrationEnabled}
       />
 
       <EditProjectModal
@@ -596,6 +635,7 @@ const DashboardLayout = () => {
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
+        narrationEnabled={portfolioNarrationEnabled}
       />
       <DraftComparisonModal
         isOpen={isComparisonOpen}

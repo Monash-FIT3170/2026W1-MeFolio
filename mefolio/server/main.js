@@ -7,7 +7,7 @@ import {
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { isProjectNarrationEnabled } from "/imports/api/projectNarration";
+import { isPortfolioNarrationEnabled } from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
 
 // oauth login
@@ -759,6 +759,8 @@ Meteor.methods({
       _id: { $in: projectIds },
     }).fetchAsync();
 
+    const narrationEnabled = isPortfolioNarrationEnabled(portfolio);
+
     const orderedProjects = projectIds
       .map((projectId) =>
         projectRecords.find((project) => project._id === projectId),
@@ -776,7 +778,7 @@ Meteor.methods({
         media: project.media || "",
         status: project.status || "",
         narrationAvailable:
-          isProjectNarrationEnabled() &&
+          narrationEnabled &&
           typeof project.caseStudyNarrative === "string" &&
           Boolean(project.caseStudyNarrative.trim()),
         proofOfWorkMode: project.proofOfWorkMode || "standard",
@@ -801,7 +803,7 @@ Meteor.methods({
       );
     }
 
-    const publishedNarrations = isProjectNarrationEnabled()
+    const publishedNarrations = narrationEnabled
       ? projectIds
           .map((projectId) =>
             projectRecords.find((project) => project._id === projectId),
@@ -828,6 +830,7 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      narrationEnabled,
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {

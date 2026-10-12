@@ -66,6 +66,12 @@ if (Meteor.isServer) {
       sinon.assert.notCalled(fetchStub);
     });
 
+    it("rejects portfolios published with narration turned off", async function () {
+      portfolio.publishedContent = { narrationEnabled: false };
+      await assert.rejects(callMethod(), { error: "narration-not-available" });
+      sinon.assert.notCalled(fetchStub);
+    });
+
     it("rejects unknown portfolios and projects without contacting Piper", async function () {
       await assert.rejects(callMethod("missing"), {
         error: "narration-not-available",

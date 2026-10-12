@@ -16,7 +16,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { Meteor } from "meteor/meteor";
-import { NarrationPlayer } from "./NarrationPlayer.jsx";
+import { NarrationPlayer, formatNarrationTime } from "./NarrationPlayer.jsx";
 import { ProjectCard } from "./ProjectCard.jsx";
 
 const AUDIO_URL = "data:audio/wav;base64,UklGRg==";
@@ -96,6 +96,68 @@ if (Meteor.isClient) {
         .to.be.true;
     });
 
+    it("shows elapsed and total time on a progress bar while playing", async () => {
+      renderPlayer();
+      expect(screen.queryByRole("progressbar")).to.equal(null);
+
+      fireEvent.click(screen.getByRole("button", { name: /play narration/i }));
+      await screen.findByRole("button", { name: /pause narration/i });
+
+      const audio = screen
+        .getByTestId("narration-player")
+        .querySelector("audio");
+      Object.defineProperty(audio, "duration", {
+        value: 75,
+        configurable: true,
+      });
+      Object.defineProperty(audio, "currentTime", {
+        value: 30,
+        configurable: true,
+        writable: true,
+      });
+      fireEvent.durationChange(audio);
+      fireEvent.timeUpdate(audio);
+
+      const progress = screen.getByRole("progressbar", {
+        name: /narration progress/i,
+      });
+      expect(progress.getAttribute("aria-valuenow")).to.equal("30");
+      expect(progress.getAttribute("aria-valuemax")).to.equal("75");
+      expect(screen.getByTestId("narration-time").textContent).to.equal(
+        "0:30 / 1:15",
+      );
+      expect(
+        screen.getByTestId("narration-progress-fill").style.width,
+      ).to.equal("40%");
+
+      // Stays visible while paused so the visitor can see where they are.
+      fireEvent.click(screen.getByRole("button", { name: /pause narration/i }));
+      expect(screen.getByRole("progressbar")).to.exist;
+
+      fireEvent.click(screen.getByRole("button", { name: /stop narration/i }));
+      expect(screen.queryByRole("progressbar")).to.equal(null);
+    });
+
+    it("hides the progress bar when the narration finishes", async () => {
+      renderPlayer();
+      fireEvent.click(screen.getByRole("button", { name: /play narration/i }));
+      await screen.findByRole("button", { name: /pause narration/i });
+      expect(screen.getByRole("progressbar")).to.exist;
+
+      fireEvent.ended(
+        screen.getByTestId("narration-player").querySelector("audio"),
+      );
+      expect(screen.queryByRole("progressbar")).to.equal(null);
+    });
+
+    it("formats narration times as minutes and seconds", () => {
+      expect(formatNarrationTime(0)).to.equal("0:00");
+      expect(formatNarrationTime(9.8)).to.equal("0:09");
+      expect(formatNarrationTime(75)).to.equal("1:15");
+      expect(formatNarrationTime(Infinity)).to.equal("0:00");
+      expect(formatNarrationTime(NaN)).to.equal("0:00");
+    });
+
     it("shows a loading state while the audio is generated", async () => {
       let finishLoading;
       renderPlayer(
@@ -163,8 +225,10 @@ if (Meteor.isClient) {
 
       render(<ProjectCard project={project} />);
       expect(screen.queryByTestId("narration-player")).to.equal(null);
-      expect(screen.getByRole("button", { name: /voice summary/i }).disabled).to
-        .be.true;
+      expect(
+        screen.getByRole("button", { name: /no narration available/i })
+          .disabled,
+      ).to.be.true;
     });
 
     it("explains when a draft project has no narration text", () => {
@@ -272,8 +336,9 @@ if (Meteor.isClient) {
         );
 
         expect(screen.queryByTestId("narration-player")).to.equal(null);
-        expect(screen.getByRole("button", { name: /voice summary/i }).disabled)
-          .to.be.true;
+        expect(screen.getByRole("status").textContent).to.equal(
+          "No narration added for this project.",
+        );
         sinon.assert.notCalled(callStub);
       });
     });
