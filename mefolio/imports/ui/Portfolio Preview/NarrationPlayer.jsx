@@ -2,9 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { Loader2, Mic, Pause, Play, Square } from "lucide-react";
+import { NARRATION_VOICES, DEFAULT_VOICE_ID } from "../../api/narrationVoices";
 
-const requestNarration = (portfolioId, projectId) =>
-  Meteor.callAsync("projects.getNarrationAudio", portfolioId, projectId);
+const VOICE_STORAGE_KEY = "mefolio.narrationVoice";
+
+const readSavedVoice = () => {
+  try {
+    const saved = window.localStorage.getItem(VOICE_STORAGE_KEY);
+    return NARRATION_VOICES.some((voice) => voice.id === saved)
+  ? saved
+  : DEFAULT_VOICE_ID;
+  } catch {
+    return DEFAULT_VOICE_ID;
+  }
+};
+
+const requestNarration = (portfolioId, projectId, voiceId) =>
+  Meteor.callAsync("projects.getNarrationAudio", portfolioId, projectId, voiceId);
 
 // Formats seconds as m:ss. Durations the browser can't report yet (NaN or
 // Infinity before metadata loads) show as 0:00.
@@ -30,6 +44,8 @@ export function NarrationPlayer({
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [voiceId, setVoiceId] = useState(readSavedVoice);
+  const requestId = useRef(0);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -42,15 +58,19 @@ export function NarrationPlayer({
 
   const handlePlay = async () => {
     const audio = audioRef.current;
+    const token = requestId.current;
     setError("");
     try {
       if (!audio.getAttribute("src")) {
         setStatus("loading");
-        audio.src = await loadAudio(portfolioId, projectId);
+        const src = await loadAudio(portfolioId, projectId, voiceId);
+        if (token !== requestId.current) return;
+        audio.src = src;
       }
       await audio.play();
       setStatus("playing");
     } catch (playError) {
+      if (token !== requestId.current) return;
       setStatus("idle");
       setError(
         playError?.reason ||
@@ -82,6 +102,27 @@ export function NarrationPlayer({
     setStatus("idle");
   };
 
+  const handleVoiceChange = (event) => {
+    const next = event.target.value;
+    if (!NARRATION_VOICES.some((voice) => voice.id === next)) return;
+
+    requestId.current += 1;
+    const audio = audioRef.current;
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    setCurrentTime(0);
+    setDuration(0);
+    setStatus("idle");
+    setError("");
+    setVoiceId(next);
+    try {
+      window.localStorage.setItem(VOICE_STORAGE_KEY, next);
+    } catch {
+      // storage unavailable
+    }
+  };
+
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
   const showProgress = status === "playing" || status === "paused";
@@ -95,6 +136,18 @@ export function NarrationPlayer({
         <span className="flex-1 text-sm font-bold text-primary">
           {isLoading ? "Loading audio..." : "Voice Summary"}
         </span>
+        <select aria-label="Narration voice"
+        value={voiceId}
+        onChange={handleVoiceChange}
+        disabled={isLoading}
+        className="h-9 rounded-lg border border-line bg-background px-2 text-xs font-semibold text-primary disabled:cursor-wait disabled:opacity-50"
+        >
+          {NARRATION_VOICES.map((voice) => (
+            <option key={voice.id} value={voice.id}>
+              {voice.label}
+              </option>
+            ))}
+            </select>
         <button
           type="button"
           onClick={isPlaying ? handlePause : handlePlay}

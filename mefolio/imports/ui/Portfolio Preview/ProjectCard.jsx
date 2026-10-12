@@ -57,6 +57,7 @@ export function ProjectCard({
       "projects.generateNarration",
       ownerPortfolioId,
       draftNarrationText,
+      voiceId
     );
 
   const handleProjectClick = (target) => {
