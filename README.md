@@ -341,7 +341,7 @@ Sometimes the CI test runner shows "CLIENT FAILURES: 1" without displaying the e
 
 ### Deployment Strategy
 
-The previous handover reports staging and production on Meteor Galaxy, with `dev` intended for staging and `main` for production. Confirm live app URLs, organisation access, database provider, settings and billing with the account owner. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
+Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy. The Galaxy account logs in with the MeFolio admin email; billing is handed over by adding the incoming owner's company card to that account (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#billing-handover)). Confirm live app URLs and database backup settings in the Galaxy dashboard. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
 
 
 #### Staging Environment
@@ -400,7 +400,7 @@ Publish GitHub release notes describing changes, known issues, dependency/runtim
 3. Implement the change, add relevant tests and update affected documentation. Keep secrets and unrelated generated output out of the diff.
 4. From `mefolio`, run tests, lint and a formatting check. Push the branch and open a PR targeting `dev`; copy [pull_request_template.md](pull_request_template.md) into the description because the root filename does not establish automatic GitHub template loading.
 5. Include the issue reference, change summary, test evidence, screenshots for UI changes, risks/migrations/rollback, and the extent of Generative AI use (explicitly state none if not used).
-6. Require at least one authorised maintainer review, passing test/lint/format checks and resolved review comments before merge. Prefer squash-merging feature PRs; the administrator should enforce required checks/reviews through branch protection.
+6. Require at least one code owner review (see [.github/CODEOWNERS](.github/CODEOWNERS)), passing test/lint/format checks and resolved review comments before merge. Prefer squash-merging feature PRs; the administrator should enforce required checks/reviews through branch protection.
 7. Release via a reviewed `dev` to `main` PR, tag the approved commit and follow the deployment runbook. Urgent production fixes may target `main` with the same review/check requirements, then be brought back into `dev`.
 
 ---
@@ -444,6 +444,7 @@ Publish GitHub release notes describing changes, known issues, dependency/runtim
 For questions about specific features or issues:
 - Check existing GitHub issues for similar problems
 - Review inline code comments and JSDoc documentation
-- Use the successor's nominated support contact once ownership is accepted. The team list is historical attribution, not a commitment to support after Week 12.
+- Code maintainers: Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02). They are listed in [.github/CODEOWNERS](.github/CODEOWNERS), so GitHub requests their review on every PR.
+- The rest of the team list is historical attribution, not a commitment to support after Week 12.
 
 ---

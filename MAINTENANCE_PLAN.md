@@ -6,14 +6,15 @@ Prepared: 12 October 2026. Scope: the repository at the time of this update and 
 
 This plan describes how student contributions will end, how MeFolio can remain maintainable, and what must happen to production services after Week 12. Students have no obligation to provide ongoing development, support, on-call coverage or funding after the project ends.
 
-The proposed operating model is **handover to an explicitly nominated project owner if ownership and funding are accepted; otherwise, controlled shutdown**. It is not a promise of indefinite availability. The repository does not establish a current billing owner, budget, hosting expiry date or agreed successor. These must be confirmed with the project stakeholder before Week 12 ends.
+The operating model is **continued hosting (Option A), handed over by changing the billing card on the MeFolio admin account; controlled shutdown (Option B) is the fallback** if no one takes over billing. It is not a promise of indefinite availability. Remaining billing details must be confirmed with the project stakeholder before Week 12 ends.
 
-| Decision requiring stakeholder confirmation | Status at preparation |
+| Decision | Status |
 | --- | --- |
-| Accountable project owner and incoming technical maintainer | Not confirmed in repository |
-| Production/staging URLs, Galaxy organisation and database provider | Existing README reports Galaxy hosting; live configuration not verified |
-| Hosting, database, storage and domain costs; payer and renewal dates | Not confirmed; obtain actual account invoices and subscription details |
-| Continue hosting or shut down, and the effective date | Proposed decision gate: end of Week 12; stakeholder approval pending |
+| Code maintainers | Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02), recorded in [CODEOWNERS](.github/CODEOWNERS) |
+| Accountable project owner and billing payer | Pending: the incoming owner adds their company card to the hosting account (see section 5) |
+| Hosting and database | Meteor Galaxy hosts the app and its MongoDB database. Production/staging URLs and backup settings to be checked in the Galaxy dashboard |
+| Hosting, database, storage and domain costs; renewal dates | Pending: record the plan and monthly cost from the Galaxy billing page |
+| Continue hosting or shut down, and the effective date | Continue hosting, subject to billing being transferred by the end of Week 12 |
 | Data retention/deletion policy, user notice period and backup custodian | Must be approved before transfer or shutdown |
 
 Record the named owner, payer, approved budget, decision date and service end/renewal dates in this document before sign-off. Do not put passwords, API tokens, private connection strings or billing details in Git.
@@ -82,6 +83,17 @@ Shutdown preserves the ability to restart from source and authorised backups; it
 | Domain/DNS, if used | Registrar, renewal date and any paid DNS/TLS services | Accepting domain/project owner |
 | CI and external integrations | GitHub Actions quotas, optional GitHub API access and provider terms; no separate paid email service is established by the inspected visit-notification code | Successor organisation if charges arise |
 | Maintenance labour | Security updates, incident handling and future development | Successor's agreed staff/volunteer arrangement; no student commitment |
+
+### Billing Handover
+
+The Meteor Galaxy account (app hosting and database) logs in with the MeFolio admin email, and its costs are charged to the card on that account. To hand over billing:
+
+1. Give the incoming owner access to the MeFolio admin email and Galaxy account through a secure channel, never through Git or a shared document. Move the admin email's recovery details and multi-factor authentication to the incoming owner.
+2. The incoming owner adds themselves as an account administrator and adds their company card as the billing method.
+3. Remove the previous card once the new one is active, then change the account password.
+4. Set a billing alert or spending cap and record the alert recipient here.
+
+Card numbers, passwords and invoices must not be recorded in this repository.
 
 The outgoing students are **not committing to bear future costs**. The accepting stakeholder/organisation should bear approved costs, but no named payer or funding agreement is verified here. Existing account holders must check their present billing liability with their providers and transfer or cancel it explicitly; this plan does not itself change a billing contract.
 
