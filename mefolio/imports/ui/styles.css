@@ -46,7 +46,8 @@ html,
 }
 
 [data-theme="default"] {
-  --font-main: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-main:
+    system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   --theme-background: #f6f8fa;
   --theme-selected: #e0e7ff;
   --theme-primary: #000000;
@@ -61,7 +62,9 @@ html,
 }
 
 [data-theme="terminal-retro"] {
-  --font-main: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-main:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   --theme-background: #000000;
   --theme-selected: #000000;
   --theme-primary: #00ff00;
@@ -76,7 +79,8 @@ html,
 }
 
 [data-theme="modern-saas"] {
-  --font-main: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-main:
+    system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   --theme-background: #111111;
   --theme-selected: #0160d9;
   --theme-primary: #ffffff;
@@ -91,7 +95,8 @@ html,
 }
 
 [data-theme="minimalist"] {
-  --font-main: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-main:
+    system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   --theme-background: #f8fafc;
   --theme-selected: #e5e7eb;
   --theme-primary: #111827;
