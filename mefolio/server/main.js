@@ -1,5 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
+import { WebApp } from "meteor/webapp";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import {
@@ -31,6 +32,12 @@ import "./portfolio-indexes.js";
 // register github methods for sync
 import "./github-methods.js";
 import { validateChallenge } from "./challenge-methods.js";
+
+// cache middleware
+import {
+  shouldCachePortfolioView,
+  applyCacheHeaders,
+} from "./cache-middleware.js";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -278,6 +285,16 @@ Meteor.startup(async () => {
         }),
       ),
     );
+  }
+
+  // FEAT-28: Performance Hardening -- Cache Headers
+  if (Meteor.isProduction) {
+    WebApp.rawConnectHandlers.use((req, res, next) => {
+      if (shouldCachePortfolioView(req)) {
+        applyCacheHeaders(res);
+      }
+      next();
+    });
   }
 });
 
