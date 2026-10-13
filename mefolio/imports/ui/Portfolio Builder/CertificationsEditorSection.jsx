@@ -161,7 +161,10 @@ const CertificationsEditorSection = ({
               <p className="min-w-0 flex-1 text-sm text-muted">
                 {credlyUsername ? (
                   <>
-                    Credly username: <span className="font-medium text-primary">{credlyUsername}</span>
+                    Credly username:{" "}
+                    <span className="font-medium text-primary">
+                      {credlyUsername}
+                    </span>
                   </>
                 ) : (
                   "Link a Credly username to import your public certifications."
