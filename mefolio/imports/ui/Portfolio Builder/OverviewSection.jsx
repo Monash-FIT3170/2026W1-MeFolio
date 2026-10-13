@@ -91,7 +91,7 @@ const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
           </button>
         </div>
         <p className="mt-1 block text-xs text-primary">
-          Showing 3 of {visitors.length}
+          Showing {Math.min(3, visitors.length)} of {visitors.length}
         </p>
 
         <div>
