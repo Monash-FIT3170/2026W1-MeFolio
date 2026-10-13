@@ -560,7 +560,9 @@ const DashboardLayout = () => {
                   <CertificationsEditorSection
                     portfolioId={selectedPortfolio?._id}
                     certifications={selectedPortfolio?.certifications || []}
-                    credlyUsername={snapshot.user?.profile?.credlyUsername || ""}
+                    credlyUsername={
+                      snapshot.user?.profile?.credlyUsername || ""
+                    }
                   />
                 </div>
               ) : activeTab === "themes" ? (
