@@ -276,7 +276,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
       setPendingDocs([]);
       clearDirty();
       setStatus({
-        message: "Your AI twin information has been saved.",
+        message: "Your AI twin has saved your information.",
         isError: false,
       });
     } catch (error) {
@@ -292,7 +292,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
       aria-labelledby="ai-twin-title"
     >
       <h2 id="ai-twin-title" className="m-0 text-lg font-bold text-primary">
-        Tell your AI twin about you
+        Tell your AI twin about yourself
       </h2>
       <p className="mt-1 text-sm text-primary">
         Add notes or text-based files, and label each one so your AI twin only
