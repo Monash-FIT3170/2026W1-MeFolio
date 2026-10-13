@@ -19,6 +19,7 @@ if (Meteor.isClient) {
         title: "AI Portfolio Dashboard",
         description: "An interactive portfolio with AI-powered analytics",
         technologies: ["React", "Meteor", "Tailwind"],
+        githubLink: "https://github.com/example/ai-portfolio-dashboard",
         stars: 42,
       };
 

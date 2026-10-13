@@ -36,6 +36,37 @@ Accounts.config({
   loginExpirationInDays: 1,
 });
 
+/* global process */
+// BUG-01: real password-reset email delivery.
+// Meteor sends mail through its built-in SMTP transport when MAIL_URL is set;
+// with no MAIL_URL it only logs the email, which is why resets previously did
+// nothing. Keep the real MAIL_URL out of VCS (an env var in staging, or private
+// settings locally) — only a placeholder lives in oauth.settings.example.json.
+if (!process.env.MAIL_URL && Meteor.settings.private?.MAIL_URL) {
+  process.env.MAIL_URL = Meteor.settings.private.MAIL_URL;
+}
+
+Accounts.emailTemplates.siteName = "MeFolio";
+// The sender must match the provider's authenticated/verified address or real
+// mail will be rejected or spam-filtered, so read it from settings and fall
+// back to a generic address only when none is configured.
+Accounts.emailTemplates.from =
+  Meteor.settings.private?.MAIL_FROM || "MeFolio <no-reply@mefolio.app>";
+
+// Point the reset link at our in-app react-router route (not Meteor's default
+// hash URL) so /reset-password/:token renders the ResetPasswordPage.
+Accounts.urls.resetPassword = (token) =>
+  Meteor.absoluteUrl(`reset-password/${token}`);
+
+Accounts.emailTemplates.resetPassword = {
+  subject: () => "Reset your MeFolio password",
+  text: (user, url) =>
+    "Hello,\n\n" +
+    "We received a request to reset your MeFolio password. Click the link " +
+    `below to choose a new one:\n\n${url}\n\n` +
+    "If you didn't request this, you can safely ignore this email.\n\n— MeFolio",
+};
+
 Meteor.startup(async () => {
   let sampleUserId;
   const existingSampleUser =

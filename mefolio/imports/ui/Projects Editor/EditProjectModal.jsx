@@ -92,8 +92,32 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
     if (!form.description.trim()) e.description = "Description is required.";
-    if (form.githubLink && !/^https?:\/\/.+/.test(form.githubLink))
-      e.githubLink = "Enter a valid URL (starting with http).";
+    const githubLink = form.githubLink.trim();
+    if (githubLink) {
+      try {
+        const url = new URL(githubLink);
+        const parts = url.pathname.split("/").filter(Boolean);
+        const repository = parts[1]?.replace(/\.git$/, "");
+
+        if (
+          url.protocol !== "https:" ||
+          !["github.com", "www.github.com"].includes(url.hostname) ||
+          url.port ||
+          url.username ||
+          url.password ||
+          url.search ||
+          url.hash ||
+          parts.length !== 2 ||
+          !parts[0] ||
+          !repository
+        ) {
+          throw new Error("Invalid repository URL");
+        }
+      } catch {
+        e.githubLink =
+          "Enter the main GitHub repository URL, e.g., https://github.com/owner/repo";
+      }
+    }
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with http).";
     if (form.proofOfWorkMode === "interactive") {
