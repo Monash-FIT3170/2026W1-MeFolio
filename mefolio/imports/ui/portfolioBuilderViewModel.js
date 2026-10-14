@@ -22,37 +22,34 @@ export const mapOverviewStats = (portfolios) => {
 export const mapLiveVisitors = (portfolios) => {
   if (!portfolios?.length) return [];
 
-  const viewers = portfolios[0]?.viewers || [];
+  const viewers = portfolios?.[0]?.viewers || [];
   if (!viewers.length) return [];
 
-  return viewers.map((viewer, index) => {
-    const displayName =
-      viewer.name && viewer.name !== viewer.userId && viewer.name !== "Guest"
-        ? viewer.name
-        : "Anonymous Viewer";
-    const connectedAt = viewer.connectedAt
-      ? new Date(viewer.connectedAt)
-      : null;
-    const duration = connectedAt
-      ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
-      : "Live now";
+  return viewers.filter(Boolean).map((viewer, index) => {
+    let locationLabel = "Location not shared";
+
+    if (viewer.location && typeof viewer.location === "object") {
+      const { city, countryCode } = viewer.location;
+      if (city && countryCode) {
+        locationLabel = `${city}, ${countryCode}`;
+      } else if (city) {
+        locationLabel = city;
+      } else {
+        locationLabel = "Location saved, no city";
+      }
+    } else if (viewer.userId) {
+      locationLabel = "Signed in";
+    }
 
     return {
-      id:
-        viewer.connectionId || viewer.userId || `viewer-${index}-${Date.now()}`,
-      name: displayName,
+      id: viewer.connectionId || viewer.userId || `viewer-${index}`,
+      name: viewer.name || "Anonymous Viewer",
       email: viewer.email || "",
       activity: "Viewing portfolio",
-      location: (() => {
-        const loc = viewer.location;
-        if (loc?.city && loc?.countryCode) return `${loc.city}, ${loc.countryCode}`;
-        if (loc?.city) return loc.city;
-        if (typeof loc?.lat === "number" && typeof loc?.lng === "number")
-          return `${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`;
-        if (viewer.userId) return "Signed in";
-        return "Location not shared";
-      })(),
-      duration,
+      location: locationLabel,
+      duration: viewer.connectedAt
+        ? `${Math.max(0, Math.floor((Date.now() - new Date(viewer.connectedAt).getTime()) / 60000))} min ago`
+        : "Live now",
       active: true,
     };
   });

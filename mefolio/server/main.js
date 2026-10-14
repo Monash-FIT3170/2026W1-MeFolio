@@ -407,6 +407,8 @@ const removePortfolioViewer = async (connectionId) => {
   const entry = activeViewerConnections.get(connectionId);
   if (!entry) return;
 
+  if (startedAt && entry.viewer.connectedAt > startedAt) return;
+
   await PortfolioCollection.updateAsync(entry.portfolioId, {
     $pull: { viewers: { connectionId } },
   });
@@ -893,15 +895,29 @@ Meteor.methods({
       capturedAt: new Date(),
     };
 
-    const updatedCount = await PortfolioCollection.updateAsync(
-      {
-        _id: portfolioId,
-        "viewers.connectionId": connectionId,
-      },
-      {
-        $set: { "viewers.$.location": locationEntry },
-      },
+    let updatedCount = await PortfolioCollection.updateAsync(
+      { _id: portfolioId, "viewers.connectionId": connectionId },
+      { $set: { "viewers.$.location": locationEntry } },
     );
+
+    if (!updatedCount) {
+      const published = await PortfolioCollection.findOneAsync({
+        _id: portfolioId,
+        isPublished: true,
+      });
+      if (!published) {
+        throw new Meteor.Error(
+          "portfolios.recordViewerLocation.notFound",
+          "Portfolio not found.",
+        );
+      }
+
+      const viewer = await getViewerData(this);
+      if (!viewer) return 0;
+      viewer.location = locationEntry;
+      await addPortfolioViewer(portfolioId, viewer);
+      return 1;
+    }
 
     const activeViewer = activeViewerConnections.get(connectionId);
     if (activeViewer?.portfolioId === portfolioId) {

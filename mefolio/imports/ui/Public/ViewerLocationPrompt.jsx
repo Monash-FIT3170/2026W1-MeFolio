@@ -4,9 +4,7 @@ import PropTypes from "prop-types";
 import { MapPin } from "lucide-react";
 
 // Small inline prompt on the public portfolio view letting a visitor share
-// their location with the owner. Only fires on user click (no auto-prompt),
-// truncates coordinates to ~1km precision before sending, and reverse-geocodes
-// client-side via BigDataCloud's free endpoint.
+// their location with the owner.
 const ViewerLocationPrompt = ({ portfolioId }) => {
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
   const [message, setMessage] = useState("");
@@ -28,10 +26,6 @@ const ViewerLocationPrompt = ({ portfolioId }) => {
         // Truncate to 2 decimal places for ~1km precision.
         const lat = Math.round(position.coords.latitude * 100) / 100;
         const lng = Math.round(position.coords.longitude * 100) / 100;
-
-        // Reverse-geocode in the browser so we don't need an API key or
-        // server round trip. BigDataCloud's client endpoint is free and
-        // CORS-friendly. Failure is fine — we still send coords.
         let city = "";
         let countryCode = "";
 
@@ -45,21 +39,20 @@ const ViewerLocationPrompt = ({ portfolioId }) => {
             countryCode = data.countryCode || "";
           }
         } catch {
-          // Ignore — we'll still record the coords.
         }
 
         Meteor.call(
           "portfolios.recordViewerLocation",
           portfolioId,
           { lat, lng, city, countryCode },
-          (err) => {
-            if (err) {
+          (err, count) => {
+            if (err || !count) {
               setStatus("error");
               setMessage("Couldn't save your location.");
               return;
             }
             setStatus("done");
-            setMessage("Thanks — your location was shared.");
+            setMessage("Thanks! Your location was shared.");
           },
         );
       },

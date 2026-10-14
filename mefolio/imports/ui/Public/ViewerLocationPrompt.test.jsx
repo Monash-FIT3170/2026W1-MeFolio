@@ -22,7 +22,7 @@ if (Meteor.isClient) {
         },
       });
 
-      // Stub fetch (reverse-geocode)
+      // Stub fetch
       originalFetch = global.fetch;
       global.fetch = () =>
         Promise.resolve({
@@ -80,10 +80,10 @@ if (Meteor.isClient) {
       const [methodName, portfolioId, location] = methodCalls[0];
       expect(methodName).to.equal("portfolios.recordViewerLocation");
       expect(portfolioId).to.equal("abc123");
-      // Truncated to 2dp
+
       expect(location.lat).to.equal(-33.88);
       expect(location.lng).to.equal(151.21);
-      // Geocode data preserved
+
       expect(location.city).to.equal("Sydney");
       expect(location.countryCode).to.equal("AU");
     });
