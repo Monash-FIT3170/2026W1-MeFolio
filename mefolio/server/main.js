@@ -376,6 +376,7 @@ const getViewerData = async (publication) => {
     email,
     connectedAt: new Date(),
     lastSeenAt: new Date(),
+    location: null, 
   };
 
   if (publication.userId) {
@@ -853,6 +854,58 @@ Meteor.methods({
 
     if (activeViewer?.portfolioId === portfolioId) {
       activeViewer.viewer.lastSeenAt = lastSeenAt;
+      activeViewerConnections.set(connectionId, activeViewer);
+    }
+
+    return updatedCount;
+  },
+
+  async "portfolios.recordViewerLocation"(portfolioId, location) {
+    check(portfolioId, String);
+    check(location, {
+      lat: Number,
+      lng: Number,
+      city: String,
+      countryCode: String,
+    });
+
+    const connectionId = this.connection?.id;
+    if (!connectionId) return 0;
+
+    // Reject nonsensical coordinates
+    if (
+      location.lat < -90 ||
+      location.lat > 90 ||
+      location.lng < -180 ||
+      location.lng > 180
+    ) {
+      throw new Meteor.Error(
+        "portfolios.recordViewerLocation.invalidCoords",
+        "Coordinates out of range.",
+      );
+    }
+
+    const locationEntry = {
+      lat: location.lat,
+      lng: location.lng,
+      city: String(location.city).slice(0, 100),
+      countryCode: String(location.countryCode).slice(0, 8),
+      capturedAt: new Date(),
+    };
+
+    const updatedCount = await PortfolioCollection.updateAsync(
+      {
+        _id: portfolioId,
+        "viewers.connectionId": connectionId,
+      },
+      {
+        $set: { "viewers.$.location": locationEntry },
+      },
+    );
+
+    const activeViewer = activeViewerConnections.get(connectionId);
+    if (activeViewer?.portfolioId === portfolioId) {
+      activeViewer.viewer.location = locationEntry;
       activeViewerConnections.set(connectionId, activeViewer);
     }
 

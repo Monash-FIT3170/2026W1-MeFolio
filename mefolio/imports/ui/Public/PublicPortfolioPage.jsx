@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioContent } from "../Portfolio Preview/PortfolioContent.jsx";
 import { getPublishedTheme } from "../Portfolio Preview/publishedTheme.js";
+import ViewerLocationPrompt from "./ViewerLocationPrompt.jsx";
 
 /**
  * FEAT-12: the portfolio as a visitor sees it.
@@ -105,6 +106,12 @@ export const PublicPortfolioPage = () => {
         portfolioId={portfolioId}
         projects={publishedContent.projects || []}
       />
+
+      <div className="pointer-events-none fixed bottom-5 right-5 z-40">
+        <div className="pointer-events-auto">
+          <ViewerLocationPrompt portfolioId={portfolioId} />
+        </div>
+      </div>
     </div>
   );
 };

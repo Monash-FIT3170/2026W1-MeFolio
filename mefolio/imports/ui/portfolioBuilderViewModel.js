@@ -43,7 +43,15 @@ export const mapLiveVisitors = (portfolios) => {
       name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
-      location: viewer.userId ? "Signed in" : "Guest",
+      location: (() => {
+        const loc = viewer.location;
+        if (loc?.city && loc?.countryCode) return `${loc.city}, ${loc.countryCode}`;
+        if (loc?.city) return loc.city;
+        if (typeof loc?.lat === "number" && typeof loc?.lng === "number")
+          return `${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`;
+        if (viewer.userId) return "Signed in";
+        return "Location not shared";
+      })(),
       duration,
       active: true,
     };
