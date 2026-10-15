@@ -376,7 +376,7 @@ const getViewerData = async (publication) => {
     email,
     connectedAt: new Date(),
     lastSeenAt: new Date(),
-    location: null, 
+    location: null,
   };
 
   if (publication.userId) {
@@ -406,8 +406,6 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
 const removePortfolioViewer = async (connectionId) => {
   const entry = activeViewerConnections.get(connectionId);
   if (!entry) return;
-
-  if (startedAt && entry.viewer.connectedAt > startedAt) return;
 
   await PortfolioCollection.updateAsync(entry.portfolioId, {
     $pull: { viewers: { connectionId } },

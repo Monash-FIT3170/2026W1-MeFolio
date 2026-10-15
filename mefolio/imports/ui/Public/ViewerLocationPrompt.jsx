@@ -39,6 +39,7 @@ const ViewerLocationPrompt = ({ portfolioId }) => {
             countryCode = data.countryCode || "";
           }
         } catch {
+          //Ignore reverse-geocoding error
         }
 
         Meteor.call(

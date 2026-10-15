@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { expect } from "chai";
 import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
-import { ViewerLocationPrompt } from "./ViewerLocationPrompt.jsx";
+import ViewerLocationPrompt from "./ViewerLocationPrompt.jsx";
 
 if (Meteor.isClient) {
   describe("ViewerLocationPrompt", function () {
@@ -23,8 +23,8 @@ if (Meteor.isClient) {
       });
 
       // Stub fetch
-      originalFetch = global.fetch;
-      global.fetch = () =>
+      originalFetch = globalThis.fetch;
+      globalThis.fetch = () =>
         Promise.resolve({
           ok: true,
           json: () =>
@@ -38,9 +38,10 @@ if (Meteor.isClient) {
       originalCall = Meteor.call;
       Meteor.call = (...args) => {
         methodCalls.push(args);
-        // Invoke the callback with no error
+
+        // Simulate a successful database update.
         const cb = args[args.length - 1];
-        if (typeof cb === "function") cb(null);
+        if (typeof cb === "function") cb(null, 1);
       };
     });
 
@@ -50,7 +51,7 @@ if (Meteor.isClient) {
         configurable: true,
         value: originalGeolocation,
       });
-      global.fetch = originalFetch;
+      globalThis.fetch = originalFetch;
       Meteor.call = originalCall;
     });
 
@@ -119,7 +120,7 @@ if (Meteor.isClient) {
     });
 
     it("still sends coordinates if reverse-geocoding fails", async function () {
-      global.fetch = () => Promise.reject(new Error("network down"));
+      globalThis.fetch = () => Promise.reject(new Error("network down"));
 
       navigator.geolocation.getCurrentPosition = (onSuccess) => {
         onSuccess({ coords: { latitude: -33.87, longitude: 151.21 } });
