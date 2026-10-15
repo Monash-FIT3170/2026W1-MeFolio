@@ -2,6 +2,7 @@ import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { incrementChatQuestionCount } from "./chatMetrics.js";
 import { answerPortfolioQuestion } from "./chatService.js";
 
 Meteor.methods({
@@ -29,6 +30,8 @@ Meteor.methods({
         "This portfolio is not available.",
       );
     }
+
+    await incrementChatQuestionCount();
 
     try {
       const answer = await answerPortfolioQuestion({
