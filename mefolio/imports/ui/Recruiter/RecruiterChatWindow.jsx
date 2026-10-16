@@ -84,7 +84,7 @@ export function RecruiterChatWindow({ portfolioId }) {
         aria-haspopup="dialog"
         aria-controls="recruiter-chat-dialog"
         aria-expanded={isOpen}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 border border-muted rounded-full bg- px-5 py-3 font-bold text-secondary shadow-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full border border-line bg-primary px-5 py-3 font-bold text-background shadow-lg hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
       >
         <MessageCircle className="h-5 w-5" aria-hidden="true" />
         Ask AI

@@ -8,19 +8,30 @@ import {
   categoryLabel,
   guessCategory,
 } from "../../models/aiTwinCategories.js";
- 
+
 const TEXT_EXTENSIONS = new Set([
-  "txt", "md", "markdown", "rst", "adoc", "json", "yaml", "yml",
-  "csv", "html", "htm", "xml",
+  "txt",
+  "md",
+  "markdown",
+  "rst",
+  "adoc",
+  "json",
+  "yaml",
+  "yml",
+  "csv",
+  "html",
+  "htm",
+  "xml",
 ]);
- 
-const ACCEPT = ".md,.markdown,.txt,.rst,.adoc,.json,.yaml,.yml,.csv,.html,.htm,.xml";
- 
+
+const ACCEPT =
+  ".md,.markdown,.txt,.rst,.adoc,.json,.yaml,.yml,.csv,.html,.htm,.xml";
+
 const tabClass = (active) =>
   active
     ? "rounded-md bg-selected px-3 py-1.5 text-sm font-semibold text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1"
     : "rounded-md px-3 py-1.5 text-sm font-semibold text-muted hover:bg-selected hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1";
- 
+
 const labelClass = "mb-2 block text-sm font-medium text-primary";
 const helperClass = "mt-2 text-xs text-muted";
 const fieldClass =
@@ -29,15 +40,16 @@ const ghostButtonClass =
   "rounded-md px-3 py-1.5 text-sm font-semibold text-primary hover:bg-selected focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1";
 const primaryButtonClass =
   "rounded-md bg-button px-4 py-2 text-sm font-semibold text-secondary hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent1 disabled:cursor-not-allowed disabled:opacity-40";
- 
+
 const formatSize = (chars) => `${Math.max(1, Math.round(chars / 1024))} KB`;
- 
-const CategorySelect = ({ id, value, onChange, label }) => (
+
+const CategorySelect = ({ id, value, onChange, label, disabled = false }) => (
   <select
     id={id}
     value={value}
     onChange={(event) => onChange(event.target.value)}
     aria-label={label}
+    disabled={disabled}
     className={fieldClass}
   >
     {AI_TWIN_CATEGORIES.map((category) => (
@@ -47,36 +59,46 @@ const CategorySelect = ({ id, value, onChange, label }) => (
     ))}
   </select>
 );
- 
-const DocumentRow = ({ doc, onCategoryChange, onRemove }) => (
+
+const DocumentRow = ({ doc, onCategoryChange, onRemove, disabled = false }) => (
   <li className="grid grid-cols-1 items-center gap-3 border-b border-line py-3 last:border-b-0 sm:grid-cols-[1fr_14rem_auto]">
     <div className="min-w-0">
       <p className="m-0 truncate text-sm font-semibold text-primary">
         {doc.title}
       </p>
       <p className="m-0 mt-0.5 text-xs text-muted">
-        {doc.kind === "file" ? "File" : "Written note"}, {formatSize(doc.content.length)}
+        {doc.kind === "file" ? "File" : "Written note"},{" "}
+        {formatSize(doc.content.length)}
       </p>
     </div>
- 
+
     <CategorySelect
       value={doc.category}
       onChange={(value) => onCategoryChange(doc.id, value)}
       label={`Category for ${doc.title}`}
+      disabled={disabled}
     />
- 
+
     <button
       type="button"
       onClick={() => onRemove(doc.id)}
       aria-label={`Remove ${doc.title}`}
+      disabled={disabled}
       className={ghostButtonClass}
     >
       Remove
     </button>
   </li>
 );
- 
-const DocumentList = ({ heading, description, docs, onCategoryChange, onRemove }) => (
+
+const DocumentList = ({
+  heading,
+  description,
+  docs,
+  onCategoryChange,
+  onRemove,
+  disabled = false,
+}) => (
   <div className="mt-6">
     <h3 className="m-0 text-sm font-bold text-primary">{heading}</h3>
     {description && <p className={helperClass}>{description}</p>}
@@ -87,12 +109,13 @@ const DocumentList = ({ heading, description, docs, onCategoryChange, onRemove }
           doc={doc}
           onCategoryChange={onCategoryChange}
           onRemove={onRemove}
+          disabled={disabled}
         />
       ))}
     </ul>
   </div>
 );
- 
+
 const AiTwinConfiguration = ({ portfolioId, configuration }) => {
   const [tab, setTab] = useState("text");
   const [savedDocs, setSavedDocs] = useState([]);
@@ -102,33 +125,35 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
   const [text, setText] = useState("");
   const [status, setStatus] = useState({ message: "", isError: false });
   const [isSaving, setIsSaving] = useState(false);
+  const [isReadingFiles, setIsReadingFiles] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const dirtyRef = useRef(false);
- 
+  const operationInProgress = useRef(false);
+  const isBusy = isSaving || isReadingFiles;
+
   const serverDocs = Array.isArray(configuration?.documents)
     ? configuration.documents
     : [];
- 
+
   // Sync from the server, but never overwrite changes the user hasn't saved yet.
   useEffect(() => {
     if (dirtyRef.current) return;
     setSavedDocs(serverDocs);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configuration]);
- 
+
   const markDirty = () => {
     dirtyRef.current = true;
     setIsDirty(true);
   };
- 
+
   const clearDirty = () => {
     dirtyRef.current = false;
     setIsDirty(false);
   };
- 
+
   const fail = (message) => setStatus({ message, isError: true });
   const clearStatus = () => setStatus({ message: "", isError: false });
- 
+
   const totals = () => {
     const all = [...savedDocs, ...pendingDocs];
     return {
@@ -136,11 +161,13 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
       chars: all.reduce((sum, doc) => sum + doc.content.length, 0),
     };
   };
- 
+
   const addText = () => {
+    if (isBusy || operationInProgress.current) return;
+
     const content = text.trim();
     if (!content) return;
- 
+
     const { count, chars } = totals();
     if (content.length > AI_TWIN_LIMITS.maxDocumentChars) {
       fail("That note is too long. Split it into smaller notes.");
@@ -153,13 +180,15 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
       fail("You have reached the limit. Remove something before adding more.");
       return;
     }
- 
+
     setPendingDocs((current) => [
       ...current,
       {
         id: Random.id(),
         kind: "text",
-        title: title.trim().slice(0, AI_TWIN_LIMITS.maxTitleChars) || categoryLabel(category),
+        title:
+          title.trim().slice(0, AI_TWIN_LIMITS.maxTitleChars) ||
+          categoryLabel(category),
         category,
         content,
       },
@@ -169,100 +198,120 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
     markDirty();
     clearStatus();
   };
- 
+
   const handleFileSelection = async (event) => {
-    const selected = Array.from(event.target.files || []);
-    event.target.value = "";
- 
-    const additions = [];
-    const skipped = [];
-    let { count, chars } = totals();
- 
-    for (const file of selected) {
-      const extension = file.name.split(".").pop().toLowerCase();
-      if (!TEXT_EXTENSIONS.has(extension) && !file.type.startsWith("text/")) {
-        skipped.push(`${file.name} (not a text file)`);
-        continue;
-      }
-      if (file.size > AI_TWIN_LIMITS.maxFileBytes) {
-        skipped.push(`${file.name} (file too large)`);
-        continue;
-      }
- 
-      let content = "";
-      try {
-        content = (await file.text()).trim();
-      } catch {
-        content = "";
-      }
-      if (!content) {
-        skipped.push(`${file.name} (empty or unreadable)`);
-        continue;
-      }
-      if (
-        content.length > AI_TWIN_LIMITS.maxDocumentChars ||
-        count >= AI_TWIN_LIMITS.maxDocuments ||
-        chars + content.length > AI_TWIN_LIMITS.maxTotalChars
-      ) {
-        skipped.push(`${file.name} (over the size limit)`);
-        continue;
-      }
- 
-      additions.push({
-        id: Random.id(),
-        kind: "file",
-        title: file.name.slice(0, AI_TWIN_LIMITS.maxTitleChars),
-        fileName: file.name,
-        category: guessCategory(file.name),
-        content,
-      });
-      count += 1;
-      chars += content.length;
+    if (operationInProgress.current) {
+      event.target.value = "";
+      return;
     }
- 
-    if (additions.length > 0) {
-      setPendingDocs((current) => [...current, ...additions]);
-      markDirty();
-    }
- 
-    if (skipped.length > 0) {
-      fail(`Skipped: ${skipped.join(", ")}.`);
-    } else {
-      clearStatus();
+    operationInProgress.current = true;
+    setIsReadingFiles(true);
+
+    try {
+      const selected = Array.from(event.target.files || []);
+      event.target.value = "";
+      const additions = [];
+      const skipped = [];
+      let { count, chars } = totals();
+
+      for (const file of selected) {
+        const extension = file.name.split(".").pop().toLowerCase();
+        if (!TEXT_EXTENSIONS.has(extension) && !file.type.startsWith("text/")) {
+          skipped.push(`${file.name} (not a text file)`);
+          continue;
+        }
+        if (file.size > AI_TWIN_LIMITS.maxFileBytes) {
+          skipped.push(`${file.name} (file too large)`);
+          continue;
+        }
+
+        let content = "";
+        try {
+          content = (await file.text()).trim();
+        } catch {
+          content = "";
+        }
+        if (!content) {
+          skipped.push(`${file.name} (empty or unreadable)`);
+          continue;
+        }
+        if (
+          content.length > AI_TWIN_LIMITS.maxDocumentChars ||
+          count >= AI_TWIN_LIMITS.maxDocuments ||
+          chars + content.length > AI_TWIN_LIMITS.maxTotalChars
+        ) {
+          skipped.push(`${file.name} (over the size limit)`);
+          continue;
+        }
+
+        additions.push({
+          id: Random.id(),
+          kind: "file",
+          title: file.name.slice(0, AI_TWIN_LIMITS.maxTitleChars),
+          fileName: file.name,
+          category: guessCategory(file.name),
+          content,
+        });
+        count += 1;
+        chars += content.length;
+      }
+
+      if (additions.length > 0) {
+        setPendingDocs((current) => [...current, ...additions]);
+        markDirty();
+      }
+
+      if (skipped.length > 0) {
+        fail(`Skipped: ${skipped.join(", ")}.`);
+      } else {
+        clearStatus();
+      }
+    } finally {
+      operationInProgress.current = false;
+      setIsReadingFiles(false);
     }
   };
- 
+
   const changeCategory = (id, value) => {
+    if (isBusy || operationInProgress.current) return;
+
     const update = (docs) =>
       docs.map((doc) => (doc.id === id ? { ...doc, category: value } : doc));
     setSavedDocs(update);
     setPendingDocs(update);
     markDirty();
   };
- 
+
   const removeDoc = (id) => {
+    if (isBusy || operationInProgress.current) return;
+
     setSavedDocs((docs) => docs.filter((doc) => doc.id !== id));
     setPendingDocs((docs) => docs.filter((doc) => doc.id !== id));
     markDirty();
   };
- 
+
   const discardChanges = () => {
+    if (isBusy || operationInProgress.current) return;
+
     setPendingDocs([]);
     setSavedDocs(serverDocs);
     clearDirty();
     clearStatus();
   };
- 
+
   const save = async () => {
+    if (operationInProgress.current) return;
+
     if (!portfolioId) {
       fail("No active portfolio found to save.");
       return;
     }
- 
+
     const documents = [...savedDocs, ...pendingDocs];
+    operationInProgress.current = true;
     setIsSaving(true);
     clearStatus();
- 
+
     try {
       await new Promise((resolve, reject) => {
         Meteor.call(
@@ -282,10 +331,11 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
     } catch (error) {
       fail(error.reason || "Unable to save your AI twin information.");
     } finally {
+      operationInProgress.current = false;
       setIsSaving(false);
     }
   };
- 
+
   return (
     <section
       className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm"
@@ -298,7 +348,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
         Add notes or text-based files, and label each one so your AI twin only
         reads what is relevant to a recruiter&apos;s question.
       </p>
- 
+
       <div
         role="tablist"
         aria-label="Information source"
@@ -327,7 +377,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
           Upload files
         </button>
       </div>
- 
+
       {tab === "text" ? (
         <div
           id="ai-twin-text-panel"
@@ -346,6 +396,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
                 maxLength={AI_TWIN_LIMITS.maxTitleChars}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="e.g. Portfolio builder project"
+                disabled={isBusy}
                 className={fieldClass}
               />
             </div>
@@ -358,10 +409,11 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
                 value={category}
                 onChange={setCategory}
                 label="Category"
+                disabled={isBusy}
               />
             </div>
           </div>
- 
+
           <label htmlFor="ai-twin-text" className={`${labelClass} mt-4`}>
             Information for your AI twin
           </label>
@@ -371,13 +423,14 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
             onChange={(event) => setText(event.target.value)}
             placeholder="Share your background, a project, your goals, or anything else your AI twin should know."
             rows={8}
+            disabled={isBusy}
             className={fieldClass}
           />
           <div className="mt-3 flex items-center gap-3">
             <button
               type="button"
               onClick={addText}
-              disabled={!text.trim()}
+              disabled={isBusy || !text.trim()}
               className={primaryButtonClass}
             >
               Add to list
@@ -402,16 +455,17 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
             multiple
             accept={ACCEPT}
             onChange={handleFileSelection}
+            disabled={isBusy}
             className="block w-full rounded-md border border-line bg-background p-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-button file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-secondary"
           />
           <p className={helperClass}>
             Text-based files only (Markdown, text, JSON, YAML, CSV, HTML, XML).
-            Chosen files are added to the list below and are not saved until
-            you select Save for AI twin.
+            Chosen files are added to the list below and are not saved until you
+            select Save for AI twin.
           </p>
         </div>
       )}
- 
+
       {pendingDocs.length > 0 && (
         <DocumentList
           heading="Ready to save"
@@ -419,9 +473,10 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
           docs={pendingDocs}
           onCategoryChange={changeCategory}
           onRemove={removeDoc}
+          disabled={isBusy}
         />
       )}
- 
+
       <div className="mt-6">
         <h3 className="m-0 text-sm font-bold text-primary">Saved</h3>
         {savedDocs.length > 0 ? (
@@ -432,6 +487,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
                 doc={doc}
                 onCategoryChange={changeCategory}
                 onRemove={removeDoc}
+                disabled={isBusy}
               />
             ))}
           </ul>
@@ -441,29 +497,34 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
           </p>
         )}
       </div>
- 
+
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
         <button
           type="button"
           onClick={save}
-          disabled={isSaving || !isDirty}
+          disabled={isBusy || !isDirty}
           className={primaryButtonClass}
         >
           {isSaving ? "Saving..." : "Save"}
         </button>
- 
+
         {isDirty && !isSaving && (
-          <button type="button" onClick={discardChanges} className={ghostButtonClass}>
+          <button
+            type="button"
+            onClick={discardChanges}
+            disabled={isReadingFiles}
+            className={ghostButtonClass}
+          >
             Discard changes
           </button>
         )}
- 
+
         {isDirty && (
           <p className="m-0 text-sm text-muted">
             You have unsaved changes. Removed items are deleted when you save.
           </p>
         )}
- 
+
         {status.message && (
           <p
             role="status"
@@ -480,7 +541,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
     </section>
   );
 };
- 
+
 const documentShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   kind: PropTypes.oneOf(["text", "file"]).isRequired,
@@ -489,33 +550,36 @@ const documentShape = PropTypes.shape({
   content: PropTypes.string.isRequired,
   fileName: PropTypes.string,
 });
- 
+
 CategorySelect.propTypes = {
   id: PropTypes.string,
   value: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   label: PropTypes.string.isRequired,
+  disabled: PropTypes.bool,
 };
- 
+
 DocumentRow.propTypes = {
   doc: documentShape.isRequired,
   onCategoryChange: PropTypes.func.isRequired,
   onRemove: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
- 
+
 DocumentList.propTypes = {
   heading: PropTypes.string.isRequired,
   description: PropTypes.string,
   docs: PropTypes.arrayOf(documentShape).isRequired,
   onCategoryChange: PropTypes.func.isRequired,
   onRemove: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
- 
+
 AiTwinConfiguration.propTypes = {
   portfolioId: PropTypes.string,
   configuration: PropTypes.shape({
     documents: PropTypes.arrayOf(documentShape),
   }),
 };
- 
+
 export default AiTwinConfiguration;

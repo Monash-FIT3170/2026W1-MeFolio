@@ -30,7 +30,10 @@ Meteor.methods({
       { fields: { userId: 1 } },
     );
     if (!portfolio || portfolio.userId !== this.userId) {
-      throw new Meteor.Error("not-authorized", "You can't edit this portfolio.");
+      throw new Meteor.Error(
+        "not-authorized",
+        "You can't edit this portfolio.",
+      );
     }
 
     const { documents } = configuration;

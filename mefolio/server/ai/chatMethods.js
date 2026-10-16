@@ -1,5 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
+import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { answerPortfolioQuestion } from "./chatService.js";
 
@@ -46,3 +47,13 @@ Meteor.methods({
     }
   },
 });
+
+DDPRateLimiter.addRule(
+  {
+    type: "method",
+    name: "chat.send",
+    connectionId: () => true,
+  },
+  10,
+  60 * 1000,
+);
