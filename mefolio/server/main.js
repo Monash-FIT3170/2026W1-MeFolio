@@ -305,6 +305,21 @@ Meteor.startup(async () => {
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
+    if (
+      portfolio.isPublished &&
+      !Object.hasOwn(portfolio, "publishedAiTwinConfiguration")
+    ) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $set: {
+          publishedAiTwinConfiguration: {
+            documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+              ? portfolio.aiTwinConfiguration.documents
+              : [],
+          },
+        },
+      });
+    }
+
     const existingOrderCount = await PortfolioProjectsCollection.find({
       portfolioId: portfolio._id,
     }).countAsync();
@@ -343,12 +358,14 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to the
-// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
-// publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
+// `portfolio.recruiterView` publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
+};
 const activeViewerConnections = new Map();
 
 const getViewerData = async (publication) => {
@@ -844,6 +861,11 @@ Meteor.methods({
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedAiTwinConfiguration: {
+          documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+            ? portfolio.aiTwinConfiguration.documents
+            : [],
+        },
         isPublished: true,
         publishedAt: new Date(),
       },
