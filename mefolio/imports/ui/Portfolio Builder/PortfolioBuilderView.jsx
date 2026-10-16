@@ -544,11 +544,11 @@ const DashboardLayout = () => {
               ) : activeTab === "visitors" ? (
                 <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
               ) : activeTab === "ai-twin" ? (
-            <AiTwinConfiguration
-              portfolioId={selectedPortfolio?._id}
-              configuration={selectedPortfolio?.aiTwinConfiguration}
-            />
-          ) : activeTab === "recruiter" ? (
+                <AiTwinConfiguration
+                  portfolioId={selectedPortfolio?._id}
+                  configuration={selectedPortfolio?.aiTwinConfiguration}
+                />
+              ) : activeTab === "recruiter" ? (
                 <RecruiterPortal
                   portfolio={selectedPortfolio}
                   userId={snapshot.user?._id}
