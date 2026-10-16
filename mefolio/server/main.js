@@ -14,6 +14,10 @@ import "/imports/api/files/resumeFiles";
 import "./oauth-login/oauth.js";
 import "./projectClickTracking.js";
 
+// register AI Twin methods
+import "./ai/chatMethods.js";
+import "./ai/aiTwinMethods.js";
+
 // recruiter access token
 import "./recruiter-tokens/collection.js";
 import "./recruiter-tokens/methods.js";
@@ -31,6 +35,8 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+// register AI Twin methods
+import "./ai/chatMethods.js";
 import { validateChallenge } from "./challenge-methods.js";
 
 // cache middleware

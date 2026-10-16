@@ -1,5 +1,9 @@
 {
   "private": {
+    "gemini": {
+      "apiKey": "GEMINI_API_KEY_HERE",
+      "model": "gemini-3.8-flash"
+    },
     "MAIL_URL": "smtps://USERNAME:PASSWORD@smtp.gmail.com:465",
     "MAIL_FROM": "MeFolio <your-sender@example.com>",
     "google": {

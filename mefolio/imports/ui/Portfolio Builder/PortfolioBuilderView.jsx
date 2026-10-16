@@ -29,6 +29,7 @@ import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
 import AnalyticsSection from "./AnalyticsSection";
+import AiTwinConfiguration from "./AiTwinConfiguration.jsx";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
@@ -542,6 +543,11 @@ const DashboardLayout = () => {
                 />
               ) : activeTab === "visitors" ? (
                 <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
+              ) : activeTab === "ai-twin" ? (
+                <AiTwinConfiguration
+                  portfolioId={selectedPortfolio?._id}
+                  configuration={selectedPortfolio?.aiTwinConfiguration}
+                />
               ) : activeTab === "recruiter" ? (
                 <RecruiterPortal
                   portfolio={selectedPortfolio}
