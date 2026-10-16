@@ -1,5 +1,6 @@
 // Default portfolio profile data aligned with the current PortfolioCollection shape in server/main.js.
 // This helps the UI safely load and display portfolio/user information even when fields are missing.
+import { DEFAULT_CHATBOT_PERSONA } from "./chatbotPersonas";
 
 export const defaultPortfolioProfileData = {
   userId: "",
@@ -21,6 +22,7 @@ export const defaultPortfolioProfileData = {
   projects: [],
   theme: "minimal",
   badges: [],
+  chatbotPersona: DEFAULT_CHATBOT_PERSONA,
   recruiterInfo: {
     salaryExpectation: "",
     phoneNumber: "",
@@ -44,6 +46,7 @@ export const samplePortfolioProfileData = {
   createdAt: new Date(),
   projects: [],
   theme: "minimal",
+  chatbotPersona: DEFAULT_CHATBOT_PERSONA,
   badges: [
     {
       title: "Sample Badge",

@@ -7,6 +7,10 @@ import {
   PortfolioCollection,
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
+import {
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "/imports/api/files/resumeFiles";
 
@@ -708,8 +712,20 @@ Meteor.methods({
     const safePortfolioData = { ...portfolioData };
     delete safePortfolioData.username;
 
+    if (
+      Object.hasOwn(safePortfolioData, "chatbotPersona") &&
+      !isChatbotPersona(safePortfolioData.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
+
     const newPortfolio = {
       ...safePortfolioData,
+      chatbotPersona:
+        safePortfolioData.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
@@ -822,6 +838,7 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {

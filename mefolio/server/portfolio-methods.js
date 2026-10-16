@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { isChatbotPersona } from "/imports/api/chatbotPersonas";
 
 // Portfolio methods kept in their own module (rather than main.js) so tests can
 // import them without pulling in the app seed and OAuth config, which need
@@ -33,6 +34,16 @@ Meteor.methods({
     delete safeUpdates.userId;
     delete safeUpdates._id;
     delete safeUpdates.username;
+
+    if (
+      Object.hasOwn(safeUpdates, "chatbotPersona") &&
+      !isChatbotPersona(safeUpdates.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: safeUpdates,
