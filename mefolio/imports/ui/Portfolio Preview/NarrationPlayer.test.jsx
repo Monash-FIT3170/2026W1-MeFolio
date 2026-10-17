@@ -28,6 +28,9 @@ if (Meteor.isClient) {
     let pauseStub;
 
     beforeEach(() => {
+      // The player remembers the last chosen voice; start each test on the
+      // default so voice-dependent assertions are deterministic.
+      window.localStorage.removeItem("mefolio.narrationVoice");
       playStub = sinon
         .stub(HTMLMediaElement.prototype, "play")
         .resolves(undefined);
@@ -58,7 +61,12 @@ if (Meteor.isClient) {
       fireEvent.click(screen.getByRole("button", { name: /play narration/i }));
 
       await screen.findByRole("button", { name: /pause narration/i });
-      sinon.assert.calledOnceWithExactly(loadAudio, "portfolio-1", "project-1");
+      sinon.assert.calledOnceWithExactly(
+        loadAudio,
+        "portfolio-1",
+        "project-1",
+        DEFAULT_VOICE_ID,
+      );
       sinon.assert.calledOnce(playStub);
       expect(
         screen.getByTestId("narration-player").querySelector("audio").src,
