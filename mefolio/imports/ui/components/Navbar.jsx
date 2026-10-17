@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -8,8 +8,8 @@ import { PortfolioCollection } from "../../api/portfolio";
 const Navbar = ({
   portfolio: draftPortfolio = null,
   viewportMode = "desktop",
+  hasBuilderMenu = false,
 }) => {
-  const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { portfolio: loadedPortfolio } = useTracker(() => {
@@ -30,8 +30,12 @@ const Navbar = ({
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-muted">
       <div
-        className={`h-16 flex items-center justify-between ${
-          isMobilePreview ? "px-4" : "px-20"
+        className={`flex items-center justify-between ${
+          isMobilePreview && hasBuilderMenu
+            ? "h-24 pl-20 pr-4"
+            : isMobilePreview
+              ? "h-16 px-4"
+              : "h-16 px-20"
         }`}
       >
         <a
@@ -81,15 +85,6 @@ const Navbar = ({
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-lg text-primary hover:text-alt hover:bg-background transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
         </div>
       </div>
 
@@ -121,6 +116,7 @@ const Navbar = ({
 Navbar.propTypes = {
   portfolio: PropTypes.object,
   viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
+  hasBuilderMenu: PropTypes.bool,
 };
 
 export default Navbar;

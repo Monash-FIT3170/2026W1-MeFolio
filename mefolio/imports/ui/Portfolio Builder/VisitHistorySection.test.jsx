@@ -40,8 +40,8 @@ describe("VisitHistorySection formatRelativeTime", function () {
   it("falls back to an absolute date for a week or more", function () {
     const result = formatRelativeTime(daysAgo(10));
     expect(result).to.not.match(/ago|just now/);
-    // en-AU short format, e.g. "19 Aug 2026"
-    expect(result).to.match(/\d{1,2} [A-Za-z]{3} \d{4}/);
+    // en-AU short format, e.g. "19 Aug 2026" or "3 Sept 2026"
+    expect(result).to.match(/\d{1,2} [A-Za-z]{3,4} \d{4}/);
   });
 
   it("accepts an ISO string as well as a Date", function () {

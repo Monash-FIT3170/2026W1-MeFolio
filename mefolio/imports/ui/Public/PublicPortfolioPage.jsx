@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioContent } from "../Portfolio Preview/PortfolioContent.jsx";
 import { getPublishedTheme } from "../Portfolio Preview/publishedTheme.js";
+import ViewerLocationPrompt from "./ViewerLocationPrompt.jsx";
 
 /**
  * FEAT-12: the portfolio as a visitor sees it.
@@ -21,40 +22,44 @@ export const PublicPortfolioPage = () => {
   const { portfolioId, username } = useParams();
   const lookupValue = username || portfolioId;
 
-  const { isLoading, publishedContent } = useTracker(() => {
+  const { isLoading, portfolio, publishedContent } = useTracker(() => {
     const publicViewHandle = Meteor.subscribe(
       "portfolios.publicView",
       lookupValue,
     );
-    const viewerHandle = Meteor.subscribe("portfolios.viewer", portfolioId);
-    const portfolio = PortfolioCollection.findOne({
+
+    const foundPortfolio = PortfolioCollection.findOne({
       $or: [{ _id: lookupValue }, { username: lookupValue }],
     });
-    // The publication withholds unpublished portfolios, but an owner signed in
-    // elsewhere in the app has their own draft in minimongo already. Checking
-    // isPublished here keeps this route showing the same thing to everyone.
+
+    // Only subscribe to viewer once we know the real _id.
+    if (foundPortfolio?._id) {
+      Meteor.subscribe("portfolios.viewer", foundPortfolio._id);
+    }
+
     return {
-      isLoading: !publicViewHandle.ready() || !viewerHandle.ready(),
-      publishedContent: portfolio?.isPublished
-        ? portfolio.publishedContent
+      isLoading: !publicViewHandle.ready(),
+      portfolio: foundPortfolio,
+      publishedContent: foundPortfolio?.isPublished
+        ? foundPortfolio.publishedContent
         : null,
     };
   }, [lookupValue]);
 
   useEffect(() => {
-    if (isLoading || !publishedContent || !portfolioId) return undefined;
+    if (isLoading || !publishedContent || !portfolio?._id) return undefined;
 
+    const realPortfolioId = portfolio._id;
     const sendHeartbeat = () => {
-      Meteor.call("portfolios.viewerHeartbeat", portfolioId, (error) => {
+      Meteor.call("portfolios.viewerHeartbeat", realPortfolioId, (error) => {
         if (error) console.error("Failed to send viewer heartbeat:", error);
       });
     };
 
     sendHeartbeat();
-    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
-
-    return () => clearInterval(heartbeatInterval);
-  }, [isLoading, portfolioId, publishedContent]);
+    const interval = setInterval(sendHeartbeat, 10000);
+    return () => clearInterval(interval);
+  }, [isLoading, portfolio?._id, publishedContent]);
 
   if (isLoading) {
     return (
@@ -102,9 +107,14 @@ export const PublicPortfolioPage = () => {
     >
       <PortfolioContent
         portfolio={publishedContent}
-        portfolioId={portfolioId}
+        portfolioId={portfolio?._id}
         projects={publishedContent.projects || []}
       />
+      <div className="pointer-events-none fixed top-16 right-5 z-40">
+        <div className="pointer-events-auto">
+          <ViewerLocationPrompt portfolioId={portfolio?._id} />
+        </div>
+      </div>
     </div>
   );
 };

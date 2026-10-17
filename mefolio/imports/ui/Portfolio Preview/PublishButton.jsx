@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useNavigate } from "react-router-dom";
+import DraftComparisonModal from "./DraftComparisonModal";
+import { getDraftStatus } from "./portfolioDraftDiff";
 
 // Friendly names for the fields the publish method requires.
 const REQUIRED_FIELD_LABELS = {
@@ -126,92 +128,15 @@ MissingContentDialog.propTypes = {
   onGoToDashboard: PropTypes.func.isRequired,
 };
 
-// Names the portfolio that is about to be published. A user may end up with
-// several portfolios, so the target is stated explicitly rather than implied
-// by whichever preview happens to be open.
-const ConfirmPublishDialog = ({
-  portfolioTitle,
-  isRepublish,
-  onCancel,
-  onConfirm,
-}) => {
-  const overlayRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onCancel]);
-
-  return (
-    <div
-      ref={overlayRef}
-      data-testid="publish-confirm-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="publish-confirm-title"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onCancel();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-5 backdrop-blur-sm"
-    >
-      <div className="w-full max-w-md rounded-2xl bg-surface-fill shadow-2xl">
-        <div className="border-b border-line px-6 py-5">
-          <h2
-            id="publish-confirm-title"
-            className="text-lg font-bold text-primary"
-          >
-            Publish this portfolio?
-          </h2>
-          <p
-            data-testid="publish-confirm-target"
-            className="mt-3 rounded-lg border border-line bg-background px-3 py-2 text-sm font-semibold text-primary"
-          >
-            {portfolioTitle}
-          </p>
-          <p className="mt-3 text-sm text-muted">
-            {isRepublish
-              ? "The version shown in this preview will replace what is currently published."
-              : "The version shown in this preview will become your published portfolio."}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-end gap-2.5 rounded-b-2xl border-t border-line bg-background px-6 py-4">
-          <button
-            type="button"
-            data-testid="publish-confirm-cancel"
-            onClick={onCancel}
-            className="rounded-lg border border-line bg-surface-fill px-5 py-2 text-sm font-medium text-muted transition hover:bg-selected"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            data-testid="publish-confirm-accept"
-            onClick={onConfirm}
-            className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
-          >
-            Publish
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-ConfirmPublishDialog.propTypes = {
-  portfolioTitle: PropTypes.string.isRequired,
-  isRepublish: PropTypes.bool,
-  onCancel: PropTypes.func.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-};
-
 // Publishes the draft portfolio to the live site. Required content is checked
 // first, and publishing is blocked with an explanation when anything is
 // missing.
-const PublishButton = ({ portfolio }) => {
+const PublishButton = ({
+  portfolio,
+  projects = [],
+  sidebar = false,
+  onGoToDashboard,
+}) => {
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBlockedDialogOpen, setIsBlockedDialogOpen] = useState(false);
@@ -253,17 +178,10 @@ const PublishButton = ({ portfolio }) => {
 
   return (
     <>
-      <div className="flex items-center gap-3">
-        {status === "published" && (
-          <span
-            data-testid="publish-success-message"
-            className="text-xs font-medium text-muted"
-          >
-            Portfolio published. Your public link is coming soon.
-          </span>
-        )}
-
-        {portfolio?.isPublished && (
+      <div
+        className={sidebar ? "flex flex-col gap-2" : "flex items-center gap-3"}
+      >
+        {!sidebar && portfolio?.isPublished && (
           <button
             type="button"
             data-testid="view-published-link"
@@ -288,18 +206,19 @@ const PublishButton = ({ portfolio }) => {
           data-testid="publish-btn"
           onClick={handleClick}
           disabled={!portfolioId || isPublishing}
-          className="rounded-lg bg-button px-4 py-2 text-sm font-bold text-secondary shadow-sm transition-colors hover:bg-accent1 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`rounded-lg bg-button px-4 text-sm font-bold text-secondary shadow-sm transition-colors hover:bg-accent1 disabled:cursor-not-allowed disabled:opacity-60 ${sidebar ? "w-full py-3" : "py-2"}`}
         >
           {isPublishing ? "Publishing..." : "Publish"}
         </button>
       </div>
 
       {isConfirmOpen && (
-        <ConfirmPublishDialog
+        <DraftComparisonModal
+          isOpen={isConfirmOpen}
           portfolioTitle={portfolio?.title || "Untitled portfolio"}
-          isRepublish={Boolean(portfolio?.isPublished)}
-          onCancel={() => setIsConfirmOpen(false)}
-          onConfirm={runPublish}
+          status={getDraftStatus({ portfolio, projects })}
+          onClose={() => setIsConfirmOpen(false)}
+          onPublish={runPublish}
         />
       )}
 
@@ -309,7 +228,8 @@ const PublishButton = ({ portfolio }) => {
           onClose={() => setIsBlockedDialogOpen(false)}
           onGoToDashboard={() => {
             setIsBlockedDialogOpen(false);
-            navigate("/");
+            if (onGoToDashboard) onGoToDashboard();
+            else navigate("/");
           }}
         />
       )}
@@ -319,6 +239,9 @@ const PublishButton = ({ portfolio }) => {
 
 PublishButton.propTypes = {
   portfolio: PropTypes.object,
+  projects: PropTypes.arrayOf(PropTypes.object),
+  sidebar: PropTypes.bool,
+  onGoToDashboard: PropTypes.func,
 };
 
 export default PublishButton;
