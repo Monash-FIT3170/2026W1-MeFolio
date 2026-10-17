@@ -2,6 +2,7 @@ const FIELD_LABELS = {
   title: "Portfolio title",
   bio: "Bio",
   theme: "Theme",
+  chatbotPersona: "AI chatbot personality",
   "profile.fullName": "Full name",
   "profile.headline": "Headline",
   "profile.avatarUrl": "Avatar",
@@ -40,6 +41,39 @@ const getByPath = (obj, path) => {
 };
 const valuesAreEqual = (a, b) =>
   JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+const getAiTwinDocuments = (configuration) =>
+  Array.isArray(configuration?.documents) ? configuration.documents : [];
+
+const describeAiTwinDocuments = (documents, comparisonDocuments = []) => {
+  if (documents.length === 0) return "(empty)";
+
+  const comparisonById = new Map(
+    comparisonDocuments.map((document) => [document.id, document]),
+  );
+  const titles = documents.map((document) => {
+    const comparison = comparisonById.get(document.id);
+    const wasUpdated = comparison && !valuesAreEqual(document, comparison);
+
+    return `${document.title || "Untitled"}${wasUpdated ? " (updated)" : ""}`;
+  });
+
+  return `${documents.length} ${documents.length === 1 ? "item" : "items"}: ${titles.join(", ")}`;
+};
+
+const getAiTwinChange = (draft) => {
+  const draftDocuments = getAiTwinDocuments(draft?.aiTwinConfiguration);
+  const liveDocuments = getAiTwinDocuments(draft?.publishedAiTwinConfiguration);
+  if (valuesAreEqual(draftDocuments, liveDocuments)) return null;
+
+  return {
+    path: "aiTwinConfiguration",
+    label: "AI Twin information",
+    from: describeAiTwinDocuments(liveDocuments),
+    to: describeAiTwinDocuments(draftDocuments, liveDocuments),
+  };
+};
+
 export const formatDiffValue = (value) => {
   if (value === undefined || value === null || value === "") return "(empty)";
   if (typeof value === "boolean") return value ? "Yes" : "No";
@@ -120,6 +154,8 @@ export const getDraftStatus = ({ portfolio, projects = [] }) => {
 
   const live = portfolio.publishedContent || null;
   const fieldChanges = diffPortfolioFields(portfolio, live);
+  const aiTwinChange = getAiTwinChange(portfolio);
+  if (aiTwinChange) fieldChanges.push(aiTwinChange);
   const projectChanges = diffPortfolioProjects(projects, live?.projects || []);
   const hasProjectChanges =
     projectChanges.added.length > 0 ||
