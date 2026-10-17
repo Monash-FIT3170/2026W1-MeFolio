@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
 import { useRef, useState, useMemo } from "react";
+import { isPortfolioNarrationEnabled } from "../../api/projectNarration";
 import { ProjectCard } from "./ProjectCard.jsx";
+import { NarrationToggle } from "./NarrationToggle.jsx";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
@@ -20,6 +22,8 @@ export const PortfolioContent = ({
   viewportMode = "desktop",
 }) => {
   const scrollRef = useRef(null);
+  const narrationFeatureEnabled = isPortfolioNarrationEnabled(portfolio);
+  const [narrationEnabled, setNarrationEnabled] = useState(true);
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
@@ -131,7 +135,7 @@ export const PortfolioContent = ({
             <select
               value={selectedSkill}
               onChange={(e) => setSelectedSkill(e.target.value)}
-              className={`rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
+              className={`h-10 min-h-0 w-44 rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
                 viewportMode === "mobile" ? "w-full" : ""
               }`}
             >
@@ -142,6 +146,13 @@ export const PortfolioContent = ({
                 </option>
               ))}
             </select>
+            {narrationFeatureEnabled && (
+              <NarrationToggle
+                enabled={narrationEnabled}
+                onChange={setNarrationEnabled}
+                fullWidth={viewportMode === "mobile"}
+              />
+            )}
             {selectedSkill !== "All" && (
               <button
                 onClick={() => setSelectedSkill("All")}
@@ -188,7 +199,13 @@ export const PortfolioContent = ({
                   }`}
                   key={projectId}
                 >
-                  <ProjectCard project={project} portfolioId={portfolioId} />
+                  <ProjectCard
+                    project={project}
+                    portfolioId={portfolioId}
+                    narrationEnabled={
+                      narrationFeatureEnabled && narrationEnabled
+                    }
+                  />
                 </div>
               );
             })}

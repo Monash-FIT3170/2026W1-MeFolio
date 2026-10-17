@@ -4,15 +4,24 @@ import TechStackInput from "./TechStackInput";
 import ProofOfWorkSection from "./ProofOfWorkSection";
 import CodeBlock from "./CodeBlock";
 import getLanguageFromTechStack from "./techToLanguage";
+import { isProjectNarrationEnabled } from "../../api/projectNarration";
 
 const STATUS_OPTIONS = ["live", "in progress", "archived"];
 
 // Modal form for editing an existing project's details. Pre-fills from the
 // given project and reports the updated fields back through onSave.
-const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
+const EditProjectModal = ({
+  isOpen,
+  project,
+  onClose,
+  onSave,
+  onDelete,
+  narrationEnabled = true,
+}) => {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    caseStudyNarrative: "",
     technologies: [],
     status: "live",
     githubLink: "",
@@ -37,6 +46,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     setForm({
       title: project.title || "",
       description: project.description || "",
+      caseStudyNarrative: project.caseStudyNarrative || "",
       technologies: project.technologies || [],
       status: project.status || "live",
       githubLink: project.githubLink || "",
@@ -145,6 +155,7 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
     onSave(project._id, {
       title: form.title.trim(),
       description: form.description.trim(),
+      caseStudyNarrative: form.caseStudyNarrative.trim(),
       technologies: form.technologies,
       status: form.status,
       githubLink: form.githubLink.trim(),
@@ -258,6 +269,32 @@ const EditProjectModal = ({ isOpen, project, onClose, onSave, onDelete }) => {
               </p>
             )}
           </div>
+
+          {narrationEnabled && isProjectNarrationEnabled() && (
+            <div>
+              <label
+                htmlFor="edit-case-study-narrative"
+                className="mb-1.5 block text-sm font-semibold text-primary"
+              >
+                Case Study Narration
+              </label>
+
+              <textarea
+                id="edit-case-study-narrative"
+                data-testid="edit-field-case-study-narrative"
+                rows={5}
+                value={form.caseStudyNarrative}
+                onChange={(e) => set("caseStudyNarrative", e.target.value)}
+                className={`${fieldClass("caseStudyNarrative")} resize-y leading-relaxed`}
+                placeholder="Write the project story you want recruiters to hear..."
+              />
+
+              <p className="mt-1 text-xs text-muted">
+                This text is used to generate the project's voice narration and
+                is not shown publicly.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-primary">
@@ -555,6 +592,7 @@ EditProjectModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   onDelete: PropTypes.func,
+  narrationEnabled: PropTypes.bool,
 };
 
 export default EditProjectModal;

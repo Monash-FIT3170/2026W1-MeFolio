@@ -84,7 +84,7 @@ if (Meteor.isClient) {
       expect(screen.getByRole("button", { name: /submit solution/i })).to.exist;
     });
 
-    it("displays Voice Summary, Code, and Demo buttons", () => {
+    it("displays the narration placeholder, Code, and Demo buttons", () => {
       const mockProject = {
         title: "Test Project",
         technologies: ["React"],
@@ -92,7 +92,7 @@ if (Meteor.isClient) {
 
       render(<ProjectCard project={mockProject} />);
 
-      expect(screen.getByText("Voice Summary")).to.exist;
+      expect(screen.getByText("No narration available")).to.exist;
       expect(screen.getByText("Code")).to.exist;
       expect(screen.getByText("Demo")).to.exist;
     });

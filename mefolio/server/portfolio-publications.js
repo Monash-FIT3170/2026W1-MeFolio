@@ -12,6 +12,7 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 // `portfolio.recruiterView` publication instead.
 const NON_OWNER_PORTFOLIO_FIELDS = {
   recruiterInfo: 0,
+  publishedNarrations: 0,
   aiTwinConfiguration: 0,
   publishedAiTwinConfiguration: 0,
 };

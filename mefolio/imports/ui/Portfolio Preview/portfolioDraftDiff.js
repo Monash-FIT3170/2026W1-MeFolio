@@ -21,12 +21,24 @@ const FIELD_LABELS = {
   "socials.other": "Other social links",
   "cta.resumeUrl": "Resume link",
   "cta.contactEnabled": "Contact button enabled",
+  narrationEnabled: "Voice narration enabled",
 };
 
-const getByPath = (obj, path) =>
-  path
+// Fields whose missing value means something other than "empty". Portfolios
+// and snapshots from before the narration toggle have narration on.
+const FIELD_DEFAULTS = {
+  narrationEnabled: true,
+};
+
+const getByPath = (obj, path) => {
+  const value = path
     .split(".")
-    .reduce((value, key) => (value == null ? undefined : value[key]), obj);
+    .reduce(
+      (current, key) => (current == null ? undefined : current[key]),
+      obj,
+    );
+  return value === undefined ? FIELD_DEFAULTS[path] : value;
+};
 const valuesAreEqual = (a, b) =>
   JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -75,10 +87,14 @@ export const diffPortfolioFields = (draft, live) => {
       .map(([path, label]) => ({
         path,
         label,
-        from: undefined,
+        from: FIELD_DEFAULTS[path],
         to: getByPath(draft, path),
       }))
-      .filter((change) => formatDiffValue(change.to) !== "(empty)");
+      .filter(
+        (change) =>
+          formatDiffValue(change.to) !== "(empty)" &&
+          !valuesAreEqual(change.from, change.to),
+      );
   }
   return Object.entries(FIELD_LABELS)
     .map(([path, label]) => ({
