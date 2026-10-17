@@ -3,6 +3,11 @@ import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { Random } from "meteor/random";
 import {
+  CHATBOT_PERSONAS,
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
+import {
   AI_TWIN_CATEGORIES,
   AI_TWIN_LIMITS,
   categoryLabel,
@@ -116,10 +121,25 @@ const DocumentList = ({
   </div>
 );
 
-const AiTwinConfiguration = ({ portfolioId, configuration }) => {
+const AiTwinConfiguration = ({
+  portfolioId,
+  configuration,
+  chatbotPersona: initialChatbotPersona,
+}) => {
   const [tab, setTab] = useState("text");
   const [savedDocs, setSavedDocs] = useState([]);
   const [pendingDocs, setPendingDocs] = useState([]);
+  const [chatbotPersona, setChatbotPersona] = useState(
+    isChatbotPersona(initialChatbotPersona)
+      ? initialChatbotPersona
+      : DEFAULT_CHATBOT_PERSONA,
+  );
+  const [isSavingPersona, setIsSavingPersona] = useState(false);
+  const [isPersonaDirty, setIsPersonaDirty] = useState(false);
+  const [personaStatus, setPersonaStatus] = useState({
+    message: "",
+    isError: false,
+  });
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("about");
   const [text, setText] = useState("");
@@ -128,6 +148,7 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
   const [isReadingFiles, setIsReadingFiles] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const dirtyRef = useRef(false);
+  const personaDirtyRef = useRef(false);
   const operationInProgress = useRef(false);
   const isBusy = isSaving || isReadingFiles;
 
@@ -141,6 +162,15 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
     setSavedDocs(serverDocs);
   }, [configuration]);
 
+  useEffect(() => {
+    if (personaDirtyRef.current) return;
+    setChatbotPersona(
+      isChatbotPersona(initialChatbotPersona)
+        ? initialChatbotPersona
+        : DEFAULT_CHATBOT_PERSONA,
+    );
+  }, [initialChatbotPersona]);
+
   const markDirty = () => {
     dirtyRef.current = true;
     setIsDirty(true);
@@ -153,6 +183,37 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
 
   const fail = (message) => setStatus({ message, isError: true });
   const clearStatus = () => setStatus({ message: "", isError: false });
+
+  const savePersona = () => {
+    if (!portfolioId || isSavingPersona || !isPersonaDirty) return;
+
+    setIsSavingPersona(true);
+    setPersonaStatus({ message: "", isError: false });
+
+    Meteor.call(
+      "portfolios.update",
+      portfolioId,
+      { chatbotPersona },
+      (error) => {
+        setIsSavingPersona(false);
+        if (error) {
+          setPersonaStatus({
+            message: error.reason || "Unable to save the AI personality.",
+            isError: true,
+          });
+          return;
+        }
+
+        personaDirtyRef.current = false;
+        setIsPersonaDirty(false);
+        setPersonaStatus({
+          message:
+            "AI personality saved. Publish your portfolio for the change to go live.",
+          isError: false,
+        });
+      },
+    );
+  };
 
   const totals = () => {
     const all = [...savedDocs, ...pendingDocs];
@@ -337,208 +398,278 @@ const AiTwinConfiguration = ({ portfolioId, configuration }) => {
   };
 
   return (
-    <section
-      className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm"
-      aria-labelledby="ai-twin-title"
-    >
-      <h2 id="ai-twin-title" className="m-0 text-lg font-bold text-primary">
-        Tell your AI twin about yourself
-      </h2>
-      <p className="mt-1 text-sm text-primary">
-        Add notes or text-based files, and label each one so your AI twin only
-        reads what is relevant to a recruiter&apos;s question.
-      </p>
-
-      <div
-        role="tablist"
-        aria-label="Information source"
-        className="mt-5 mb-5 flex gap-2 border-b border-line pb-3"
+    <div className="space-y-6">
+      <section
+        className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm"
+        aria-labelledby="ai-twin-persona-title"
       >
-        <button
-          id="ai-twin-text-tab"
-          type="button"
-          role="tab"
-          aria-selected={tab === "text"}
-          aria-controls="ai-twin-text-panel"
-          onClick={() => setTab("text")}
-          className={tabClass(tab === "text")}
+        <h2
+          id="ai-twin-persona-title"
+          className="m-0 text-lg font-bold text-primary"
         >
-          Enter text
-        </button>
-        <button
-          id="ai-twin-upload-tab"
-          type="button"
-          role="tab"
-          aria-selected={tab === "upload"}
-          aria-controls="ai-twin-upload-panel"
-          onClick={() => setTab("upload")}
-          className={tabClass(tab === "upload")}
-        >
-          Upload files
-        </button>
-      </div>
-
-      {tab === "text" ? (
-        <div
-          id="ai-twin-text-panel"
-          role="tabpanel"
-          aria-labelledby="ai-twin-text-tab"
-        >
-          <div className="grid gap-4 sm:grid-cols-[1fr_14rem]">
-            <div>
-              <label htmlFor="ai-twin-title-input" className={labelClass}>
-                Title
-              </label>
-              <input
-                id="ai-twin-title-input"
-                type="text"
-                value={title}
-                maxLength={AI_TWIN_LIMITS.maxTitleChars}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="e.g. Portfolio builder project"
-                disabled={isBusy}
-                className={fieldClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="ai-twin-category" className={labelClass}>
-                Category
-              </label>
-              <CategorySelect
-                id="ai-twin-category"
-                value={category}
-                onChange={setCategory}
-                label="Category"
-                disabled={isBusy}
-              />
-            </div>
-          </div>
-
-          <label htmlFor="ai-twin-text" className={`${labelClass} mt-4`}>
-            Information for your AI twin
+          AI chatbot personality
+        </h2>
+        <div className="mt-4 rounded-md border border-line p-4">
+          <label htmlFor="ai-twin-persona" className={labelClass}>
+            Choose a personality
           </label>
-          <textarea
-            id="ai-twin-text"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            placeholder="Share your background, a project, your goals, or anything else your AI twin should know."
-            rows={8}
-            disabled={isBusy}
-            className={fieldClass}
-          />
-          <div className="mt-3 flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              id="ai-twin-persona"
+              data-testid="field-chatbot-persona"
+              value={chatbotPersona}
+              onChange={(event) => {
+                setChatbotPersona(event.target.value);
+                personaDirtyRef.current = true;
+                setIsPersonaDirty(true);
+                setPersonaStatus({ message: "", isError: false });
+              }}
+              disabled={isSavingPersona}
+              className={`${fieldClass} sm:max-w-xl`}
+            >
+              {CHATBOT_PERSONAS.map((persona) => (
+                <option key={persona.id} value={persona.id}>
+                  {persona.label} — {persona.description}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
-              onClick={addText}
-              disabled={isBusy || !text.trim()}
+              data-testid="btn-save-chatbot-persona"
+              onClick={savePersona}
+              disabled={!isPersonaDirty || isSavingPersona || !portfolioId}
               className={primaryButtonClass}
             >
-              Add to list
+              {isSavingPersona ? "Saving..." : "Save personality"}
             </button>
-            <p className="m-0 text-xs text-muted">
-              Nothing is saved until you select Save for AI twin.
+          </div>
+          <p className={helperClass}>
+            This changes the assistant&apos;s tone, not the portfolio facts it
+            can share. Publish your portfolio for the change to go live.
+          </p>
+          {personaStatus.message && (
+            <p
+              role="status"
+              className={
+                personaStatus.isError
+                  ? "m-0 mt-2 text-sm font-medium text-red-700"
+                  : "m-0 mt-2 text-sm font-medium text-primary"
+              }
+            >
+              {personaStatus.message}
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section
+        className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm"
+        aria-labelledby="ai-twin-title"
+      >
+        <h2 id="ai-twin-title" className="m-0 text-lg font-bold text-primary">
+          Tell your AI twin about yourself
+        </h2>
+        <p className="mt-1 text-sm text-primary">
+          Add notes or text-based files, and label each one so your AI twin only
+          reads what is relevant to a recruiter&apos;s question.
+        </p>
+        <p className="mt-2 text-xs text-muted">
+          Saved information stays in your draft until you publish. Review
+          changes will include updates to this information and the chatbot
+          personality.
+        </p>
+
+        <div
+          role="tablist"
+          aria-label="Information source"
+          className="mt-5 mb-5 flex gap-2 border-b border-line pb-3"
+        >
+          <button
+            id="ai-twin-text-tab"
+            type="button"
+            role="tab"
+            aria-selected={tab === "text"}
+            aria-controls="ai-twin-text-panel"
+            onClick={() => setTab("text")}
+            className={tabClass(tab === "text")}
+          >
+            Enter text
+          </button>
+          <button
+            id="ai-twin-upload-tab"
+            type="button"
+            role="tab"
+            aria-selected={tab === "upload"}
+            aria-controls="ai-twin-upload-panel"
+            onClick={() => setTab("upload")}
+            className={tabClass(tab === "upload")}
+          >
+            Upload files
+          </button>
+        </div>
+
+        {tab === "text" ? (
+          <div
+            id="ai-twin-text-panel"
+            role="tabpanel"
+            aria-labelledby="ai-twin-text-tab"
+          >
+            <div className="grid gap-4 sm:grid-cols-[1fr_14rem]">
+              <div>
+                <label htmlFor="ai-twin-title-input" className={labelClass}>
+                  Title
+                </label>
+                <input
+                  id="ai-twin-title-input"
+                  type="text"
+                  value={title}
+                  maxLength={AI_TWIN_LIMITS.maxTitleChars}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="e.g. Portfolio builder project"
+                  disabled={isBusy}
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="ai-twin-category" className={labelClass}>
+                  Category
+                </label>
+                <CategorySelect
+                  id="ai-twin-category"
+                  value={category}
+                  onChange={setCategory}
+                  label="Category"
+                  disabled={isBusy}
+                />
+              </div>
+            </div>
+
+            <label htmlFor="ai-twin-text" className={`${labelClass} mt-4`}>
+              Information for your AI twin
+            </label>
+            <textarea
+              id="ai-twin-text"
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              placeholder="Share your background, a project, your goals, or anything else your AI twin should know."
+              rows={8}
+              disabled={isBusy}
+              className={fieldClass}
+            />
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={addText}
+                disabled={isBusy || !text.trim()}
+                className={primaryButtonClass}
+              >
+                Add to list
+              </button>
+              <p className="m-0 text-xs text-muted">
+                Nothing is saved until you select Save for AI twin.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div
+            id="ai-twin-upload-panel"
+            role="tabpanel"
+            aria-labelledby="ai-twin-upload-tab"
+          >
+            <label htmlFor="ai-twin-files" className={labelClass}>
+              Choose README or context files
+            </label>
+            <input
+              id="ai-twin-files"
+              type="file"
+              multiple
+              accept={ACCEPT}
+              onChange={handleFileSelection}
+              disabled={isBusy}
+              className="block w-full rounded-md border border-line bg-background p-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-button file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-secondary"
+            />
+            <p className={helperClass}>
+              Text-based files only (Markdown, text, JSON, YAML, CSV, HTML,
+              XML). Chosen files are added to the list below and are not saved
+              until you select Save for AI twin.
             </p>
           </div>
-        </div>
-      ) : (
-        <div
-          id="ai-twin-upload-panel"
-          role="tabpanel"
-          aria-labelledby="ai-twin-upload-tab"
-        >
-          <label htmlFor="ai-twin-files" className={labelClass}>
-            Choose README or context files
-          </label>
-          <input
-            id="ai-twin-files"
-            type="file"
-            multiple
-            accept={ACCEPT}
-            onChange={handleFileSelection}
-            disabled={isBusy}
-            className="block w-full rounded-md border border-line bg-background p-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-button file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-secondary"
-          />
-          <p className={helperClass}>
-            Text-based files only (Markdown, text, JSON, YAML, CSV, HTML, XML).
-            Chosen files are added to the list below and are not saved until you
-            select Save for AI twin.
-          </p>
-        </div>
-      )}
-
-      {pendingDocs.length > 0 && (
-        <DocumentList
-          heading="Ready to save"
-          description="Set a category for each item so your AI twin knows when to use it."
-          docs={pendingDocs}
-          onCategoryChange={changeCategory}
-          onRemove={removeDoc}
-          disabled={isBusy}
-        />
-      )}
-
-      <div className="mt-6">
-        <h3 className="m-0 text-sm font-bold text-primary">Saved</h3>
-        {savedDocs.length > 0 ? (
-          <ul className="mt-2 list-none p-0">
-            {savedDocs.map((doc) => (
-              <DocumentRow
-                key={doc.id}
-                doc={doc}
-                onCategoryChange={changeCategory}
-                onRemove={removeDoc}
-                disabled={isBusy}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 py-4 text-sm text-muted">
-            Nothing saved yet. Add a note or file above, then save.
-          </p>
         )}
-      </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
-        <button
-          type="button"
-          onClick={save}
-          disabled={isBusy || !isDirty}
-          className={primaryButtonClass}
-        >
-          {isSaving ? "Saving..." : "Save"}
-        </button>
+        {pendingDocs.length > 0 && (
+          <DocumentList
+            heading="Ready to save"
+            description="Set a category for each item so your AI twin knows when to use it."
+            docs={pendingDocs}
+            onCategoryChange={changeCategory}
+            onRemove={removeDoc}
+            disabled={isBusy}
+          />
+        )}
 
-        {isDirty && !isSaving && (
+        <div className="mt-6">
+          <h3 className="m-0 text-sm font-bold text-primary">Saved</h3>
+          {savedDocs.length > 0 ? (
+            <ul className="mt-2 list-none p-0">
+              {savedDocs.map((doc) => (
+                <DocumentRow
+                  key={doc.id}
+                  doc={doc}
+                  onCategoryChange={changeCategory}
+                  onRemove={removeDoc}
+                  disabled={isBusy}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 py-4 text-sm text-muted">
+              Nothing saved yet. Add a note or file above, then save.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
           <button
             type="button"
-            onClick={discardChanges}
-            disabled={isReadingFiles}
-            className={ghostButtonClass}
+            onClick={save}
+            disabled={isBusy || !isDirty}
+            className={primaryButtonClass}
           >
-            Discard changes
+            {isSaving ? "Saving..." : "Save"}
           </button>
-        )}
 
-        {isDirty && (
-          <p className="m-0 text-sm text-muted">
-            You have unsaved changes. Removed items are deleted when you save.
-          </p>
-        )}
+          {isDirty && !isSaving && (
+            <button
+              type="button"
+              onClick={discardChanges}
+              disabled={isReadingFiles}
+              className={ghostButtonClass}
+            >
+              Discard changes
+            </button>
+          )}
 
-        {status.message && (
-          <p
-            role="status"
-            className={
-              status.isError
-                ? "m-0 text-sm font-medium text-red-700"
-                : "m-0 text-sm font-medium text-primary"
-            }
-          >
-            {status.message}
-          </p>
-        )}
-      </div>
-    </section>
+          {isDirty && (
+            <p className="m-0 text-sm text-muted">
+              You have unsaved changes. Removed items are deleted when you save.
+            </p>
+          )}
+
+          {status.message && (
+            <p
+              role="status"
+              className={
+                status.isError
+                  ? "m-0 text-sm font-medium text-red-700"
+                  : "m-0 text-sm font-medium text-primary"
+              }
+            >
+              {status.message}
+            </p>
+          )}
+        </div>
+      </section>
+    </div>
   );
 };
 
@@ -580,6 +711,7 @@ AiTwinConfiguration.propTypes = {
   configuration: PropTypes.shape({
     documents: PropTypes.arrayOf(documentShape),
   }),
+  chatbotPersona: PropTypes.string,
 };
 
 export default AiTwinConfiguration;

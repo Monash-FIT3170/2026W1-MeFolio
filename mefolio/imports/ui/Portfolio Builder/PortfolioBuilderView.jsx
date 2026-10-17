@@ -547,6 +547,7 @@ const DashboardLayout = () => {
                 <AiTwinConfiguration
                   portfolioId={selectedPortfolio?._id}
                   configuration={selectedPortfolio?.aiTwinConfiguration}
+                  chatbotPersona={selectedPortfolio?.chatbotPersona}
                 />
               ) : activeTab === "recruiter" ? (
                 <RecruiterPortal

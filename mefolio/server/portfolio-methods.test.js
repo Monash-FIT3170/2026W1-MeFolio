@@ -91,6 +91,21 @@ if (Meteor.isServer) {
       expect(updated.title).to.equal("Renamed");
     });
 
+    it("rejects unsupported chatbot personas", async function () {
+      try {
+        await runUpdate({ userId: ownerId }, portfolioId, {
+          chatbotPersona: "untrusted-prompt",
+        });
+        expect.fail("Expected an unsupported chatbot persona to be rejected");
+      } catch (error) {
+        expect(error).to.be.instanceOf(Meteor.Error);
+        expect(error.error).to.equal("invalid-chatbot-persona");
+      }
+
+      const unchanged = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(unchanged.chatbotPersona).to.be.undefined;
+    });
+
     it("does not let the generic update method change username", async function () {
       const originalUsername = uniqueSlug("original-name");
 

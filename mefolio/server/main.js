@@ -7,6 +7,10 @@ import {
   PortfolioCollection,
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
+import {
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "/imports/api/files/resumeFiles";
 
@@ -301,6 +305,21 @@ Meteor.startup(async () => {
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
+    if (
+      portfolio.isPublished &&
+      !Object.hasOwn(portfolio, "publishedAiTwinConfiguration")
+    ) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $set: {
+          publishedAiTwinConfiguration: {
+            documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+              ? portfolio.aiTwinConfiguration.documents
+              : [],
+          },
+        },
+      });
+    }
+
     const existingOrderCount = await PortfolioProjectsCollection.find({
       portfolioId: portfolio._id,
     }).countAsync();
@@ -366,12 +385,14 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to the
-// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
-// publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
+// `portfolio.recruiterView` publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
+};
 const activeViewerConnections = new Map();
 
 const getViewerData = async (publication) => {
@@ -742,8 +763,20 @@ Meteor.methods({
     const safePortfolioData = { ...portfolioData };
     delete safePortfolioData.username;
 
+    if (
+      Object.hasOwn(safePortfolioData, "chatbotPersona") &&
+      !isChatbotPersona(safePortfolioData.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
+
     const newPortfolio = {
       ...safePortfolioData,
+      chatbotPersona:
+        safePortfolioData.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
@@ -856,11 +889,17 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedAiTwinConfiguration: {
+          documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+            ? portfolio.aiTwinConfiguration.documents
+            : [],
+        },
         isPublished: true,
         publishedAt: new Date(),
       },
