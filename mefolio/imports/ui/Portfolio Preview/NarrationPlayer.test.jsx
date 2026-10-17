@@ -323,7 +323,7 @@ if (Meteor.isClient) {
         );
       });
 
-      it("keeps the placeholder when the draft has no text to read", () => {
+      it("reads the description when the project has no custom narration", async () => {
         render(
           <ProjectCard
             project={{
@@ -335,11 +335,32 @@ if (Meteor.isClient) {
           />,
         );
 
-        expect(screen.queryByTestId("narration-player")).to.equal(null);
-        expect(screen.getByRole("status").textContent).to.equal(
-          "No narration added for this project.",
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
         );
-        sinon.assert.notCalled(callStub);
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        expect(callStub.firstCall.args[2]).to.equal(
+          "A normal public project description.",
+        );
+      });
+
+      it("reads the description when the owner turns custom narration off", async () => {
+        render(
+          <ProjectCard
+            project={{ ...draftProject, useCustomNarration: false }}
+            draftPortfolioId="draft-1"
+          />,
+        );
+
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
+        );
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        expect(callStub.firstCall.args[2]).to.equal(
+          "Visible project description.",
+        );
       });
     });
   });
