@@ -9,6 +9,7 @@ import {
 } from "/imports/api/portfolio";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "/imports/api/files/resumeFiles";
+import "./user-methods.js";
 
 // oauth login
 import "./oauth-login/oauth.js";
