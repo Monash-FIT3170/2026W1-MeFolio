@@ -5,6 +5,7 @@ import "meteor/accounts-password";
 
 import "/imports/ui/Login/LoginPage.test.jsx";
 import "/imports/ui/Login/ForgotPasswordPage.test.jsx";
+import "/imports/ui/Login/ResetPasswordPage.test.jsx";
 import "/imports/api/account.test.js";
 import "/imports/api/session.test.js";
 import "/imports/api/projectClickTracking.test.js";
@@ -14,10 +15,14 @@ import "/imports/ui/Portfolio Preview/PortfolioContent.test.jsx";
 import "/imports/ui/Portfolio Preview/ProjectChallenge.test.jsx";
 import "/imports/ui/Portfolio Preview/NarrationPlayer.test.jsx";
 import "/imports/ui/Portfolio Preview/runInSandbox.test.js";
+import "/imports/ui/Portfolio Preview/portfolioDraftDiff.test.js";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";
 import "/imports/ui/Recruiter/RecruiterLoginPage.test.jsx";
 import "/imports/ui/Public/PublicPortfolioPage.test.jsx";
+import "/imports/ui/Portfolio Builder/AiTwinConfiguration.test.jsx";
+import "/imports/ui/Portfolio Builder/ProfileSettings.test.jsx";
 import "/imports/ui/Recruiter/recruiterVisitAlertLogic.test.js";
+import "/server/ai/chatService.test.js";
 import "/server/recruiter-tokens/methods.test.js";
 import "/server/publications/publicPortfolio.test.js";
 import "/server/publications/publicPortfolioMeta.test.js";
@@ -31,9 +36,17 @@ import "/server/portfolios.byUsername.test.js";
 import "/server/github-api.test.js";
 import "/server/project-narration.test.js";
 import "/server/project-narration-public.test.js";
+import "/server/credly-api.test.js";
+import "/server/credly-methods.test.js";
 import "/server/challenge-methods.test.js";
+import "/server/cache-middleware.test.js";
+import "/imports/ui/Public/ViewerLocationPrompt.test.jsx";
+import "/imports/api/certifications.test.js";
 import "/imports/api/projects.test.js";
 import "../imports/ui/Portfolio Builder/VisitHistorySection.test.jsx";
+import "/imports/ui/components/ProfileCard.test.jsx";
+import "../imports/api/portfolio.test.js";
+import "/imports/ui/Portfolio Preview/CertificationsSection.test.jsx";
 
 describe("mefolio", function () {
   it("package.json has correct name", async function () {

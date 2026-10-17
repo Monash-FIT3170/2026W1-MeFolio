@@ -1,11 +1,16 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
+import { WebApp } from "meteor/webapp";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import {
   PortfolioCollection,
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
+import {
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import { isPortfolioNarrationEnabled } from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
@@ -13,6 +18,10 @@ import "/imports/api/files/resumeFiles";
 // oauth login
 import "./oauth-login/oauth.js";
 import "./projectClickTracking.js";
+
+// register AI Twin methods
+import "./ai/chatMethods.js";
+import "./ai/aiTwinMethods.js";
 
 // recruiter access token
 import "./recruiter-tokens/collection.js";
@@ -32,11 +41,56 @@ import "./portfolio-indexes.js";
 // register github methods for sync
 import "./github-methods.js";
 import "./project-narration.js";
+// register AI Twin methods
+import "./ai/chatMethods.js";
+import "./credly-methods.js";
 import { validateChallenge } from "./challenge-methods.js";
+
+// cache middleware
+import {
+  shouldCachePortfolioView,
+  applyCacheHeaders,
+} from "./cache-middleware.js";
+// certifications
+import {
+  normalizeCertification,
+  normalizeCertifications,
+} from "/imports/api/certifications";
 
 Accounts.config({
   loginExpirationInDays: 1,
 });
+
+/* global process */
+// BUG-01: real password-reset email delivery.
+// Meteor sends mail through its built-in SMTP transport when MAIL_URL is set;
+// with no MAIL_URL it only logs the email, which is why resets previously did
+// nothing. Keep the real MAIL_URL out of VCS (an env var in staging, or private
+// settings locally) — only a placeholder lives in oauth.settings.example.json.
+if (!process.env.MAIL_URL && Meteor.settings.private?.MAIL_URL) {
+  process.env.MAIL_URL = Meteor.settings.private.MAIL_URL;
+}
+
+Accounts.emailTemplates.siteName = "MeFolio";
+// The sender must match the provider's authenticated/verified address or real
+// mail will be rejected or spam-filtered, so read it from settings and fall
+// back to a generic address only when none is configured.
+Accounts.emailTemplates.from =
+  Meteor.settings.private?.MAIL_FROM || "MeFolio <no-reply@mefolio.app>";
+
+// Point the reset link at our in-app react-router route (not Meteor's default
+// hash URL) so /reset-password/:token renders the ResetPasswordPage.
+Accounts.urls.resetPassword = (token) =>
+  Meteor.absoluteUrl(`reset-password/${token}`);
+
+Accounts.emailTemplates.resetPassword = {
+  subject: () => "Reset your MeFolio password",
+  text: (user, url) =>
+    "Hello,\n\n" +
+    "We received a request to reset your MeFolio password. Click the link " +
+    `below to choose a new one:\n\n${url}\n\n` +
+    "If you didn't request this, you can safely ignore this email.\n\n— MeFolio",
+};
 
 Meteor.startup(async () => {
   let sampleUserId;
@@ -259,6 +313,21 @@ Meteor.startup(async () => {
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
+    if (
+      portfolio.isPublished &&
+      !Object.hasOwn(portfolio, "publishedAiTwinConfiguration")
+    ) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $set: {
+          publishedAiTwinConfiguration: {
+            documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+              ? portfolio.aiTwinConfiguration.documents
+              : [],
+          },
+        },
+      });
+    }
+
     const existingOrderCount = await PortfolioProjectsCollection.find({
       portfolioId: portfolio._id,
     }).countAsync();
@@ -280,6 +349,43 @@ Meteor.startup(async () => {
         }),
       ),
     );
+  }
+
+  // BUG-02: Flush lingering visitor presence state from prior container
+  // sessions or abrupt restarts. When the server boots, no active client connections exist.
+  await PortfolioCollection.updateAsync(
+    { viewers: { $exists: true, $not: { $size: 0 } } },
+    { $set: { viewers: [] } },
+    { multi: true },
+  );
+
+  // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
+  // Heartbeats occur every 10s from PublicPortfolioPage; expire after 30s of inactivity.
+  Meteor.setInterval(async () => {
+    try {
+      const expirationThreshold = new Date(Date.now() - 30 * 1000);
+      await PortfolioCollection.updateAsync(
+        { "viewers.lastSeenAt": { $lt: expirationThreshold } },
+        {
+          $pull: {
+            viewers: { lastSeenAt: { $lt: expirationThreshold } },
+          },
+        },
+        { multi: true },
+      );
+    } catch (err) {
+      console.error("Failed to prune stale live visitors:", err);
+    }
+  }, 15 * 1000);
+
+  // FEAT-28: Performance Hardening -- Cache Headers
+  if (Meteor.isProduction) {
+    WebApp.rawConnectHandlers.use((req, res, next) => {
+      if (shouldCachePortfolioView(req)) {
+        applyCacheHeaders(res);
+      }
+      next();
+    });
   }
 });
 
@@ -307,14 +413,14 @@ Meteor.publish("projects.all", async function () {
   );
 });
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to the
-// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
-// publication instead.
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
+// `portfolio.recruiterView` publication instead.
 const NON_OWNER_PORTFOLIO_FIELDS = {
   recruiterInfo: 0,
   publishedNarrations: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
 };
 const activeViewerConnections = new Map();
 
@@ -353,6 +459,7 @@ const getViewerData = async (publication) => {
     email,
     connectedAt: new Date(),
     lastSeenAt: new Date(),
+    location: null,
   };
 
   if (publication.userId) {
@@ -370,8 +477,15 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
     viewer,
   });
 
+  // Pull existing session by connectionId, or by userId if logged in, to prevent duplicates
+  const pullFilter = viewer.userId
+    ? {
+        $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }],
+      }
+    : { connectionId: viewer.connectionId };
+
   await PortfolioCollection.updateAsync(portfolioId, {
-    $pull: { viewers: { connectionId: viewer.connectionId } },
+    $pull: { viewers: pullFilter },
   });
 
   await PortfolioCollection.updateAsync(portfolioId, {
@@ -694,13 +808,172 @@ Meteor.methods({
     const safePortfolioData = { ...portfolioData };
     delete safePortfolioData.username;
 
+    if (
+      Object.hasOwn(safePortfolioData, "chatbotPersona") &&
+      !isChatbotPersona(safePortfolioData.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
+
     const newPortfolio = {
       ...safePortfolioData,
+      chatbotPersona:
+        safePortfolioData.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
 
     return await PortfolioCollection.insertAsync(newPortfolio);
+  },
+
+  // Certification methods
+  async "portfolios.addCertification"(portfolioId, certification) {
+    check(portfolioId, String);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to add a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const normalized = normalizeCertification({
+      ...certification,
+      source: "manual",
+      verified: false,
+      lastSyncedAt: null,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [];
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: [...existing, normalized] },
+    });
+  },
+
+  async "portfolios.updateCertification"(portfolioId, index, certification) {
+    check(portfolioId, String);
+    check(index, Number);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to update a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    const original = existing[index];
+
+    // Preserve server-owned fields
+    const normalized = normalizeCertification({
+      ...certification,
+      source: original.source,
+      verified: original.verified,
+      lastSyncedAt: original.lastSyncedAt,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    existing[index] = normalized;
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
+  },
+
+  async "portfolios.removeCertification"(portfolioId, index) {
+    check(portfolioId, String);
+    check(index, Number);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to remove a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    existing.splice(index, 1);
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
   },
 
   async "portfolios.publish"(portfolioId) {
@@ -831,12 +1104,19 @@ Meteor.methods({
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
       narrationEnabled,
+      chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
+      certifications: normalizeCertifications(portfolio.certifications),
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
         publishedNarrations,
+        publishedAiTwinConfiguration: {
+          documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+            ? portfolio.aiTwinConfiguration.documents
+            : [],
+        },
         isPublished: true,
         publishedAt: new Date(),
       },
@@ -870,6 +1150,72 @@ Meteor.methods({
 
     if (activeViewer?.portfolioId === portfolioId) {
       activeViewer.viewer.lastSeenAt = lastSeenAt;
+      activeViewerConnections.set(connectionId, activeViewer);
+    }
+
+    return updatedCount;
+  },
+
+  async "portfolios.recordViewerLocation"(portfolioId, location) {
+    check(portfolioId, String);
+    check(location, {
+      lat: Number,
+      lng: Number,
+      city: String,
+      countryCode: String,
+    });
+
+    const connectionId = this.connection?.id;
+    if (!connectionId) return 0;
+
+    // Reject nonsensical coordinates
+    if (
+      location.lat < -90 ||
+      location.lat > 90 ||
+      location.lng < -180 ||
+      location.lng > 180
+    ) {
+      throw new Meteor.Error(
+        "portfolios.recordViewerLocation.invalidCoords",
+        "Coordinates out of range.",
+      );
+    }
+
+    const locationEntry = {
+      lat: location.lat,
+      lng: location.lng,
+      city: String(location.city).slice(0, 100),
+      countryCode: String(location.countryCode).slice(0, 8),
+      capturedAt: new Date(),
+    };
+
+    let updatedCount = await PortfolioCollection.updateAsync(
+      { _id: portfolioId, "viewers.connectionId": connectionId },
+      { $set: { "viewers.$.location": locationEntry } },
+    );
+
+    if (!updatedCount) {
+      const published = await PortfolioCollection.findOneAsync({
+        _id: portfolioId,
+        isPublished: true,
+      });
+      if (!published) {
+        throw new Meteor.Error(
+          "portfolios.recordViewerLocation.notFound",
+          "Portfolio not found.",
+        );
+      }
+
+      const viewer = await getViewerData(this);
+      if (!viewer) return 0;
+      viewer.location = locationEntry;
+      await addPortfolioViewer(portfolioId, viewer);
+      return 1;
+    }
+
+    const activeViewer = activeViewerConnections.get(connectionId);
+    if (activeViewer?.portfolioId === portfolioId) {
+      activeViewer.viewer.location = locationEntry;
       activeViewerConnections.set(connectionId, activeViewer);
     }
 

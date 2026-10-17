@@ -93,6 +93,8 @@ export function ProjectCard({
               data-testid="project-card-image"
               src={media}
               alt={`${title} preview`}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           )

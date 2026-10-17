@@ -59,12 +59,12 @@ const ProjectClicksChart = ({ analytics }) => {
   );
 
   return (
-    <section className="rounded-xl border border-line bg-surface-fill p-6 shadow-sm">
-      <div className="mb-6">
-        <h2 className="m-0 text-lg font-bold text-primary">
+    <section className="min-w-0 rounded-xl border border-line bg-surface-fill p-3 shadow-sm md:p-6">
+      <div className="mb-3 md:mb-6">
+        <h2 className="m-0 text-sm font-bold text-primary md:text-lg">
           Clicks by Project
         </h2>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 hidden text-sm text-muted md:block">
           Total recorded clicks for each portfolio project.
         </p>
       </div>
@@ -83,12 +83,12 @@ const ProjectClicksChart = ({ analytics }) => {
 
             return (
               <div key={project.id}>
-                <div className="mb-2 flex items-center justify-between gap-4">
-                  <span className="truncate text-sm font-medium text-primary">
+                <div className="mb-2 flex items-center justify-between gap-2 md:gap-4">
+                  <span className="truncate text-xs font-medium text-primary md:text-sm">
                     {project.title}
                   </span>
 
-                  <span className="text-sm font-bold text-primary">
+                  <span className="shrink-0 text-xs font-bold text-primary md:text-sm">
                     {project.totalClicks}
                   </span>
                 </div>
@@ -112,10 +112,12 @@ const TopProjects = ({ analytics }) => {
   const topProjects = analytics.slice(0, 5);
 
   return (
-    <section className="rounded-xl border border-line bg-surface-fill p-6 shadow-sm">
-      <div className="mb-5">
-        <h2 className="m-0 text-lg font-bold text-primary">Top Projects</h2>
-        <p className="mt-1 text-sm text-muted">
+    <section className="min-w-0 rounded-xl border border-line bg-surface-fill p-3 shadow-sm md:p-6">
+      <div className="mb-3 md:mb-5">
+        <h2 className="m-0 text-sm font-bold text-primary md:text-lg">
+          Top Projects
+        </h2>
+        <p className="mt-1 hidden text-sm text-muted md:block">
           Projects ranked by recorded clicks.
         </p>
       </div>
@@ -129,14 +131,14 @@ const TopProjects = ({ analytics }) => {
           {topProjects.map((project, index) => (
             <div
               key={project.id}
-              className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+              className="flex flex-wrap items-center justify-between gap-1 py-3 first:pt-0 last:pb-0 md:flex-nowrap md:gap-4 md:py-4"
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-selected text-sm font-bold text-alt">
+              <div className="flex min-w-0 items-center gap-1 md:gap-3">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-selected text-xs font-bold text-alt md:h-8 md:w-8 md:text-sm">
                   {index + 1}
                 </span>
 
-                <span className="truncate text-sm font-semibold text-primary">
+                <span className="truncate text-xs font-semibold text-primary md:text-sm">
                   {project.title}
                 </span>
               </div>
@@ -232,41 +234,33 @@ const AnalyticsSection = ({ projects = [], engagements = [] }) => {
   );
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-line bg-surface-fill p-5 shadow-sm">
-          <p className="m-0 text-sm font-medium text-muted">
+    <div className="space-y-3 md:space-y-6">
+      <section className="grid grid-cols-2 gap-3 md:gap-4">
+        <div className="min-w-0 rounded-xl border border-line bg-surface-fill p-3 shadow-sm md:p-5">
+          <p className="m-0 text-xs font-medium text-muted md:text-sm">
             Total Project Clicks
           </p>
-          <p className="mt-2 text-3xl font-extrabold text-primary">
+          <p className="mt-2 text-xl font-extrabold text-primary md:text-3xl">
             {totalClicks}
           </p>
         </div>
 
-        <div className="rounded-xl border border-line bg-surface-fill p-5 shadow-sm">
-          <p className="m-0 text-sm font-medium text-muted">Projects Tracked</p>
-          <p className="mt-2 text-3xl font-extrabold text-primary">
+        <div className="min-w-0 rounded-xl border border-line bg-surface-fill p-3 shadow-sm md:p-5">
+          <p className="m-0 text-xs font-medium text-muted md:text-sm">
+            Projects Tracked
+          </p>
+          <p className="mt-2 text-xl font-extrabold text-primary md:text-3xl">
             {projectAnalytics.length}
           </p>
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-1 md:gap-6 xl:grid-cols-[2fr_1fr]">
         <ProjectClicksChart analytics={projectAnalytics} />
         <TopProjects analytics={projectAnalytics} />
       </div>
 
       <ProjectClickHeatmap analytics={projectHeatmap} />
-
-      <section className="rounded-xl border border-dashed border-line bg-surface-fill p-6">
-        <h2 className="m-0 text-lg font-bold text-primary">
-          Visitor Locations
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          Location analytics will appear here once visitor location data is
-          available.
-        </p>
-      </section>
     </div>
   );
 };
