@@ -344,6 +344,37 @@ const DashboardLayout = () => {
     );
   };
 
+  // Chooses whether a project's narration reads its custom case study or its
+  // description. Applies to the draft preview straight away and to the live
+  // portfolio on the next publish.
+  const handleToggleCustomNarration = (project, enabled) => {
+    const projectId = project?._id || project?.id;
+    if (!projectId) return;
+
+    Meteor.call(
+      "projects.update",
+      projectId,
+      { useCustomNarration: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update custom narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+          return;
+        }
+
+        setOrderedProjects((previousProjects) =>
+          previousProjects.map((currentProject) =>
+            (currentProject._id || currentProject.id) === projectId
+              ? { ...currentProject, useCustomNarration: enabled }
+              : currentProject,
+          ),
+        );
+      },
+    );
+  };
+
   const handleSaveProject = (projectId, updates) => {
     Meteor.call("projects.update", projectId, updates, (error) => {
       if (error) {
@@ -569,6 +600,11 @@ const DashboardLayout = () => {
                   onEdit={handleEditProject}
                   syncingProjectId={syncingProjectId}
                   onSync={handleSyncProject}
+                  onToggleCustomNarration={
+                    portfolioNarrationEnabled
+                      ? handleToggleCustomNarration
+                      : undefined
+                  }
                   draggedProjectIndex={draggedProjectIndex}
                   onDragStart={handleProjectDragStart}
                   onDragOver={handleProjectDragOver}

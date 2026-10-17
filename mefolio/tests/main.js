@@ -14,6 +14,7 @@ import "/imports/ui/Portfolio Preview/PortfolioPreview.test.jsx";
 import "/imports/ui/Portfolio Preview/PortfolioContent.test.jsx";
 import "/imports/ui/Portfolio Preview/ProjectChallenge.test.jsx";
 import "/imports/ui/Portfolio Preview/NarrationPlayer.test.jsx";
+import "/imports/ui/Projects Editor/ProjectCard.test.jsx";
 import "/imports/ui/Portfolio Preview/runInSandbox.test.js";
 import "/imports/ui/Portfolio Preview/portfolioDraftDiff.test.js";
 import "/imports/ui/Contexts/ResponsiveContext.test.jsx";

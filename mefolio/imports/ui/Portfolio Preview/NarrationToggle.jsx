@@ -1,7 +1,14 @@
 import PropTypes from "prop-types";
 import { Mic } from "lucide-react";
 
-export function NarrationToggle({ enabled, onChange, fullWidth = false }) {
+export function NarrationToggle({
+  enabled,
+  onChange,
+  fullWidth = false,
+  label = "Narration",
+  ariaLabel = "Enable voice narration",
+  disabled = false,
+}) {
   return (
     <div
       className={`flex h-11 box-border min-w-0 ${
@@ -11,15 +18,20 @@ export function NarrationToggle({ enabled, onChange, fullWidth = false }) {
       <span className="flex min-w-0 flex-1 items-center gap-1.5">
         <Mic className="h-3.5 w-3.5 shrink-0 text-accent1" aria-hidden="true" />
         <span className="whitespace-nowrap text-sm font-semibold text-primary">
-          Narration
+          {label}
         </span>
       </span>
-      <label className="ml-1.5 inline-flex shrink-0 cursor-pointer items-center">
+      <label
+        className={`ml-1.5 inline-flex shrink-0 items-center ${
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+        }`}
+      >
         <input
           type="checkbox"
           role="switch"
           checked={enabled}
-          aria-label="Enable voice narration"
+          aria-label={ariaLabel}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
           className="peer sr-only"
         />
@@ -43,4 +55,7 @@ NarrationToggle.propTypes = {
   enabled: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   fullWidth: PropTypes.bool,
+  label: PropTypes.string,
+  ariaLabel: PropTypes.string,
+  disabled: PropTypes.bool,
 };

@@ -12,7 +12,10 @@ import {
   isChatbotPersona,
 } from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
-import { isPortfolioNarrationEnabled } from "/imports/api/projectNarration";
+import {
+  buildNarrationText,
+  isPortfolioNarrationEnabled,
+} from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
 
 // oauth login
@@ -769,6 +772,16 @@ Meteor.methods({
     }
 
     if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "useCustomNarration",
+      )
+    ) {
+      normalizedUpdates.useCustomNarration =
+        normalizedUpdates.useCustomNarration === true;
+    }
+
+    if (
       Object.prototype.hasOwnProperty.call(normalizedUpdates, "proofOfWorkMode")
     ) {
       normalizedUpdates.proofOfWorkMode =
@@ -1051,9 +1064,7 @@ Meteor.methods({
         media: project.media || "",
         status: project.status || "",
         narrationAvailable:
-          narrationEnabled &&
-          typeof project.caseStudyNarrative === "string" &&
-          Boolean(project.caseStudyNarrative.trim()),
+          narrationEnabled && Boolean(buildNarrationText(project)),
         proofOfWorkMode: project.proofOfWorkMode || "standard",
         ...(project.challenge
           ? {
@@ -1084,10 +1095,7 @@ Meteor.methods({
           .filter(Boolean)
           .map((project) => ({
             projectId: project._id,
-            text:
-              typeof project.caseStudyNarrative === "string"
-                ? project.caseStudyNarrative.trim()
-                : "",
+            text: buildNarrationText(project),
           }))
           .filter((narration) => narration.text)
       : [];
