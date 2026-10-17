@@ -44,13 +44,6 @@ export function SignUpPage({
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
   const strength = getPasswordStrength(formData.password);
   const strengthLabels = ["Too weak", "Weak", "Fair", "Good", "Strong"];
-  const strengthColors = [
-    "bg-gray-200",
-    "bg-red-500",
-    "bg-orange-400",
-    "bg-yellow-400",
-    "bg-green-500",
-  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -196,7 +189,7 @@ export function SignUpPage({
           {success && (
             <div
               role="status"
-              className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-bold"
+              className="mb-6 p-4 bg-background border-2 border-accent1 rounded-xl text-primary text-sm font-bold"
             >
               Account created! Redirecting you to sign in...
             </div>
@@ -272,14 +265,12 @@ export function SignUpPage({
                     <div
                       key={level}
                       className={`h-1.5 flex-1 rounded-full ${
-                        strength >= level
-                          ? strengthColors[strength]
-                          : "bg-gray-200"
+                        strength >= level ? "bg-accent1" : "bg-muted/30"
                       }`}
                     />
                   ))}
                 </div>
-                <p className="mt-1 ml-1 text-xs font-bold text-gray-500">
+                <p className="mt-1 ml-1 text-xs font-bold text-muted">
                   {formData.password ? strengthLabels[strength] : ""}
                 </p>
                 <ul className="mt-1 ml-1 space-y-0.5 text-xs font-medium">
@@ -288,7 +279,7 @@ export function SignUpPage({
                     return (
                       <li
                         key={rule.id}
-                        className={passed ? "text-green-600" : "text-gray-400"}
+                        className={passed ? "text-accent1" : "text-muted"}
                       >
                         {passed ? "✓" : "○"} {rule.label}
                       </li>
