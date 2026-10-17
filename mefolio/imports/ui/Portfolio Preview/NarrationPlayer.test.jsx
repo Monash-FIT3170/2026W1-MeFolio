@@ -18,6 +18,7 @@ import { describe, it, beforeEach, afterEach } from "mocha";
 import { Meteor } from "meteor/meteor";
 import { NarrationPlayer, formatNarrationTime } from "./NarrationPlayer.jsx";
 import { ProjectCard } from "./ProjectCard.jsx";
+import { DEFAULT_VOICE_ID } from "/imports/api/narrationVoices";
 
 const AUDIO_URL = "data:audio/wav;base64,UklGRg==";
 
@@ -273,6 +274,7 @@ if (Meteor.isClient) {
       let callStub;
 
       beforeEach(() => {
+        window.localStorage.removeItem("mefolio.narrationVoice");
         callStub = sinon.stub(Meteor, "callAsync").resolves(AUDIO_URL);
       });
 
@@ -291,6 +293,30 @@ if (Meteor.isClient) {
           "projects.generateNarration",
           "draft-1",
           "Draft case study narration.",
+          DEFAULT_VOICE_ID,
+        );
+      });
+
+      it("passes the selected voice when generating draft narration", async () => {
+        render(
+          <ProjectCard project={draftProject} draftPortfolioId="draft-1" />,
+        );
+
+        fireEvent.change(
+          screen.getByRole("combobox", { name: /narration voice/i }),
+          { target: { value: "en_US-ryan-medium" } },
+        );
+        fireEvent.click(
+          screen.getByRole("button", { name: /play narration/i }),
+        );
+        await screen.findByRole("button", { name: /pause narration/i });
+
+        sinon.assert.calledOnceWithExactly(
+          callStub,
+          "projects.generateNarration",
+          "draft-1",
+          "Draft case study narration.",
+          "en_US-ryan-medium",
         );
       });
 

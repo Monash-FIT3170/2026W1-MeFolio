@@ -3,6 +3,10 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 import { Buffer } from "buffer";
 import assert from "assert";
 import sinon from "sinon";
+import {
+  DEFAULT_VOICE_ID,
+  NARRATION_VOICES,
+} from "/imports/api/narrationVoices";
 import { clearNarrationCache } from "./project-narration.js";
 
 if (Meteor.isServer) {
@@ -12,11 +16,16 @@ if (Meteor.isServer) {
     let portfolio;
     let audio;
 
-    const callMethod = (portfolioId = "portfolio-1", projectId = "project-1") =>
+    const callMethod = (
+      portfolioId = "portfolio-1",
+      projectId = "project-1",
+      voiceId,
+    ) =>
       Meteor.server.method_handlers["projects.getNarrationAudio"].call(
         { userId: null },
         portfolioId,
         projectId,
+        voiceId,
       );
 
     beforeEach(function () {
@@ -57,7 +66,20 @@ if (Meteor.isServer) {
       );
       assert.deepStrictEqual(JSON.parse(fetchStub.firstCall.args[1].body), {
         text: "A dedicated case study about building MeFolio.",
+        voice: DEFAULT_VOICE_ID,
       });
+    });
+
+    it("synthesizes audio using the selected voice", async function () {
+      for (const voice of NARRATION_VOICES) {
+        clearNarrationCache();
+        await callMethod("portfolio-1", "project-1", voice.id);
+        assert.deepStrictEqual(JSON.parse(fetchStub.lastCall.args[1].body), {
+          text: "A dedicated case study about building MeFolio.",
+          voice: voice.id,
+        });
+      }
+      sinon.assert.calledThrice(fetchStub);
     });
 
     it("rejects unpublished portfolios without contacting Piper", async function () {

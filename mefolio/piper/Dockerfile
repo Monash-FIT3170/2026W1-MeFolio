@@ -8,9 +8,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
 RUN python -m pip install --no-cache-dir "piper-tts[http]==1.8.0"
 
 WORKDIR /voices
-RUN python -m piper.download_voices en_US-lessac-medium
+RUN python -m piper.download_voices \
+en_US-lessac-medium \
+en_US-lessac-medium \
+en_US-ryan-medium \
+en_GB-alan-medium
 
 RUN useradd --system --uid 10001 --create-home piper
 USER piper
 
-CMD ["python", "-m", "piper.http_server", "-m", "en_US-lessac-medium", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["python", "-m", "piper.http_server", "-m", "en_US-lessac-medium", "--data-dir", "/voices", "--host", "0.0.0.0", "--port", "5000"]

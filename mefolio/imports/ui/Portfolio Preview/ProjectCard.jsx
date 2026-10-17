@@ -52,11 +52,12 @@ export function ProjectCard({
   const projectId = data._id || data.id;
   const showNarration = narrationEnabled && isProjectNarrationEnabled();
   const draftNarrationText = draftPortfolioId ? buildNarrationText(data) : "";
-  const loadDraftAudio = (ownerPortfolioId) =>
+  const loadDraftAudio = (ownerPortfolioId, _projectId, voiceId) =>
     Meteor.callAsync(
       "projects.generateNarration",
       ownerPortfolioId,
       draftNarrationText,
+      voiceId,
     );
 
   const handleProjectClick = (target) => {
