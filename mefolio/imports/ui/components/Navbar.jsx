@@ -8,6 +8,7 @@ import { PortfolioCollection } from "../../api/portfolio";
 const Navbar = ({
   portfolio: draftPortfolio = null,
   viewportMode = "desktop",
+  hasBuilderMenu = false,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,8 +30,12 @@ const Navbar = ({
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-muted">
       <div
-        className={`h-16 flex items-center justify-between ${
-          isMobilePreview ? "px-4" : "px-20"
+        className={`flex items-center justify-between ${
+          isMobilePreview && hasBuilderMenu
+            ? "h-24 pl-20 pr-4"
+            : isMobilePreview
+              ? "h-16 px-4"
+              : "h-16 px-20"
         }`}
       >
         <a
@@ -111,6 +116,7 @@ const Navbar = ({
 Navbar.propTypes = {
   portfolio: PropTypes.object,
   viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
+  hasBuilderMenu: PropTypes.bool,
 };
 
 export default Navbar;

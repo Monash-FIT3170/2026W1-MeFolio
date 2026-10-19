@@ -7,17 +7,19 @@ import { mapLiveVisitors } from "../../models/portfolioBuilderViewModel.js";
 // Reusable card for a single dashboard statistic.
 const StatCard = ({ stat }) => {
   return (
-    <div className="rounded-lg border border-line bg-surface-fill p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="min-w-0 rounded-lg border border-line bg-surface-fill p-3 shadow-sm md:p-6">
+      <div className="mb-2 flex items-center justify-between md:mb-4">
         <span className="rounded-full bg-accent1/20 px-2.5 py-1 text-xs font-semibold text-accent1">
           {"\u2197"} {stat.change}
         </span>
       </div>
 
-      <h2 className="m-0 text-3xl font-space-mono font-bold text-primary">
+      <h2 className="m-0 text-xl md:text-3xl font-space-mono font-bold text-primary">
         {stat.value}
       </h2>
-      <p className="mt-1 text-sm font-medium text-primary">{stat.label}</p>
+      <p className="mt-1 text-xs md:text-sm font-medium text-primary">
+        {stat.label}
+      </p>
     </div>
   );
 };
@@ -42,9 +44,6 @@ const VisitorCard = ({ visitor }) => {
         <p className="mt-1 text-sm font-medium text-primary">
           {visitor.activity}
         </p>
-        <span className="mt-1 block text-xs text-primary">
-          {visitor.location}
-        </span>
       </div>
 
       <div className="text-sm font-semibold text-primary">
@@ -134,7 +133,6 @@ VisitorCard.propTypes = {
     name: PropTypes.string,
     email: PropTypes.string,
     activity: PropTypes.string,
-    location: PropTypes.string,
     duration: PropTypes.string,
     active: PropTypes.bool,
   }).isRequired,

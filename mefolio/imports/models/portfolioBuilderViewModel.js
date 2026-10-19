@@ -67,12 +67,26 @@ export const mapLiveVisitors = (portfolios) => {
       ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
       : "Live now";
 
+    let location = "Location not shared";
+    if (viewer.location && typeof viewer.location === "object") {
+      const { city, countryCode } = viewer.location;
+      if (city && countryCode) {
+        location = `${city}, ${countryCode}`;
+      } else if (city) {
+        location = city;
+      } else {
+        location = "Location saved, no city";
+      }
+    } else if (viewer.userId) {
+      location = "Signed in";
+    }
+
     return {
       id: viewer.connectionId || viewer.userId || `viewer-${index}`,
       name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
-      location: viewer.userId ? "Signed in" : "Guest",
+      location,
       duration,
       active: true,
     };
@@ -151,6 +165,9 @@ export const mapAboutMe = (portfolio = {}) => {
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    certifications: Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
       ...(portfolio.recruiterInfo || {}),

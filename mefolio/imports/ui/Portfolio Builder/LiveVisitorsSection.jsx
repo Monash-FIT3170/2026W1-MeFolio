@@ -24,9 +24,7 @@ const VisitorCard = ({ visitor }) => {
         <p className="mt-1 text-sm font-medium text-primary">
           {visitor.activity}
         </p>
-        <span className="mt-1 block text-xs text-primary">
-          {visitor.location}
-        </span>
+        <p className="mt-1 text-xs text-muted">{visitor.location}</p>
       </div>
 
       <div className="text-sm font-semibold text-primary">
@@ -43,10 +41,7 @@ const LiveVisitorsPage = ({ portfolioId }) => {
     const handle = Meteor.subscribe("portfolios.liveVisitors", portfolioId);
     if (!handle.ready()) return [];
 
-    const portfolio = PortfolioCollection.findOne(
-      { _id: portfolioId },
-      { fields: { viewers: 1 } },
-    );
+    const portfolio = PortfolioCollection.findOne({ _id: portfolioId });
 
     return mapLiveVisitors(portfolio ? [portfolio] : []);
   }, [portfolioId]);
