@@ -13,7 +13,11 @@ export const createLoadingViewModel = () => ({
   projects: [],
 });
 
-export const mapOverviewStats = (engagements = [], totalViews = 0) => {
+export const mapOverviewStats = (
+  engagements = [],
+  totalViews = 0,
+  aiQuestionsAsked = 0,
+) => {
   const totalInteractions = engagements.reduce(
     (total, engagement) => total + Number(engagement.clicks || 0),
     0,
@@ -40,8 +44,8 @@ export const mapOverviewStats = (engagements = [], totalViews = 0) => {
     },
     {
       id: "ai-used",
-      value: "0",
-      label: "AI Chatbot Used",
+      value: String(Number(aiQuestionsAsked) || 0),
+      label: "AI Chatbots Used",
       change: "0%",
     },
   ];
@@ -195,7 +199,11 @@ export const createDashboardViewModel = ({
   return {
     isLoading: false,
     sidebarItems,
-    overviewStats: mapOverviewStats(engagements, portfolios[0]?.totalViews),
+    overviewStats: mapOverviewStats(
+      engagements,
+      portfolios[0]?.totalViews,
+      portfolios[0]?.aiQuestionsAsked,
+    ),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),
