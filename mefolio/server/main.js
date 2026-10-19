@@ -7,6 +7,10 @@ import {
   PortfolioCollection,
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
+import {
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
 import "/imports/api/files/resumeFiles";
 
@@ -37,6 +41,7 @@ import "./portfolio-indexes.js";
 import "./github-methods.js";
 // register AI Twin methods
 import "./ai/chatMethods.js";
+import "./credly-methods.js";
 import { validateChallenge } from "./challenge-methods.js";
 
 // cache middleware
@@ -44,6 +49,11 @@ import {
   shouldCachePortfolioView,
   applyCacheHeaders,
 } from "./cache-middleware.js";
+// certifications
+import {
+  normalizeCertification,
+  normalizeCertifications,
+} from "/imports/api/certifications";
 
 Accounts.config({
   loginExpirationInDays: 1,
@@ -301,6 +311,21 @@ Meteor.startup(async () => {
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
+    if (
+      portfolio.isPublished &&
+      !Object.hasOwn(portfolio, "publishedAiTwinConfiguration")
+    ) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $set: {
+          publishedAiTwinConfiguration: {
+            documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+              ? portfolio.aiTwinConfiguration.documents
+              : [],
+          },
+        },
+      });
+    }
+
     const existingOrderCount = await PortfolioProjectsCollection.find({
       portfolioId: portfolio._id,
     }).countAsync();
@@ -324,6 +349,33 @@ Meteor.startup(async () => {
     );
   }
 
+  // BUG-02: Flush lingering visitor presence state from prior container
+  // sessions or abrupt restarts. When the server boots, no active client connections exist.
+  await PortfolioCollection.updateAsync(
+    { viewers: { $exists: true, $not: { $size: 0 } } },
+    { $set: { viewers: [] } },
+    { multi: true },
+  );
+
+  // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
+  // Heartbeats occur every 10s from PublicPortfolioPage; expire after 30s of inactivity.
+  Meteor.setInterval(async () => {
+    try {
+      const expirationThreshold = new Date(Date.now() - 30 * 1000);
+      await PortfolioCollection.updateAsync(
+        { "viewers.lastSeenAt": { $lt: expirationThreshold } },
+        {
+          $pull: {
+            viewers: { lastSeenAt: { $lt: expirationThreshold } },
+          },
+        },
+        { multi: true },
+      );
+    } catch (err) {
+      console.error("Failed to prune stale live visitors:", err);
+    }
+  }, 15 * 1000);
+
   // FEAT-28: Performance Hardening -- Cache Headers
   if (Meteor.isProduction) {
     WebApp.rawConnectHandlers.use((req, res, next) => {
@@ -339,12 +391,14 @@ Meteor.publish("projects.all", function () {
   return ProjectCollection.find({}, { sort: { createdAt: -1 } });
 });
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to the
-// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
-// publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
+// `portfolio.recruiterView` publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
+};
 const activeViewerConnections = new Map();
 
 const getViewerData = async (publication) => {
@@ -400,8 +454,15 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
     viewer,
   });
 
+  // Pull existing session by connectionId, or by userId if logged in, to prevent duplicates
+  const pullFilter = viewer.userId
+    ? {
+        $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }],
+      }
+    : { connectionId: viewer.connectionId };
+
   await PortfolioCollection.updateAsync(portfolioId, {
-    $pull: { viewers: { connectionId: viewer.connectionId } },
+    $pull: { viewers: pullFilter },
   });
 
   await PortfolioCollection.updateAsync(portfolioId, {
@@ -708,13 +769,172 @@ Meteor.methods({
     const safePortfolioData = { ...portfolioData };
     delete safePortfolioData.username;
 
+    if (
+      Object.hasOwn(safePortfolioData, "chatbotPersona") &&
+      !isChatbotPersona(safePortfolioData.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
+
     const newPortfolio = {
       ...safePortfolioData,
+      chatbotPersona:
+        safePortfolioData.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
 
     return await PortfolioCollection.insertAsync(newPortfolio);
+  },
+
+  // Certification methods
+  async "portfolios.addCertification"(portfolioId, certification) {
+    check(portfolioId, String);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to add a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const normalized = normalizeCertification({
+      ...certification,
+      source: "manual",
+      verified: false,
+      lastSyncedAt: null,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [];
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: [...existing, normalized] },
+    });
+  },
+
+  async "portfolios.updateCertification"(portfolioId, index, certification) {
+    check(portfolioId, String);
+    check(index, Number);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to update a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    const original = existing[index];
+
+    // Preserve server-owned fields
+    const normalized = normalizeCertification({
+      ...certification,
+      source: original.source,
+      verified: original.verified,
+      lastSyncedAt: original.lastSyncedAt,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    existing[index] = normalized;
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
+  },
+
+  async "portfolios.removeCertification"(portfolioId, index) {
+    check(portfolioId, String);
+    check(index, Number);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to remove a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    existing.splice(index, 1);
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
   },
 
   async "portfolios.publish"(portfolioId) {
@@ -822,11 +1042,18 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
+      certifications: normalizeCertifications(portfolio.certifications),
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedAiTwinConfiguration: {
+          documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+            ? portfolio.aiTwinConfiguration.documents
+            : [],
+        },
         isPublished: true,
         publishedAt: new Date(),
       },

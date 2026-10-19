@@ -7,12 +7,14 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 // which need Meteor.settings to be present. Mirrors the pattern used for
 // portfolio-methods.js.
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to
-// the owner. Recruiters receive it through the token-gated
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
 // `portfolio.recruiterView` publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
+};
 
 if (Meteor.isServer) {
   Meteor.publish("portfolios.all", function () {
