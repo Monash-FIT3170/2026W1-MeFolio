@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { buildRecruiterSettingsUpdate } from "/imports/ui/Recruiter/recruiterSettingsUpdate";
 import { expect } from "chai";
 
 // Register the methods under test. Importing this lightweight module populates
@@ -51,6 +52,23 @@ if (Meteor.isServer) {
       const updated = await PortfolioCollection.findOneAsync(portfolioId);
       expect(updated.recruiterInfo.companyName).to.equal("Acme");
       expect(updated.recruiterInfo.salaryExpectation).to.equal("100k");
+    });
+
+    it("keeps uploaded resumes when recruiter settings are saved", async function () {
+      const resumeLinks = [{ name: "cv.pdf", url: "/cdn/storage/cv.pdf" }];
+      await runUpdate({ userId: ownerId }, portfolioId, {
+        "recruiterInfo.resumeLinks": resumeLinks,
+      });
+
+      await runUpdate(
+        { userId: ownerId },
+        portfolioId,
+        buildRecruiterSettingsUpdate({ phoneNumber: "0400 000 000" }),
+      );
+
+      const updated = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(updated.recruiterInfo.phoneNumber).to.equal("0400 000 000");
+      expect(updated.recruiterInfo.resumeLinks).to.deep.equal(resumeLinks);
     });
 
     it("normalises and persists certifications for the owner", async function () {
