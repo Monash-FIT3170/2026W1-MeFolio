@@ -34,16 +34,16 @@ export const PublicPortfolioPage = () => {
     const portfolio = PortfolioCollection.findOne({
       $or: [{ _id: lookupValue }, { username: lookupValue }],
     });
-    const resolvedPortfolioId = portfolio?._id || portfolioId;
-    const viewerHandle = resolvedPortfolioId
-      ? Meteor.subscribe("portfolios.viewer", resolvedPortfolioId)
+    const actualPortfolioId = portfolio?._id || portfolioId;
+    const viewerHandle = actualPortfolioId
+      ? Meteor.subscribe("portfolios.viewer", actualPortfolioId)
       : { ready: () => true };
     // The publication withholds unpublished portfolios, but an owner signed in
     // elsewhere in the app has their own draft in minimongo already. Checking
     // isPublished here keeps this route showing the same thing to everyone.
     return {
       isLoading: !publicViewHandle.ready() || !viewerHandle.ready(),
-      portfolioId: resolvedPortfolioId,
+      portfolioId: actualPortfolioId,
       publishedContent: portfolio?.isPublished
         ? portfolio.publishedContent
         : null,
