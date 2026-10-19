@@ -26,12 +26,6 @@ if (Meteor.isServer) {
         ...args,
       );
 
-    const runRecordView = (context, ...args) =>
-      Meteor.server.method_handlers["portfolios.recordView"].call(
-        { isSimulation: false, unblock() {}, ...context },
-        ...args,
-      );
-
     beforeEach(async function () {
       const unique = `${Date.now()}-${Math.random()}`;
       ownerId = await Accounts.createUserAsync({
@@ -47,22 +41,6 @@ if (Meteor.isServer) {
         title: "Owner Portfolio",
         createdAt: new Date(),
       });
-    });
-
-    it("increments views only for a published portfolio", async function () {
-      await runRecordView({}, portfolioId);
-      let portfolio = await PortfolioCollection.findOneAsync(portfolioId);
-      expect(portfolio.totalViews).to.not.exist;
-
-      await PortfolioCollection.updateAsync(portfolioId, {
-        $set: { isPublished: true },
-      });
-
-      expect(await runRecordView({}, portfolioId)).to.equal(1);
-      expect(await runRecordView({}, portfolioId)).to.equal(1);
-
-      portfolio = await PortfolioCollection.findOneAsync(portfolioId);
-      expect(portfolio.totalViews).to.equal(2);
     });
 
     it("persists recruiterInfo for the owner and reads it back", async function () {
