@@ -7,10 +7,12 @@ import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
+import { isPortfolioNarrationEnabled } from "../../api/projectNarration.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
 import SkillsProjectMap from "./SkillsProjectMap.jsx";
+import { NarrationToggle } from "./NarrationToggle.jsx";
 import { CertificationsSection } from "./CertificationsSection.jsx";
 
 const getUserEmail = (user) =>
@@ -227,6 +229,8 @@ export const PortfolioPreview = ({
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
+  const narrationFeatureEnabled = isPortfolioNarrationEnabled(portfolio);
+  const [narrationEnabled, setNarrationEnabled] = useState(true);
 
   // Compute unique skills from the loaded projects
   const availableSkills = useMemo(() => {
@@ -329,7 +333,7 @@ export const PortfolioPreview = ({
               <select
                 value={selectedSkill}
                 onChange={(e) => setSelectedSkill(e.target.value)}
-                className={`rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
+                className={`h-10 min-h-0 w-44 rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
                   viewportMode === "mobile" ? "w-full" : ""
                 }`}
               >
@@ -340,6 +344,13 @@ export const PortfolioPreview = ({
                   </option>
                 ))}
               </select>
+              {narrationFeatureEnabled && (
+                <NarrationToggle
+                  enabled={narrationEnabled}
+                  onChange={setNarrationEnabled}
+                  fullWidth={viewportMode === "mobile"}
+                />
+              )}
               {selectedSkill !== "All" && (
                 <button
                   onClick={() => setSelectedSkill("All")}
@@ -374,6 +385,12 @@ export const PortfolioPreview = ({
                   <ProjectCard
                     project={project}
                     portfolioId={trackingPortfolioId}
+                    draftPortfolioId={
+                      isPublishedView ? undefined : portfolio?._id
+                    }
+                    narrationEnabled={
+                      narrationFeatureEnabled && narrationEnabled
+                    }
                     dataTheme={portfolio.theme || "default"}
                   />
                 </div>
