@@ -118,6 +118,65 @@ const buildDocumentContext = (selected) => {
     : "";
 };
 
+const totalChars = (documents) =>
+  documents.reduce((sum, doc) => sum + doc.content.length, 0);
+
+const preview = (doc) =>
+  doc.content.replace(/\s+/g, " ").trim().slice(0, PREVIEW_CHARS);
+
+// Decide which of the candidate's saved documents are worth reading.
+const selectDocuments = async (documents, question) => {
+  if (documents.length === 0) return [];
+  if (totalChars(documents) <= SEND_EVERYTHING_BELOW_CHARS) return documents;
+
+  const index = documents
+    .map(
+      (doc, i) =>
+        `${i + 1} | ${categoryLabel(doc.category)} | ${doc.title} | ${preview(doc)}`,
+    )
+    .join("\n");
+
+  try {
+    const response = await createGeminiRouterModel().invoke([
+      new SystemMessage(ROUTER_PROMPT),
+      new HumanMessage(
+        `Documents (number | category | title | preview):\n${index}\n\nRecruiter question: ${question}`,
+      ),
+    ]);
+
+    const match = getTextContent(response.content).match(/\[[\d,\s]*\]/);
+    if (match) {
+      return JSON.parse(match[0])
+        .map((n) => documents[n - 1])
+        .filter(Boolean)
+        .slice(0, MAX_DOCS_PER_QUESTION);
+    }
+  } catch (error) {
+    console.error("AI twin document routing failed, using fallback:", error);
+  }
+
+  // Router failed: fall back to the broadest documents rather than guessing.
+  return documents
+    .filter((doc) => doc.category === "resume" || doc.category === "about")
+    .slice(0, 2);
+};
+
+const buildDocumentContext = (selected) => {
+  let remaining = MAX_DOCUMENT_CONTEXT_CHARS;
+  const sections = [];
+
+  for (const doc of selected) {
+    if (remaining <= 0) break;
+    const body = doc.content.slice(0, remaining);
+    remaining -= body.length;
+    sections.push(`[${doc.title} (${categoryLabel(doc.category)})]\n${body}`);
+  }
+
+  return sections.length
+    ? `\n\n<candidate_documents>\n${sections.join("\n\n")}\n</candidate_documents>`
+    : "";
+};
+
 export const answerPortfolioQuestion = async ({
   portfolio,
   documents = [],
@@ -126,6 +185,7 @@ export const answerPortfolioQuestion = async ({
 }) => {
   const model = createGeminiModel();
   const selected = await selectDocuments(documents, question);
+  const context = JSON.stringify(portfolio);
 
   const response = await model.invoke([
     new SystemMessage(
