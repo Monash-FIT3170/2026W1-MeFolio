@@ -69,10 +69,16 @@ const OverviewSection = ({ stats, portfolioId, onViewAllVisitors }) => {
     return mapLiveVisitors(portfolio ? [portfolio] : []);
   }, [portfolioId]);
 
+  const displayedStats = stats.map((stat) =>
+    stat.id === "visitors-now"
+      ? { ...stat, value: String(visitors.length) }
+      : stat,
+  );
+
   return (
     <>
       <section className="grid grid-cols-2 gap-3 md:gap-5 xl:grid-cols-4">
-        {stats.map((stat) => (
+        {displayedStats.map((stat) => (
           <StatCard key={stat.id} stat={stat} />
         ))}
       </section>
