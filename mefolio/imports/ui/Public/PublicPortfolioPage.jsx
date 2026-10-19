@@ -30,14 +30,13 @@ export const PublicPortfolioPage = () => {
     const foundPortfolio = PortfolioCollection.findOne({
       $or: [{ _id: lookupValue }, { username: lookupValue }],
     });
+
+    // Only subscribe to viewer once we know the real _id.
     const viewerHandle = foundPortfolio?._id
       ? Meteor.subscribe("portfolios.viewer", foundPortfolio._id)
       : null;
     const viewerReady = !viewerHandle || viewerHandle.ready();
 
-    // The publication withholds unpublished portfolios, but an owner signed in
-    // elsewhere in the app has their own draft in minimongo already. Checking
-    // isPublished here keeps this route showing the same thing to everyone.
     return {
       isLoading: !publicViewHandle.ready() || !viewerReady,
       portfolio: foundPortfolio,

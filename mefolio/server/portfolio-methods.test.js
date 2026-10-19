@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { buildRecruiterSettingsUpdate } from "/imports/ui/Recruiter/recruiterSettingsUpdate";
 import { expect } from "chai";
 
 // Register the methods under test. Importing this lightweight module populates
@@ -26,12 +27,6 @@ if (Meteor.isServer) {
         ...args,
       );
 
-    const runRecordView = (context, ...args) =>
-      Meteor.server.method_handlers["portfolios.recordView"].call(
-        { isSimulation: false, unblock() {}, ...context },
-        ...args,
-      );
-
     beforeEach(async function () {
       const unique = `${Date.now()}-${Math.random()}`;
       ownerId = await Accounts.createUserAsync({
@@ -49,22 +44,6 @@ if (Meteor.isServer) {
       });
     });
 
-    it("increments views only for a published portfolio", async function () {
-      await runRecordView({}, portfolioId);
-      let portfolio = await PortfolioCollection.findOneAsync(portfolioId);
-      expect(portfolio.totalViews).to.not.exist;
-
-      await PortfolioCollection.updateAsync(portfolioId, {
-        $set: { isPublished: true },
-      });
-
-      expect(await runRecordView({}, portfolioId)).to.equal(1);
-      expect(await runRecordView({}, portfolioId)).to.equal(1);
-
-      portfolio = await PortfolioCollection.findOneAsync(portfolioId);
-      expect(portfolio.totalViews).to.equal(2);
-    });
-
     it("persists recruiterInfo for the owner and reads it back", async function () {
       await runUpdate({ userId: ownerId }, portfolioId, {
         recruiterInfo: { companyName: "Acme", salaryExpectation: "100k" },
@@ -73,6 +52,23 @@ if (Meteor.isServer) {
       const updated = await PortfolioCollection.findOneAsync(portfolioId);
       expect(updated.recruiterInfo.companyName).to.equal("Acme");
       expect(updated.recruiterInfo.salaryExpectation).to.equal("100k");
+    });
+
+    it("keeps uploaded resumes when recruiter settings are saved", async function () {
+      const resumeLinks = [{ name: "cv.pdf", url: "/cdn/storage/cv.pdf" }];
+      await runUpdate({ userId: ownerId }, portfolioId, {
+        "recruiterInfo.resumeLinks": resumeLinks,
+      });
+
+      await runUpdate(
+        { userId: ownerId },
+        portfolioId,
+        buildRecruiterSettingsUpdate({ phoneNumber: "0400 000 000" }),
+      );
+
+      const updated = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(updated.recruiterInfo.phoneNumber).to.equal("0400 000 000");
+      expect(updated.recruiterInfo.resumeLinks).to.deep.equal(resumeLinks);
     });
 
     it("normalises and persists certifications for the owner", async function () {

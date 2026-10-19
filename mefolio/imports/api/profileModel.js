@@ -36,6 +36,39 @@ export const defaultPortfolioProfileData = {
   },
 };
 
+// Temporary sample data for testing display before real database data is connected.
+export const samplePortfolioProfileData = {
+  userId: "Superuser",
+  portfolioNumber: 1,
+  title: "Sample Portfolio",
+  isPublished: false,
+  publishedContent: null,
+  bio: "This is a sample portfolio.",
+  createdAt: new Date(),
+  projects: [],
+  theme: "minimal",
+  chatbotPersona: DEFAULT_CHATBOT_PERSONA,
+  badges: [
+    {
+      title: "Sample Badge",
+      issuer: "Sample Issuer",
+      issueDate: new Date(),
+      badgeImageUrl: "https://example.com/badge.png",
+      verificationUrl: "https://example.com/verify-badge",
+    },
+  ],
+  recruiterInfo: {
+    salaryExpectation: "$70,000 - $90,000",
+    phoneNumber: "123-456-7890",
+    currentLocation: "Sydney NSW",
+    availability: "Immediate",
+    personalNote: "Looking for opportunities in full-stack development.",
+    resumeLink: "",
+    resumeLinks: [],
+    allowAccess: true,
+  },
+};
+
 // Merges loaded portfolio data with default values.
 // This prevents the UI from breaking if database data is incomplete.
 export function normalisePortfolioProfileData(portfolio = {}) {
@@ -61,6 +94,10 @@ export function normalisePortfolioProfileData(portfolio = {}) {
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
     recruiterInfo,
+    // recruiterInfo: {
+    //   ...defaultPortfolioProfileData.recruiterInfo,
+    //   ...(portfolio.recruiterInfo || {}),
+    // },
   };
 }
 

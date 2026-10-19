@@ -20,6 +20,7 @@ import "/imports/ui/Public/PublicPortfolioPage.test.jsx";
 import "/imports/ui/Portfolio Builder/AiTwinConfiguration.test.jsx";
 import "/imports/ui/Portfolio Builder/ProfileSettings.test.jsx";
 import "/imports/ui/Recruiter/recruiterVisitAlertLogic.test.js";
+import "/imports/ui/Recruiter/recruiterSettingsUpdate.test.js";
 import "/server/ai/chatService.test.js";
 import "/server/recruiter-tokens/methods.test.js";
 import "/server/publications/publicPortfolio.test.js";
