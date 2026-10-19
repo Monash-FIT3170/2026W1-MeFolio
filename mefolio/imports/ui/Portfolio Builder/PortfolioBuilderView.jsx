@@ -244,6 +244,7 @@ const DashboardLayout = () => {
     isLoading: showFullPageLoading,
     portfolios: visiblePortfolios,
     projects: databaseProjects,
+    engagements: snapshot.engagements,
     user: snapshot.user,
   });
 
