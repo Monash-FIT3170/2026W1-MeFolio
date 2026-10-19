@@ -128,12 +128,12 @@ export const PublicPortfolioPage = () => {
     >
       <PortfolioContent
         portfolio={publishedContent}
-        portfolioId={portfolio?._id}
+        portfolioId={resolvedPortfolioId}
         projects={publishedContent.projects || []}
       />
       <div className="pointer-events-none fixed top-16 right-5 z-40">
         <div className="pointer-events-auto">
-          <ViewerLocationPrompt portfolioId={portfolio?._id} />
+          <ViewerLocationPrompt portfolioId={resolvedPortfolioId} />
         </div>
       </div>
     </div>
