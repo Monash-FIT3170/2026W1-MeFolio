@@ -6,6 +6,17 @@ import { PortfolioCollection } from "/imports/api/portfolio";
 // import them without pulling in the app seed and OAuth config, which need
 // Meteor.settings to be present.
 Meteor.methods({
+  async "portfolios.recordView"(portfolioId) {
+    check(portfolioId, String);
+
+    const updatedCount = await PortfolioCollection.updateAsync(
+      { _id: portfolioId, isPublished: true },
+      { $inc: { totalViews: 1 } },
+    );
+
+    return updatedCount;
+  },
+
   async "portfolios.update"(portfolioId, updates) {
     check(portfolioId, String);
     check(updates, Object);

@@ -13,7 +13,7 @@ export const createLoadingViewModel = () => ({
   projects: [],
 });
 
-export const mapOverviewStats = (engagements = []) => {
+export const mapOverviewStats = (engagements = [], totalViews = 0) => {
   const totalInteractions = engagements.reduce(
     (total, engagement) => total + Number(engagement.clicks || 0),
     0,
@@ -22,7 +22,7 @@ export const mapOverviewStats = (engagements = []) => {
   return [
     {
       id: "total-views",
-      value: "0",
+      value: String(Number(totalViews) || 0),
       label: "Total Views",
       change: "0%",
     },
@@ -182,7 +182,7 @@ export const createDashboardViewModel = ({
   return {
     isLoading: false,
     sidebarItems,
-    overviewStats: mapOverviewStats(engagements),
+    overviewStats: mapOverviewStats(engagements, portfolios[0]?.totalViews),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),
