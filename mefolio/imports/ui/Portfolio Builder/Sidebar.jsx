@@ -27,6 +27,7 @@ const Sidebar = ({
     <>
       <div className="shrink-0 p-6 border-b border-primary">
         <div className="text-2xl font-extrabold text-primary mb-4">MeFolio</div>
+
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -39,6 +40,7 @@ const Sidebar = ({
           >
             {isPreview ? "Back to Builder" : "View Portfolio"}
           </button>
+
           {isPreview && (
             <button
               type="button"
@@ -58,6 +60,7 @@ const Sidebar = ({
               View published portfolio
             </button>
           )}
+
           <PublishButton
             portfolio={portfolio}
             projects={projects}
@@ -67,6 +70,7 @@ const Sidebar = ({
               setIsMobileMenuOpen(false);
             }}
           />
+
           <ShareButton
             portfolio={portfolio}
             hasUnpublishedChanges={hasUnpublishedChanges}
@@ -75,10 +79,11 @@ const Sidebar = ({
         </div>
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto p-4 flex flex-col gap-1">
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] p-4 flex flex-col gap-1">
         {items.map((item) => (
           <button
             key={item.id}
+            type="button"
             onClick={() => {
               onTabChange(item.id);
               setIsMobileMenuOpen(false);
@@ -94,13 +99,15 @@ const Sidebar = ({
         ))}
       </nav>
 
-      <ProfileSummary
-        profile={profile}
-        onAccountSettings={() => {
-          onTabChange("settings");
-          setIsMobileMenuOpen(false);
-        }}
-      />
+      <div className="shrink-0">
+        <ProfileSummary
+          profile={profile}
+          onAccountSettings={() => {
+            onTabChange("settings");
+            setIsMobileMenuOpen(false);
+          }}
+        />
+      </div>
     </>
   );
 
@@ -109,6 +116,7 @@ const Sidebar = ({
       {/* Mobile Menu Button - Only shows on mobile */}
       {isMobile && (
         <button
+          type="button"
           onClick={() => setIsMobileMenuOpen(true)}
           className="fixed top-6 left-4 z-50 bg-button text-secondary p-3 rounded-full shadow-lg hover:bg-accent1 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Open menu"
@@ -124,16 +132,21 @@ const Sidebar = ({
             className="fixed inset-0 bg-primary/50 z-40"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <aside className="fixed top-0 left-0 h-full w-80 bg-surface-fill border-r border-line z-50 flex flex-col shadow-xl">
-            <div className="p-4 border-b border-line flex justify-between items-center">
+
+          <aside className="fixed inset-y-0 left-0 z-50 flex h-screen h-[100dvh] max-h-[100dvh] w-80 flex-col overflow-hidden border-r border-line bg-surface-fill shadow-xl">
+            <div className="shrink-0 p-4 border-b border-line flex justify-between items-center">
               <span className="font-bold text-lg text-primary">Menu</span>
+
               <button
+                type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-2 rounded-lg hover:bg-selected transition-colors min-h-[44px] min-w-[44px]"
+                aria-label="Close menu"
               >
                 <X className="w-5 h-5 text-primary" />
               </button>
             </div>
+
             {renderSidebarContent()}
           </aside>
         </>
