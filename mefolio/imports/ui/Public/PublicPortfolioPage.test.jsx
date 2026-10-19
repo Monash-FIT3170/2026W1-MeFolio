@@ -64,10 +64,7 @@ if (Meteor.isClient) {
       // 404s on a loop and keeps the DDP connection busy, which stops the test
       // runner from ever exiting. Pass other calls through unchanged.
       Meteor.call = (name, ...args) => {
-        if (
-          name === "portfolios.viewerHeartbeat" ||
-          name === "portfolios.recordView"
-        ) {
+        if (name === "portfolios.viewerHeartbeat") {
           const maybeCallback = args[args.length - 1];
           if (typeof maybeCallback === "function") maybeCallback();
           return undefined;

@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { useParams } from "react-router-dom";
 import { PortfolioCollection } from "../../api/portfolio.js";
@@ -22,65 +22,46 @@ export const PublicPortfolioPage = () => {
   const { portfolioId, username } = useParams();
   const lookupValue = username || portfolioId;
 
-  const {
-    isLoading,
-    portfolioId: resolvedPortfolioId,
-    publishedContent,
-  } = useTracker(() => {
+  const { isLoading, portfolio, publishedContent } = useTracker(() => {
     const publicViewHandle = Meteor.subscribe(
       "portfolios.publicView",
       lookupValue,
     );
-    const portfolio = PortfolioCollection.findOne({
+
+    const foundPortfolio = PortfolioCollection.findOne({
       $or: [{ _id: lookupValue }, { username: lookupValue }],
     });
-    const resolvedPortfolioId = portfolio?._id || portfolioId;
-    const viewerHandle = resolvedPortfolioId
-      ? Meteor.subscribe("portfolios.viewer", resolvedPortfolioId)
-      : { ready: () => true };
-    // The publication withholds unpublished portfolios, but an owner signed in
-    // elsewhere in the app has their own draft in minimongo already. Checking
-    // isPublished here keeps this route showing the same thing to everyone.
+
+    // Only subscribe to viewer once we know the real _id.
+    const viewerHandle = foundPortfolio?._id
+      ? Meteor.subscribe("portfolios.viewer", foundPortfolio._id)
+      : null;
+
+    const viewerReady = !viewerHandle || viewerHandle.ready();
+
     return {
-      isLoading: !publicViewHandle.ready() || !viewerHandle.ready(),
-      portfolioId: resolvedPortfolioId,
-      publishedContent: portfolio?.isPublished
-        ? portfolio.publishedContent
+      isLoading: !publicViewHandle.ready() || !viewerReady,
+      portfolio: foundPortfolio,
+      publishedContent: foundPortfolio?.isPublished
+        ? foundPortfolio.publishedContent
         : null,
     };
   }, [lookupValue]);
-  const recordedViewForPortfolio = useRef(null);
 
   useEffect(() => {
-    if (isLoading || !publishedContent || !resolvedPortfolioId) {
-      return undefined;
-    }
+    if (isLoading || !publishedContent || !portfolio?._id) return undefined;
 
-    if (recordedViewForPortfolio.current !== resolvedPortfolioId) {
-      recordedViewForPortfolio.current = resolvedPortfolioId;
-
-      Meteor.call("portfolios.recordView", resolvedPortfolioId, (error) => {
-        if (error) {
-          console.error("Failed to record portfolio view:", error);
-        }
-      });
-    }
-
+    const realPortfolioId = portfolio._id;
     const sendHeartbeat = () => {
-      Meteor.call(
-        "portfolios.viewerHeartbeat",
-        resolvedPortfolioId,
-        (error) => {
-          if (error) console.error("Failed to send viewer heartbeat:", error);
-        },
-      );
+      Meteor.call("portfolios.viewerHeartbeat", realPortfolioId, (error) => {
+        if (error) console.error("Failed to send viewer heartbeat:", error);
+      });
     };
 
     sendHeartbeat();
-    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
-
-    return () => clearInterval(heartbeatInterval);
-  }, [isLoading, resolvedPortfolioId, publishedContent]);
+    const interval = setInterval(sendHeartbeat, 10000);
+    return () => clearInterval(interval);
+  }, [isLoading, portfolio?._id, publishedContent]);
 
   if (isLoading) {
     return (
