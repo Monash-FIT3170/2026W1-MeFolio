@@ -36,7 +36,7 @@ import "./recruiter-tokens/visit-notifications.js";
 import "./publications/publicPortfolio.js";
 import "./publications/publicPortfolioMeta.js";
 // portfolio methods (in their own module so tests can load them without the
-// app seed and OAuth config)
+// app startup and OAuth config)
 import "./portfolio-methods.js";
 // portfolio indexes (unique custom URL / username)
 import "./portfolio-indexes.js";
@@ -95,203 +95,8 @@ Accounts.emailTemplates.resetPassword = {
     "If you didn't request this, you can safely ignore this email.\n\n— MeFolio",
 };
 
-Meteor.startup(async () => {
-  let sampleUserId;
-  const existingSampleUser =
-    (await Meteor.users.findOneAsync({
-      "emails.address": "superuser@example.com",
-    })) || (await Meteor.users.findOneAsync({ "profile.name": "Superuser" }));
-
-  if (existingSampleUser) {
-    sampleUserId = existingSampleUser._id;
-  } else {
-    sampleUserId = await Accounts.createUser({
-      email: "superuser@example.com",
-      password: "superuser",
-      profile: { name: "Superuser" },
-    });
-  }
-
-  let projectIds = [];
-  if ((await ProjectCollection.find().countAsync()) === 0) {
-    const project1Id = await ProjectCollection.insertAsync({
-      title: "Personal Portfolio Website",
-      description:
-        "A responsive portfolio website used to showcase projects, skills, and contact details.",
-      createdAt: new Date(),
-      technologies: ["React", "CSS", "Meteor"],
-      githubLink: "https://github.com/example/portfolio",
-      liveDemoLink: "https://example-portfolio.com",
-      media:
-        "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80",
-    });
-
-    const project2Id = await ProjectCollection.insertAsync({
-      title: "Task Management App",
-      description:
-        "A simple task tracking app with project cards, status updates, and basic filtering.",
-      createdAt: new Date(),
-      technologies: ["JavaScript", "MongoDB", "Meteor"],
-      githubLink: "https://github.com/example/task-app",
-      liveDemoLink: "https://example-task-app.com",
-      media:
-        "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80",
-    });
-
-    const project3Id = await ProjectCollection.insertAsync({
-      title: "Developer Blog Platform",
-      description:
-        "A blog-style project used to share technical writeups and software engineering reflections.",
-      createdAt: new Date(),
-      technologies: ["React", "Node.js", "CSS"],
-      githubLink: "https://github.com/example/blog-platform",
-      liveDemoLink: "https://example-blog.com",
-      media:
-        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
-    });
-
-    const project4Id = await ProjectCollection.insertAsync({
-      title: "E-Commerce Storefront",
-      description:
-        "A full-stack online store with product listings, cart, and checkout flow.",
-      createdAt: new Date(),
-      technologies: ["React", "Node.js", "Stripe"],
-      githubLink: "https://github.com/example/ecommerce",
-      liveDemoLink: "https://example-store.com",
-      media:
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
-    });
-
-    const project5Id = await ProjectCollection.insertAsync({
-      title: "Real-Time Chat App",
-      description:
-        "A websocket-powered chat application with rooms, presence indicators, and message history.",
-      createdAt: new Date(),
-      technologies: ["Meteor", "React", "MongoDB"],
-      githubLink: "https://github.com/example/chat-app",
-      liveDemoLink: "https://example-chat.com",
-      media:
-        "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&q=80",
-    });
-
-    const project6Id = await ProjectCollection.insertAsync({
-      title: "Data Visualisation Dashboard",
-      description:
-        "An analytics dashboard with interactive charts, filters, and CSV export built for internal reporting.",
-      createdAt: new Date(),
-      technologies: ["React", "D3.js", "Python"],
-      githubLink: "https://github.com/example/dashboard",
-      liveDemoLink: "https://example-dashboard.com",
-      media:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    });
-
-    projectIds = [
-      project1Id,
-      project2Id,
-      project3Id,
-      project4Id,
-      project5Id,
-      project6Id,
-    ];
-  } else {
-    const existingProjects = await ProjectCollection.find(
-      {},
-      { sort: { createdAt: 1 } },
-    ).fetchAsync();
-    projectIds = existingProjects.map((project) => project._id);
-  }
-
-  let samplePortfolioId;
-  const existingSamplePortfolio =
-    (await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" })) ||
-    (await PortfolioCollection.findOneAsync({ userId: sampleUserId }));
-
-  if (existingSamplePortfolio) {
-    samplePortfolioId = existingSamplePortfolio._id;
-    const samplePortfolioUpdates = {};
-
-    if (existingSamplePortfolio.userId !== sampleUserId) {
-      samplePortfolioUpdates.userId = sampleUserId;
-    }
-
-    if (!existingSamplePortfolio.projects?.length && projectIds.length) {
-      samplePortfolioUpdates.projects = projectIds;
-    }
-
-    if (Object.keys(samplePortfolioUpdates).length) {
-      await PortfolioCollection.updateAsync(samplePortfolioId, {
-        $set: samplePortfolioUpdates,
-      });
-    }
-  } else {
-    samplePortfolioId = await PortfolioCollection.insertAsync({
-      userId: sampleUserId,
-      portfolioNumber: 1,
-      title: "Sample Portfolio",
-      bio: "This is a sample portfolio.",
-
-      ...createDefaultPortfolioPublishingState(),
-
-      // Agreed FEAT-05 structure
-      profile: {
-        fullName: "John Doe",
-        headline: "Product Designer and Frontend Developer",
-        avatarUrl: "",
-        location: "Sydney, NSW",
-        availability: {
-          isAvailable: true,
-          label: "Available for hire",
-        },
-      },
-
-      about: {
-        summary:
-          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
-        highlights: ["React", "UI Design", "Frontend Development"],
-        yearsOfExperience: 3,
-      },
-
-      contact: {
-        email: "john@example.com",
-        phone: "",
-        website: "",
-      },
-
-      socials: {
-        github: "https://github.com/johndoe",
-        linkedin: "https://www.linkedin.com/in/johndoe",
-        twitter: "",
-        other: [],
-      },
-
-      cta: {
-        contactEnabled: true,
-      },
-
-      createdAt: new Date(),
-      projects: projectIds,
-      theme: "minimalist",
-      badges: [
-        {
-          title: "Sample Badge",
-          issuer: "Sample Issuer",
-          issueDate: new Date(),
-          badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge",
-        },
-      ],
-      recruiterInfo: {
-        salaryExpectation: "$70,000 - $90,000",
-        phoneNumber: "123-456-7890",
-        currentLocation: "Sydney NSW",
-        availability: "Immediate",
-        personalNote: "Looking for opportunities in full-stack development.",
-        allowAccess: true,
-      },
-    });
-  }
-
+// Maintain existing portfolios without creating accounts or sample content.
+export async function initializePortfolioData() {
   // FEAT-11: Backfill publication fields for portfolios created before
   // draft/live separation was introduced.
   await PortfolioCollection.updateAsync(
@@ -336,11 +141,9 @@ Meteor.startup(async () => {
     }).countAsync();
     if (existingOrderCount > 0) continue;
 
-    const savedProjectIds = portfolio.projects?.length
+    const savedProjectIds = Array.isArray(portfolio.projects)
       ? portfolio.projects
-      : portfolio._id === samplePortfolioId
-        ? projectIds
-        : [];
+      : [];
 
     await Promise.all(
       savedProjectIds.map((projectId, index) =>
@@ -361,6 +164,10 @@ Meteor.startup(async () => {
     { $set: { viewers: [] } },
     { multi: true },
   );
+}
+
+Meteor.startup(async () => {
+  await initializePortfolioData();
 
   // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
   // Heartbeats occur every 10s from PublicPortfolioPage; expire after 30s of inactivity.
@@ -713,9 +520,8 @@ Meteor.methods({
 
     const projectId = await ProjectCollection.insertAsync(normalized);
 
-    // Use the portfolioId passed from the client if provided (e.g. test user
-    // viewing the superuser portfolio), otherwise find or create the current
-    // user's own portfolio.
+    // Use the selected portfolio when provided; otherwise find or create the
+    // current user's portfolio.
     let portfolio = projectData.portfolioId
       ? await PortfolioCollection.findOneAsync(projectData.portfolioId)
       : await PortfolioCollection.findOneAsync({ userId: this.userId });

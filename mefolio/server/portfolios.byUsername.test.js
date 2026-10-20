@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { PortfolioCollection } from "/imports/api/portfolio";
 
 // Register the publications under test. Importing this lightweight module
-// populates Meteor.server.publish_handlers without pulling in main.js's seed
+// populates Meteor.server.publish_handlers without pulling in main.js's startup
 // and OAuth config, which need Meteor.settings to be present.
 import "./portfolio-publications.js";
 
