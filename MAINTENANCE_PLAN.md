@@ -1,134 +1,213 @@
 # MeFolio Maintenance and Contribution Wind-Down Plan
 
-Prepared: 12 October 2026. Scope: the repository at the time of this update and the transition after teaching Week 12.
+Prepared: 12 October 2026. Updated: 20 October 2026. Scope: the repository at the time of this update and the transition after the semester ends.
 
 ## 1. Purpose and Decision Status
 
-This plan describes how student contributions will end, how MeFolio can remain maintainable, and what must happen to production services after Week 12. Students have no obligation to provide ongoing development, support, on-call coverage or funding after the project ends.
+This plan describes how student contributions will end, what happens to the hosted services, and how anyone can restart MeFolio later. Students have no obligation to provide ongoing development, support, on-call coverage or funding after the project ends.
 
-The operating model is **continued hosting (Option A), handed over by changing the billing card on the MeFolio admin account; controlled shutdown (Option B) is the fallback** if no one takes over billing. It is not a promise of indefinite availability. As agreed with the tutor (12 Oct 2026), the incoming owner is not named in advance, because it cannot be known who will take over deployment. The remaining open items are practical details: the monthly cost, live URLs and database backup settings.
+**Decision: MeFolio stays live and maintained until final semester results on 3 December 2026. On or after 4 December 2026 it is shut down, because no one is paying for hosting after that date.** The system architects (Joy Jasmine Kaur, Joyce Leung and Jonah Rudzki) carry out the shutdown using the steps in [section 4](#4-shutdown-plan-on-or-after-4-december-2026).
+
+The shutdown is not a dead end. The source code, a database backup and the Piper image are kept, and [section 5](#5-restarting-mefolio-later) explains how anyone can bring MeFolio back at any later point by taking over billing. As agreed with the tutor (12 Oct 2026), that future owner is not named in advance, because it cannot be known who will take it on.
 
 | Decision | Status |
 | --- | --- |
-| Code maintainers | Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02), recorded in [CODEOWNERS](.github/CODEOWNERS) |
-| Accountable project owner and billing payer | Agreed with the tutor (12 Oct 2026): the incoming owner is not named in advance. Billing transfers when they add their company card to the hosting account (see section 5) |
-| Hosting and database | Meteor Galaxy hosts the app and its MongoDB database. Production/staging URLs and backup settings to be checked in the Galaxy dashboard |
-| Hosting, database, storage and domain costs; renewal dates | Pending: record the plan and monthly cost from the Galaxy billing page |
-| Continue hosting or shut down, and the effective date | Continue hosting, subject to billing being transferred by the end of Week 12 |
-| Data retention/deletion policy, user notice period and backup custodian | Must be approved before transfer or shutdown |
+| System architects and code maintainers | Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02), recorded in [CODEOWNERS](.github/CODEOWNERS) |
+| Hosting | Meteor Galaxy hosts the app and its MongoDB database. Staging: <https://mefolio-staging.sandbox.galaxycloud.app/login>. Production: <https://mefolio-production.sandbox.galaxycloud.app/login> |
+| Voice narration (Piper) | Runs separately on Azure Container Apps (Azure for Students subscription), from the Docker Hub image `jask1/mefolio-piper:v1`. Live in production until 3 December 2026. See [section 6](#6-voice-narration-piper) |
+| Service period | Live and maintained until final results on **3 December 2026** |
+| Shutdown | On or after **4 December 2026**, by the system architects, because there is no payer for hosting after the semester |
+| Payer | An outgoing team member's card pays for Galaxy until shutdown, after which it is removed. No payer after shutdown. A future owner who restarts MeFolio takes over billing (agreed with the tutor, 12 Oct 2026) |
+| Data at shutdown | The production database is backed up, then deleted with the app. The backup is stored in the MeFolio admin account's storage (for example its Google Drive), never in Git, and deleted after 12 months (by 4 December 2027) if no one restarts MeFolio |
+| Piper at shutdown | The Azure Container App is deleted. The public Docker Hub image is kept so Piper can be redeployed quickly |
 
-Record the named owner, payer, approved budget, decision date and service end/renewal dates in this document before sign-off. Do not put passwords, API tokens, private connection strings or billing details in Git.
 
 ## 2. Current Technical Baseline
 
-The following findings come from the current code/configuration, not a live production audit:
-
 - [Meteor release](mefolio/.meteor/release) pins Meteor `3.4`. The [application package](mefolio/package.json) uses React 18, React Router, Tailwind, Rspack, Mocha/Chai, ESLint and Prettier. Docker and CI use Node 20; this base must be reviewed against current security support and Meteor compatibility before future releases.
-- [Docker Compose](mefolio/docker-compose.yml) starts the application on port `3000` and MongoDB 7 on host port `3001`. MongoDB data is retained in `mongo_data`. The [Dockerfile](mefolio/Dockerfile) runs `meteor run`, mounts development files through Compose and is not a production-hardened image.
-- [Server startup](mefolio/server/main.js) registers OAuth, portfolio methods/publications, indexes, recruiter tokens/visit notifications and GitHub integration. It also creates a sample account with a fixed password and seeds sample data. Disable production seeding and remove or secure any existing seeded account before continued public operation; changing its password alone is not sufficient if startup can recreate it.
+- [Docker Compose](mefolio/docker-compose.yml) starts the application on port `3000`, MongoDB 7 on host port `3001` and the Piper narration service on Docker's private network. MongoDB data is retained in `mongo_data`. The [Dockerfile](mefolio/Dockerfile) runs `meteor run`, mounts development files through Compose and is not a production-hardened image.
+- [Server startup](mefolio/server/main.js) registers OAuth, portfolio methods/publications, indexes, recruiter tokens/visit notifications, GitHub integration and project narration. It also creates a sample account with a fixed password and seeds sample data. Anyone restarting MeFolio must disable production seeding and remove or secure the seeded account first; changing its password alone is not sufficient if startup can recreate it.
 - [OAuth configuration](mefolio/server/oauth-login/oauth.js) loads Google and GitHub credentials from private Meteor settings. [GitHub API integration](mefolio/server/github-api.js) optionally uses `private.github.apiToken`, and is subject to external API availability and rate limits.
-- [Resume storage](mefolio/imports/api/files/resumeFiles.js) stores PDF files under `uploads/resumes`, with a 5 MB upload limit, and declares public downloads. Database backups alone do not preserve these files. A successor must verify durable production storage, download access/privacy expectations and file recovery. The repository does not configure a production object-storage service.
-- The checked-in [test workflow](.github/workflows/CI-Tests.yml) and [lint/format workflow](.github/workflows/CI-Linter-Formatter.yml) run on PRs to `main` and `dev`. They do not deploy the app. Any Galaxy deployment automation or branch protections must be confirmed in account/repository settings rather than assumed.
+- [Resume storage](mefolio/imports/api/files/resumeFiles.js) stores PDF files under `uploads/resumes`, with a 5 MB upload limit, and declares public downloads. Database backups do not include these files, and files written to a Galaxy container's disk are not guaranteed to survive a redeploy. The repository does not configure a production object-storage service.
+- [Project narration](mefolio/server/project-narration.js) sends narration text to a Piper text-to-speech service over HTTP. It is optional and can be switched off without affecting anything else (see [section 6](#6-voice-narration-piper)).
+- The checked-in [test workflow](.github/workflows/CI-Tests.yml) and [lint/format workflow](.github/workflows/CI-Linter-Formatter.yml) run on PRs to `main` and `dev`. They do not deploy the app.
 
 ## 3. Winding Down Contributions
 
-| When | Action | Responsibility before transition |
+| When | Action | Responsibility |
 | --- | --- | --- |
-| Before the end of Week 12 | Stop accepting new feature commitments; triage open issues into release blockers, known limitations and future work. Link unresolved work in GitHub issues. | Outgoing team |
-| Before final release | Complete or close outstanding PRs, run CI, perform login/portfolio/recruiter/resume smoke checks, and record the release commit and known limitations. | Outgoing team with release reviewer |
-| Before access transfer | Finish the [handover README](README.md), export its submission PDF, prepare the service inventory, and demonstrate setup/deployment and a backup restore to the incoming maintainer. | Outgoing team and accepting maintainer |
-| By the Week 12 decision gate | Obtain written acceptance of ownership, operating budget and data responsibilities, or approve shutdown and user notification dates. | Project stakeholder/account owner |
-| At transfer or shutdown | Transfer authorised account administration securely; rotate credentials, remove departing access, and disable obsolete automation. | Account owner and incoming maintainer, if appointed |
-| After Week 12 | Students' contribution and support commitments end. Future work is voluntary and follows the README's PR strategy; only an appointed maintainer may approve releases. | Successor, if appointed |
+| Until 3 December 2026 | Keep staging and production running for marking. Fix only issues that block assessment. | System architects |
+| On or after 4 December 2026 | Carry out the [shutdown plan](#4-shutdown-plan-on-or-after-4-december-2026). | System architects |
+| After shutdown | Students' contribution and support commitments end. Future work is voluntary and follows the README's PR strategy. | Future owner, if any |
 
-Use GitHub issues as the future technical work register. Do not make personal student email addresses the ongoing support mechanism or assume that former contributors will answer requests. The stakeholder must publish a successor-controlled support contact if the service continues.
+Use GitHub issues as the future technical work register. Do not make personal student email addresses the ongoing support mechanism or assume that former contributors will answer requests.
 
-## 4. Production Systems After Week 12
+## 4. Shutdown Plan (on or after 4 December 2026)
 
-### Option A: Funded Continuation
+The system architects carry out these steps in order. Do not cancel billing before the backup in step 2 is complete and verified.
 
-Only continue production when a named owner accepts billing, security, backups, privacy and incident response responsibilities. Before continuation:
+1. **Notify users.** If anyone other than the team uses MeFolio, tell them the closure date at least a week before, and that published portfolio and recruiter links will stop working.
+2. **Back up the production database.** Copy the `MONGO_URL` connection string from the production app's Galaxy settings, install the [MongoDB Database Tools](https://www.mongodb.com/docs/database-tools/), and run:
 
-1. Confirm Galaxy app identifiers/URLs, database provider and connection settings, domains/DNS, OAuth application owners, storage location, billing contacts and renewal dates in a restricted operations register.
-2. Transfer organisation-based access where supported and use individual authorised accounts/MFA. Rotate OAuth secrets, GitHub API tokens, database credentials and deployment credentials after transfer. Verify callback URLs and public `ROOT_URL` for each environment.
-3. Resolve the fixed-password startup account and seed-data blocker. Review the runtime's security support, database exposure, public resume downloads and durable file storage. Do not use the development Compose setup as an internet-facing production service.
-4. Take and restore-test a database backup and a matching resume-file backup. Verify that uploads survive a redeploy/restart on the hosting platform.
-5. Record a tested production deployment procedure, last working release, rollback route, alert recipient and support contact. Re-run the smoke checks after transfer.
-6. Disable routine staging deployment and shut down paid staging resources after final acceptance unless the successor explicitly budgets for them. Recreate staging for future changes when needed.
+   ```sh
+   mongodump --uri "<MONGO_URL>" --gzip --archive=mefolio-production-2026-12-04.archive.gz
+   ```
 
-There is no proposed service-level agreement or guaranteed uptime from the outgoing team. A successor must explicitly agree any support hours and recovery objectives before making availability promises to users.
+   Check that the archive restores into a local MongoDB (for example the Docker Compose one on port `3001`):
 
-### Option B: No Accepted Owner or Funding
+   ```sh
+   mongorestore --uri "mongodb://localhost:3001" --gzip --archive=mefolio-production-2026-12-04.archive.gz
+   ```
 
-If ownership/funding is not accepted by the decision gate, do not allow subscriptions to renew silently or leave an unattended service public. The existing account owner must approve and execute a shutdown schedule:
+   Upload the archive to the MeFolio admin account's storage (for example its Google Drive). Never commit it to Git. Record the backup date and its deletion date (4 December 2027) in this document.
+3. **Stop and delete the Galaxy apps.** In the Galaxy dashboard, stop the production and staging apps, then delete them along with their hosted databases.
+4. **Remove billing.** Remove the outgoing team member's card from the Galaxy account, and confirm that no plan, add-on or database remains that could still charge.
+5. **Delete the Azure Piper service.** In the Azure portal, delete the `mefolio-tts` resource group. This removes the Container App, its environment and its log workspace in one step. Keep the Docker Hub image `jask1/mefolio-piper`.
+6. **Revoke credentials.** Delete or rotate the production Google and GitHub OAuth app secrets and any GitHub API token, so the old settings files become useless.
+7. **Keep the repository.** Leave the repository, this plan, the README and the Docker Hub image available so MeFolio can be restarted later. Archive the repository only if the team agrees no one will continue it.
+8. **On 4 December 2027:** if no one has restarted MeFolio, delete the database backup from the admin account's storage and note the deletion here.
 
-1. Notify users of the approved end date, loss of access to published portfolio/recruiter links and the available process for retrieving their data. Agree retention/deletion requirements with the stakeholder; do not invent an indefinite retention period.
-2. Freeze changes and user writes for a consistent final export. Securely back up MongoDB and uploaded resumes, test restoration, and record the custodian, access controls and approved deletion date.
-3. Stop production and staging applications and disable any deployment triggers. Remove public routing or provide a suitable closure notice where feasible.
-4. Cancel hosting, database and storage subscriptions only after the backup/export and notice requirements are satisfied. Review domain auto-renewal separately: retain/transfer or cancel it deliberately.
-5. Revoke unused credentials and departing user access. Delete personal data and backups when the approved retention period ends, and record completion.
-6. Keep a sanitised source repository, release tag, handover documents and known-issues register available to the authorised successor. Archive the repository only if no future maintainer is expected and the stakeholder approves.
+Shutdown keeps the ability to restart from source, the backup and the Piper image. It does not keep the live URLs, user sessions or uploaded resume files.
 
-Shutdown preserves the ability to restart from source and authorised backups; it does not preserve live public URLs, OAuth sessions or guaranteed third-party integration behaviour.
+## 5. Restarting MeFolio Later
 
-## 5. Running Costs and Who Bears Them
+Anyone can restart MeFolio at any point by taking over billing. These instructions apply whenever that happens.
 
-**Yes, continued hosted operation can incur costs.** Local execution does not require purchasing an application licence, but consumes the operator's hardware, electricity and network resources. Cloud free tiers or educational credits may expire and must not be assumed to cover operation after Week 12.
+### 5.1 Take over the accounts and billing
 
-| Cost area | What must be checked | Proposed payer after Week 12 |
-| --- | --- | --- |
-| Meteor Galaxy or replacement application hosting | Active plan, app/container count, staging, usage, credit expiry and renewal terms | Accepting project owner/sponsor |
-| Hosted MongoDB | Actual provider, storage, backups, traffic and plan/credit limits | Accepting project owner/sponsor |
-| Uploaded resumes and backup storage | Persistent storage, backup capacity, retention and restore/transfer charges | Accepting project owner/sponsor |
-| Domain/DNS, if used | Registrar, renewal date and any paid DNS/TLS services | Accepting domain/project owner |
-| CI and external integrations | GitHub Actions quotas, optional GitHub API access and provider terms; no separate paid email service is established by the inspected visit-notification code | Successor organisation if charges arise |
-| Maintenance labour | Security updates, incident handling and future development | Successor's agreed staff/volunteer arrangement; no student commitment |
+The Galaxy account logs in with the MeFolio admin email. As agreed with the tutor (12 Oct 2026), the future owner is not named in advance: whoever takes over deployment takes over billing.
 
-### Billing Handover
-
-The Meteor Galaxy account (app hosting and database) logs in with the MeFolio admin email, and its costs are currently charged to an outgoing team member's card. As agreed with the tutor (12 Oct 2026), the incoming owner is deliberately left unnamed: whoever takes over deployment takes over billing. To hand over billing:
-
-1. Give the incoming owner access to the MeFolio admin email and Galaxy account through a secure channel, never through Git or a shared document. Move the admin email's recovery details and multi-factor authentication to the incoming owner.
-2. The incoming owner adds themselves as an account administrator and adds their company card as the billing method.
-3. Remove the outgoing team member's card once the new one is active, then change the account password. This step is required: the outgoing card must not stay on the account after handover.
-4. Set a billing alert or spending cap and record the alert recipient here.
+1. Get access to the MeFolio admin email and Galaxy account from the system architects through a secure channel, never through Git or a shared document. Move the admin email's recovery details and multi-factor authentication to yourself.
+2. Add yourself as an account administrator and add your own or your organisation's card as the billing method.
+3. Change the account password, and set a billing alert or spending cap.
 
 Card numbers, passwords and invoices must not be recorded in this repository.
 
-The outgoing students are **not committing to bear future costs**. Costs are borne by whoever takes over the account as the incoming owner; as agreed with the tutor (12 Oct 2026), that payer is intentionally not named in advance. Existing account holders must check their present billing liability with their providers and transfer or cancel it explicitly; this plan does not itself change a billing contract.
+### 5.2 Bring the app back
 
-Before approval, calculate the recurring total from actual subscriptions (hosting + database + storage/backups + applicable domain/CI costs), record currency/taxes, expiry dates and a spending cap, and nominate a billing-alert recipient. If no payer accepts those costs, use Option B. No unverified price estimate is presented as a current bill.
+1. Resolve the sample-account and seed-data issue in [section 2](#2-current-technical-baseline) before going public.
+2. Create new OAuth apps (Google and GitHub) with callback URLs for the new app address, and put their credentials in the production settings file.
+3. Deploy with the README's Galaxy deployment runbook, using a settings file kept outside Git.
+4. Restore the database backup, if it still exists, with `mongorestore --uri "<new MONGO_URL>" --gzip --archive=<backup file>`.
+5. To bring narration back, follow [section 6.4](#64-hosting-piper). Otherwise leave it switched off with the kill switch in [section 6.3](#63-switching-narration-off).
+6. Run the smoke checks: login, portfolio editing and publishing, public portfolio, recruiter link, resume upload and narration.
 
-## 6. Minimum Maintenance if Hosting Continues
+There is no service-level agreement or guaranteed uptime from the outgoing team. A future owner must agree any support hours and recovery objectives themselves before making availability promises to users.
 
-These are proposed duties for the accepting maintainer, not automated features or completed checks:
+## 6. Voice Narration (Piper)
+
+[Piper](https://github.com/OHF-Voice/piper1-gpl) is a free, open-source text-to-speech engine. MeFolio uses it to read a short narration of each project aloud. Because it is a separate open-source service run by us rather than a paid API, it can go down or be removed independently, so narration is built to be optional: it can be switched off at any time without affecting anything else in MeFolio.
+
+### 6.1 How it works
+
+1. A visitor presses play on a project card. The browser asks the MeFolio server for audio; it never contacts Piper directly.
+2. The server checks that narration is switched on, picks the project's narration text, and sends that text and the chosen voice to Piper's `/synthesize` endpoint.
+3. Piper returns WAV audio, which the server passes back to the browser. The server keeps recent audio in memory, so replaying the same narration in the same voice is instant.
+
+The narration text is the project's **custom case-study narration** when the owner has switched custom narration on, otherwise the **project description**. Custom narration text never reaches visitors' browsers; they only receive the audio.
+
+Visitors can choose from three voices, defined in [narrationVoices.js](mefolio/imports/api/narrationVoices.js) and downloaded into the image by [piper/Dockerfile](mefolio/piper/Dockerfile): US female (`en_US-lessac-medium`), US male (`en_US-ryan-medium`) and UK male (`en_GB-alan-medium`).
+
+If Piper is down or slow, the player shows an error message, the server stops waiting after 60 seconds, and the rest of the portfolio keeps working.
+
+### 6.2 Configuration
+
+The server finds Piper through the first of these that is set:
+
+1. `private.piper.url` in the Meteor settings file
+2. the `PIPER_URL` environment variable (on Galaxy, under `galaxy.meteor.com` → `env` in the app settings)
+3. `http://127.0.0.1:5000/synthesize` (local default)
+
+Locally, Docker Compose sets `PIPER_URL` to `http://piper:5000/synthesize`. That address only works inside Docker's private network: a deployed app needs the full HTTPS address of a separately hosted Piper service, ending in `/synthesize`.
+
+### 6.3 Switching narration off
+
+There are three switches, from widest to narrowest:
+
+| Switch | Who uses it | Effect |
+| --- | --- | --- |
+| **Site-wide kill switch**: set `"public": { "features": { "projectNarration": false } }` in the Meteor settings and redeploy | Whoever deploys MeFolio | Narration disappears everywhere: no players, no narration fields, and the server never calls Piper. Use this if Piper is unavailable or not hosted |
+| **Portfolio switch**: the "Narration" switch in the builder's Projects tab | Each portfolio owner | Turns narration off for their portfolio. Applies to the draft preview immediately and to the live portfolio on the next publish |
+| **Custom narration switch**: on each project card in the builder | Each portfolio owner | Chooses whether that project reads its custom case study or its description |
+
+### 6.4 Hosting Piper
+
+Piper runs from the public Docker Hub image `jask1/mefolio-piper:v1`, which already contains all three voices. Any container host that provides an HTTPS address can run it. To redeploy it on Azure Container Apps, as used until 3 December 2026:
+
+1. In the Azure portal, create a **Container App** with a new **Consumption** environment. Pick a region your subscription allows that is close to the Galaxy app's region (Azure for Students only allows certain regions).
+2. **Container:** image source **Docker Hub or other registries**, image type **Public**, registry `docker.io`, image `jask1/mefolio-piper:v1`, **1 CPU and 2 Gi memory**.
+3. **Ingress:** enabled, accepting traffic from anywhere, type **HTTP**, target port **5000**.
+4. **Scale:** max replicas `1`. Min replicas `0` stays within the free monthly grant, but the first narration after an idle period can take more than 60 seconds while Piper starts, so that one request fails. Min replicas `1` avoids this but is billed continuously.
+5. Set a budget alert in **Cost Management**.
+6. Copy the app's URL and set `PIPER_URL` in the Galaxy app settings to `https://<app URL>/synthesize`, then redeploy MeFolio.
+
+Measured with the `v1` image: Piper starts in about 8 seconds and narrates a paragraph in about 20–30 seconds on 1 CPU, using about 1 GB of memory with all three voices loaded. Hosts with less than 1 GB of memory or a fraction of a CPU (for example Render's free tier) are too small: the narration takes longer than the 60-second limit and loading a second voice runs out of memory.
+
+### 6.5 Updating Piper
+
+To change voices or the Piper version:
+
+1. Edit [piper/Dockerfile](mefolio/piper/Dockerfile) and [narrationVoices.js](mefolio/imports/api/narrationVoices.js) together; every voice offered in the app must be downloaded in the image.
+2. Build and push a new version tag (from the `mefolio` folder):
+
+   ```sh
+   docker build --platform linux/amd64 -t <dockerhub-user>/mefolio-piper:v2 ./piper
+   docker push <dockerhub-user>/mefolio-piper:v2
+   ```
+
+3. Point the hosted container at the new tag and redeploy it. Hosts do not pick up a new image automatically.
+
+Use a new tag for every change rather than overwriting an existing one, so a faulty release can be rolled back by switching the tag back.
+
+### 6.6 Known limitations
+
+- The Piper endpoint has no authentication. Anyone who finds its URL could use it, which is why the URL is kept out of this repository. A future owner should add a shared-secret check before relying on it long term.
+- Narrations near the 5,000-character limit can exceed the 60-second timeout on 1 CPU.
+- A Piper that is missing a requested voice silently falls back to its default voice. Rebuild the image whenever voices change.
+
+## 7. Running Costs and Who Bears Them
+
+**Hosting costs money, and no one is paying for it after 3 December 2026.** Free tiers and student credits expire and must not be assumed to cover operation.
+
+| Cost area | Until 3 December 2026 | After shutdown / on restart |
+| --- | --- | --- |
+| Meteor Galaxy app hosting (staging and production) | Paid by an outgoing team member's card | Removed at shutdown. A future owner pays on restart |
+| Galaxy-hosted MongoDB | Included with the Galaxy apps | Deleted at shutdown, after the backup |
+| Database backup storage | Not applicable | Free, in the MeFolio admin account's storage; deleted by 4 December 2027 |
+| Piper on Azure Container Apps | Azure for Students credit and free monthly grant | Deleted at shutdown. A future owner hosts it on their own subscription, or leaves narration switched off |
+| Docker Hub image | Free public repository | Kept, free |
+| CI (GitHub Actions) and external APIs | GitHub's free quotas; optional GitHub and Credly APIs | Unchanged; only used if development continues |
+| Maintenance labour | Outgoing team, until 3 December 2026 | No student commitment after shutdown |
+
+The outgoing students are **not committing to bear any cost after 3 December 2026**. Anyone restarting MeFolio should check the current Galaxy and Azure prices before taking over billing.
+
+## 8. Minimum Maintenance if MeFolio Is Restarted
+
+These are proposed duties for a future maintainer, not automated features or completed checks:
 
 | Frequency/trigger | Maintenance action |
 | --- | --- |
-| Daily automated checks, reviewed on alerts | Check application availability, errors, database/storage capacity and backup completion. Configure an alerting service; none is established by the inspected deployment files. |
-| Daily backups and before releases | Back up database and resume files securely. Apply the stakeholder-approved retention period and encryption/access controls. |
-| Weekly | Review incidents, OAuth/GitHub failures, recruiter-token access issues and billing/usage alerts. |
+| Daily automated checks, reviewed on alerts | Check application availability, errors, database/storage capacity and backup completion. No alerting service is set up in the repository. |
+| Daily backups and before releases | Back up the database and resume files securely, with an agreed retention period and access controls. |
+| Weekly | Review incidents, OAuth/GitHub failures, recruiter-token access issues, narration errors and billing/usage alerts. |
 | Monthly | Review dependency/runtime security advisories, hosting credits/renewals and user access. Test patches in staging and submit a PR with CI evidence. |
-| Quarterly and before major changes | Restore database and resume backups in an isolated environment; record recovery time and smoke-test critical workflows. |
+| Quarterly and before major changes | Restore database and resume backups in an isolated environment and smoke-test critical workflows. |
 | Every release | Use semantic versioning, pass CI, back up state, document data changes/rollback and test both authorised and unauthorised access. |
-| Security incident | Restrict affected access, preserve necessary evidence securely, rotate compromised secrets, and follow the owner's notification/privacy obligations. |
+| Security incident | Restrict affected access, rotate compromised secrets, and follow the owner's notification/privacy obligations. |
 
-For a failed release, stop further deployment and redeploy the last verified release. Restore data/files only when necessary and after considering writes since the backup; incompatible schema changes need an explicit migration/rollback plan. Never use `docker compose down -v` as production recovery.
+For a failed release, stop further deployment and redeploy the last verified release. Restore data only when necessary; incompatible schema changes need an explicit migration/rollback plan. Never use `docker compose down -v` as production recovery.
 
-## 7. Handover Acceptance Checklist
+## 9. Checklist
 
-- [ ] Code maintainers recorded in [CODEOWNERS](.github/CODEOWNERS).
-- [ ] Incoming owner added as account administrator, with their company card as the billing method.
-- [ ] Outgoing team member's card removed and the account password changed.
-- [ ] Continue/shutdown decision, effective dates and approved budget documented.
-- [ ] Account/service inventory and access transferred securely; departing access removed.
-- [ ] Production sample-account/seeding risk resolved, or service remains offline.
-- [ ] Durable resume storage and its privacy/access behaviour reviewed.
-- [ ] Database and resume backups restored successfully; retention and deletion approved.
-- [ ] Release tag/commit, deployment and rollback steps, CI results and known issues recorded.
-- [ ] Hosting/database/domain renewals and credit expiry checked; unnecessary staging cancelled.
-- [ ] Updated README and submission PDF reviewed; AI statements in non-handover documents reviewed.
+### Restart (future owner)
+
+- [ ] Admin email and Galaxy account transferred; own card added; password changed; billing alert set.
+- [ ] Sample-account and seed-data issue resolved before going public.
+- [ ] New OAuth apps and settings file created outside Git.
+- [ ] Database restored from backup, if available.
+- [ ] Piper hosted and `PIPER_URL` set, or narration switched off with the kill switch.
+- [ ] Smoke checks passed on staging, then production.
 
 ## Generative AI Statement
 
-Generative AI (GitHub Copilot) was used to draft and structure this maintenance plan and to summarise the repository files referenced above. No live hosting accounts, invoices, stakeholder agreements or production data were accessed to verify operational ownership or costs. The team must review the technical descriptions, confirm the pending decisions and approve the plan before submission or implementation.
+Generative AI was used in preparing this plan. GitHub Copilot was used for structuring the original plan and summarising the repository files referenced above. Claude was used to review the shutdown and restart sections, and update this plan with the team's decisions. No live hosting accounts, invoices or production data were accessed by either tool. The service URLs, dates and decisions were supplied by the team, who reviewed and approved this plan.
