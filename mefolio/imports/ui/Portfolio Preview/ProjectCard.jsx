@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { Meteor } from "meteor/meteor";
 import {
   Github,
   ExternalLink,
@@ -11,14 +12,21 @@ import {
   Mic,
 } from "lucide-react";
 import { trackProjectClick } from "../../api/projectClickTracking";
+import {
+  buildNarrationText,
+  isProjectNarrationEnabled,
+} from "../../api/projectNarration";
 import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 import { ProjectChallenge } from "./ProjectChallenge";
+import { NarrationPlayer } from "./NarrationPlayer";
 
 export function ProjectCard({
   project,
   portfolioId,
+  draftPortfolioId,
   onProjectClick = trackProjectClick,
   dataTheme = "default",
+  narrationEnabled = true,
 }) {
   const [showMockChallenge, setShowMockChallenge] = useState(false);
   const [, setImageError] = useState(false);
@@ -41,8 +49,18 @@ export function ProjectCard({
       }).format(new Date(githubStats.updatedAt))
     : "-";
 
+  const projectId = data._id || data.id;
+  const showNarration = narrationEnabled && isProjectNarrationEnabled();
+  const draftNarrationText = draftPortfolioId ? buildNarrationText(data) : "";
+  const loadDraftAudio = (ownerPortfolioId, _projectId, voiceId) =>
+    Meteor.callAsync(
+      "projects.generateNarration",
+      ownerPortfolioId,
+      draftNarrationText,
+      voiceId,
+    );
+
   const handleProjectClick = (target) => {
-    const projectId = data._id || data.id;
     if (!portfolioId || !projectId) return;
 
     try {
@@ -79,12 +97,14 @@ export function ProjectCard({
           </span>
         )}
 
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
-          <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
-          <span className="text-xs font-extrabold text-primary">
-            {githubStarsToDisplay}
-          </span>
-        </div>
+        {data.githubLink && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-background rounded-full shadow-sm">
+            <Star className="h-3.5 w-3.5 fill-accent2 text-accent2" />
+            <span className="text-xs font-extrabold text-primary">
+              {githubStarsToDisplay}
+            </span>
+          </div>
+        )}
       </div>
 
       <CardHeader className="p-5 pb-2">
@@ -94,16 +114,18 @@ export function ProjectCard({
         <p className="mt-1 text-sm text-primary line-clamp-2">
           {data.description}
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <GitBranch className="h-3.5 w-3.5 text-accent1" />
-            {githubStats?.commits ?? data.commits ?? "-"} commits
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Clock3 className="h-3.5 w-3.5 text-alt" />
-            Updated {lastUpdated}
-          </span>
-        </div>
+        {data.githubLink && (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <GitBranch className="h-3.5 w-3.5 text-accent1" />
+              {githubStats?.commits ?? data.commits ?? "-"} commits
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock3 className="h-3.5 w-3.5 text-alt" />
+              Updated {lastUpdated}
+            </span>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="project-card-content">
@@ -119,13 +141,42 @@ export function ProjectCard({
           ))}
         </div>
 
-        <button
-          disabled
-          className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
-        >
-          <Mic className="w-4 h-4" />
-          Voice Summary
-        </button>
+        {showNarration &&
+          (draftPortfolioId && !draftNarrationText ? (
+            <div
+              role="status"
+              className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-background px-4 py-3 text-sm text-muted"
+            >
+              <Mic className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>No narration added for this project.</span>
+            </div>
+          ) : data.narrationAvailable === false ? (
+            <div
+              role="status"
+              className="mb-4 flex items-center gap-2 rounded-xl border border-line bg-background px-4 py-3 text-sm text-muted"
+            >
+              <Mic className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>No narration available for this project.</span>
+            </div>
+          ) : portfolioId && projectId ? (
+            <NarrationPlayer portfolioId={portfolioId} projectId={projectId} />
+          ) : draftPortfolioId && projectId && draftNarrationText ? (
+            // Remount on edits so the owner never hears stale draft audio.
+            <NarrationPlayer
+              key={draftNarrationText}
+              portfolioId={draftPortfolioId}
+              projectId={projectId}
+              loadAudio={loadDraftAudio}
+            />
+          ) : (
+            <button
+              disabled
+              className="w-full mb-4 py-2.5 flex items-center border-line justify-center gap-2 bg-background text-primary rounded-xl font-bold text-sm"
+            >
+              <Mic className="w-4 h-4" />
+              No narration available
+            </button>
+          ))}
 
         <div className="p-4 mb-5 bg-background border border-accent2 rounded-2xl">
           <div className="flex items-center mb-1">
@@ -232,6 +283,8 @@ ProjectCard.propTypes = {
     }),
   }),
   portfolioId: PropTypes.string,
+  draftPortfolioId: PropTypes.string,
   onProjectClick: PropTypes.func,
   dataTheme: PropTypes.string,
+  narrationEnabled: PropTypes.bool,
 };

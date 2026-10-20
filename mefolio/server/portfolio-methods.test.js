@@ -1,6 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import { Accounts } from "meteor/accounts-base";
 import { PortfolioCollection } from "/imports/api/portfolio";
+import { buildRecruiterSettingsUpdate } from "/imports/ui/Recruiter/recruiterSettingsUpdate";
 import { expect } from "chai";
 
 // Register the methods under test. Importing this lightweight module populates
@@ -53,6 +54,54 @@ if (Meteor.isServer) {
       expect(updated.recruiterInfo.salaryExpectation).to.equal("100k");
     });
 
+    it("keeps uploaded resumes when recruiter settings are saved", async function () {
+      const resumeLinks = [{ name: "cv.pdf", url: "/cdn/storage/cv.pdf" }];
+      await runUpdate({ userId: ownerId }, portfolioId, {
+        "recruiterInfo.resumeLinks": resumeLinks,
+      });
+
+      await runUpdate(
+        { userId: ownerId },
+        portfolioId,
+        buildRecruiterSettingsUpdate({ phoneNumber: "0400 000 000" }),
+      );
+
+      const updated = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(updated.recruiterInfo.phoneNumber).to.equal("0400 000 000");
+      expect(updated.recruiterInfo.resumeLinks).to.deep.equal(resumeLinks);
+    });
+
+    it("normalises and persists certifications for the owner", async function () {
+      await runUpdate({ userId: ownerId }, portfolioId, {
+        certifications: [
+          {
+            title: "AWS Certified Developer",
+            issuer: "Amazon Web Services",
+            issueDate: "2025-01-15",
+            imageUrl: "https://img.example.com/badge.png",
+            verificationUrl: "https://verify.example.com/abc",
+            source: "credly",
+            verified: true,
+          },
+          { title: "Manual Cert" },
+        ],
+      });
+
+      const updated = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(updated.certifications).to.have.lengthOf(2);
+      expect(updated.certifications[0]).to.include({
+        title: "AWS Certified Developer",
+        source: "credly",
+        verified: true,
+      });
+      // Omitted fields normalise to safe defaults (manual / unverified).
+      expect(updated.certifications[1]).to.include({
+        title: "Manual Cert",
+        source: "manual",
+        verified: false,
+      });
+    });
+
     it("rejects an update from a non-owner", async function () {
       try {
         await runUpdate({ userId: otherUserId }, portfolioId, {
@@ -89,6 +138,21 @@ if (Meteor.isServer) {
       expect(updated.userId).to.equal(ownerId);
       expect(updated._id).to.equal(portfolioId);
       expect(updated.title).to.equal("Renamed");
+    });
+
+    it("rejects unsupported chatbot personas", async function () {
+      try {
+        await runUpdate({ userId: ownerId }, portfolioId, {
+          chatbotPersona: "untrusted-prompt",
+        });
+        expect.fail("Expected an unsupported chatbot persona to be rejected");
+      } catch (error) {
+        expect(error).to.be.instanceOf(Meteor.Error);
+        expect(error.error).to.equal("invalid-chatbot-persona");
+      }
+
+      const unchanged = await PortfolioCollection.findOneAsync(portfolioId);
+      expect(unchanged.chatbotPersona).to.be.undefined;
     });
 
     it("does not let the generic update method change username", async function () {

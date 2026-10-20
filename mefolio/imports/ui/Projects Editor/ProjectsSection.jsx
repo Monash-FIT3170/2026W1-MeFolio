@@ -9,6 +9,7 @@ const ProjectsSection = ({
   projects = [],
   onEdit,
   onSync,
+  onToggleCustomNarration,
   syncingProjectId = null,
   draggedProjectIndex = null,
   onDragStart,
@@ -48,6 +49,7 @@ const ProjectsSection = ({
               index={index}
               onEdit={onEdit}
               onSync={onSync}
+              onToggleCustomNarration={onToggleCustomNarration}
               isSyncing={onSync ? syncingProjectId === projectId : false}
               draggable={isDraggable}
               isDragging={draggedProjectIndex === index}
@@ -67,6 +69,7 @@ ProjectsSection.propTypes = {
   projects: PropTypes.arrayOf(PropTypes.object),
   onEdit: PropTypes.func,
   onSync: PropTypes.func,
+  onToggleCustomNarration: PropTypes.func,
   syncingProjectId: PropTypes.string,
   draggedProjectIndex: PropTypes.number,
   onDragStart: PropTypes.func,

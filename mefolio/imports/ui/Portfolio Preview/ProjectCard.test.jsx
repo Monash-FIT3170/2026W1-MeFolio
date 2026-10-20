@@ -19,6 +19,7 @@ if (Meteor.isClient) {
         title: "AI Portfolio Dashboard",
         description: "An interactive portfolio with AI-powered analytics",
         technologies: ["React", "Meteor", "Tailwind"],
+        githubLink: "https://github.com/example/ai-portfolio-dashboard",
         stars: 42,
       };
 
@@ -83,7 +84,7 @@ if (Meteor.isClient) {
       expect(screen.getByRole("button", { name: /submit solution/i })).to.exist;
     });
 
-    it("displays Voice Summary, Code, and Demo buttons", () => {
+    it("displays the narration placeholder, Code, and Demo buttons", () => {
       const mockProject = {
         title: "Test Project",
         technologies: ["React"],
@@ -91,7 +92,7 @@ if (Meteor.isClient) {
 
       render(<ProjectCard project={mockProject} />);
 
-      expect(screen.getByText("Voice Summary")).to.exist;
+      expect(screen.getByText("No narration available")).to.exist;
       expect(screen.getByText("Code")).to.exist;
       expect(screen.getByText("Demo")).to.exist;
     });

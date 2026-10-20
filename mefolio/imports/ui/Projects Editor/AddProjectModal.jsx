@@ -5,10 +5,12 @@ import TechStackInput from "./TechStackInput";
 import ProofOfWorkSection from "./ProofOfWorkSection";
 import CodeBlock from "./CodeBlock";
 import getLanguageFromTechStack from "./techToLanguage";
+import { isProjectNarrationEnabled } from "../../api/projectNarration";
 
 const EMPTY_FORM = {
   title: "",
   description: "",
+  caseStudyNarrative: "",
   technologies: [],
   githubLink: "",
   liveDemoLink: "",
@@ -101,7 +103,13 @@ const MediaUpload = ({ file, onChange }) => {
   );
 };
 
-const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
+const AddProjectModal = ({
+  isOpen,
+  onClose,
+  onAdd: _onAdd,
+  portfolioId,
+  narrationEnabled = true,
+}) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const overlayRef = useRef(null);
@@ -143,8 +151,32 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
     const e = {};
     if (!form.title.trim()) e.title = "Project title is required.";
     if (!form.description.trim()) e.description = "Description is required.";
-    if (form.githubLink && !/^https?:\/\/.+/.test(form.githubLink))
-      e.githubLink = "Enter a valid URL (starting with https://)";
+    const githubLink = form.githubLink.trim();
+    if (githubLink) {
+      try {
+        const url = new URL(githubLink);
+        const parts = url.pathname.split("/").filter(Boolean);
+        const repository = parts[1]?.replace(/\.git$/, "");
+
+        if (
+          url.protocol !== "https:" ||
+          !["github.com", "www.github.com"].includes(url.hostname) ||
+          url.port ||
+          url.username ||
+          url.password ||
+          url.search ||
+          url.hash ||
+          parts.length !== 2 ||
+          !parts[0] ||
+          !repository
+        ) {
+          throw new Error("Invalid repository URL");
+        }
+      } catch {
+        e.githubLink =
+          "Enter the main GitHub repository URL, e.g., https://github.com/owner/repo";
+      }
+    }
     if (form.liveDemoLink && !/^https?:\/\/.+/.test(form.liveDemoLink))
       e.liveDemoLink = "Enter a valid URL (starting with https://)";
     if (form.proofOfWorkMode === "interactive") {
@@ -175,6 +207,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
       const payload = {
         title: form.title,
         description: form.description,
+        caseStudyNarrative: form.caseStudyNarrative.trim(),
         technologies: form.technologies,
         githubLink: form.githubLink,
         liveDemoLink: form.liveDemoLink,
@@ -223,7 +256,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
   const fieldClass = (key) =>
     `w-full px-3.5 py-2.5 border rounded-lg text-sm text-primary bg-surface-fill outline-none transition
       focus:border-accent2 focus:ring-2 focus:ring-selected
-      ${errors[key] ? "border-accent2 bg-accent2/10" : "border-line"}`;
+      ${errors[key] ? "border-red-400 bg-red-50" : "border-line"}`;
 
   const previewLanguage = getLanguageFromTechStack(form.technologies);
 
@@ -288,7 +321,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
             {errors.title && (
               <p
                 data-testid="error-title"
-                className="text-xs text-accent2 mt-1"
+                className="mt-1 text-xs text-red-500"
               >
                 {errors.title}
               </p>
@@ -321,6 +354,32 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               </p>
             )}
           </div>
+
+          {narrationEnabled && isProjectNarrationEnabled() && (
+            <div>
+              <label
+                htmlFor="case-study-narrative"
+                className="mb-1.5 block text-sm font-semibold text-primary"
+              >
+                Case Study Narration
+              </label>
+
+              <textarea
+                id="case-study-narrative"
+                data-testid="field-case-study-narrative"
+                rows={5}
+                value={form.caseStudyNarrative}
+                onChange={(e) => set("caseStudyNarrative", e.target.value)}
+                className={`${fieldClass("caseStudyNarrative")} resize-y leading-relaxed`}
+                placeholder="Write the project story you want recruiters to hear..."
+              />
+
+              <p className="mt-1 text-xs text-muted">
+                This text is used to generate the project's voice narration and
+                is not shown publicly.
+              </p>
+            </div>
+          )}
 
           {/* Tech Stack */}
           <div>
@@ -383,7 +442,7 @@ const AddProjectModal = ({ isOpen, onClose, onAdd: _onAdd, portfolioId }) => {
               {errors.githubLink && (
                 <p
                   data-testid="error-githubLink"
-                  className="text-xs text-accent2 mt-1"
+                  className="mt-1 text-xs text-red-500"
                 >
                   {errors.githubLink}
                 </p>
@@ -606,6 +665,7 @@ AddProjectModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onAdd: PropTypes.func.isRequired,
+  narrationEnabled: PropTypes.bool,
 };
 
 export default AddProjectModal;

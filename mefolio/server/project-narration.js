@@ -1,0 +1,209 @@
+import { Meteor } from "meteor/meteor";
+import { check } from "meteor/check";
+import { DDPRateLimiter } from "meteor/ddp-rate-limiter";
+import { Buffer } from "buffer";
+import { env } from "process";
+import { PortfolioCollection } from "/imports/api/portfolio";
+import {
+  isPortfolioNarrationEnabled,
+  isProjectNarrationEnabled,
+} from "/imports/api/projectNarration";
+import {
+  NARRATION_VOICES,
+  DEFAULT_VOICE_ID,
+} from "/imports/api/narrationVoices";
+
+function resolveVoiceId(voiceId) {
+  if (voiceId === undefined || voiceId === null) return DEFAULT_VOICE_ID;
+  if (
+    typeof voiceId !== "string" ||
+    !NARRATION_VOICES.some((voice) => voice.id === voiceId)
+  ) {
+    throw new Meteor.Error("invalid-voice", "That voice is not available.");
+  }
+  return voiceId;
+}
+
+export async function generateProjectNarration(text, voiceId) {
+  check(text, String);
+  const voice = resolveVoiceId(voiceId);
+  const narrationText = text.trim();
+  if (!narrationText || narrationText.length > 5000) {
+    throw new Meteor.Error(
+      "invalid-narration-text",
+      "Project text must contain between 1 and 5,000 characters.",
+    );
+  }
+
+  const url =
+    Meteor.settings?.private?.piper?.url ||
+    env.PIPER_URL ||
+    "http://127.0.0.1:5000/synthesize";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "audio/wav" },
+      body: JSON.stringify({ text: narrationText, voice }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Meteor.Error(
+        "narration-request-failed",
+        "Piper could not generate project audio.",
+      );
+    }
+
+    const audio = Buffer.from(await response.arrayBuffer());
+    if (
+      audio.length <= 44 ||
+      audio.toString("ascii", 0, 4) !== "RIFF" ||
+      audio.toString("ascii", 8, 12) !== "WAVE"
+    ) {
+      throw new Meteor.Error(
+        "narration-request-failed",
+        "Piper did not return WAV audio.",
+      );
+    }
+
+    return `data:audio/wav;base64,${audio.toString("base64")}`;
+  } catch (error) {
+    if (error instanceof Meteor.Error) {
+      throw error;
+    }
+    throw new Meteor.Error(
+      error?.name === "AbortError"
+        ? "narration-timeout"
+        : "narration-request-failed",
+      error?.name === "AbortError"
+        ? "Piper did not respond in time."
+        : "Unable to generate project audio. Check that Piper is running.",
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+const MAX_CACHED_NARRATIONS = 50;
+const narrationCache = new Map();
+
+export function clearNarrationCache() {
+  narrationCache.clear();
+}
+
+// Keyed by the narrated text, so editing the project produces fresh audio.
+function getCachedNarration(text, voiceId) {
+  const voice = resolveVoiceId(voiceId);
+  const key = `${voice}::${text}`;
+  if (!narrationCache.has(key)) {
+    if (narrationCache.size >= MAX_CACHED_NARRATIONS) {
+      narrationCache.delete(narrationCache.keys().next().value);
+    }
+    const pending = generateProjectNarration(text, voice).catch((error) => {
+      narrationCache.delete(key);
+      throw error;
+    });
+    narrationCache.set(key, pending);
+  }
+  return narrationCache.get(key);
+}
+
+export async function getPublishedNarrationAudio(
+  portfolioId,
+  projectId,
+  voiceId,
+) {
+  check(portfolioId, String);
+  check(projectId, String);
+
+  const portfolio = await PortfolioCollection.findOneAsync(portfolioId, {
+    fields: {
+      isPublished: 1,
+      publishedNarrations: 1,
+      "publishedContent.narrationEnabled": 1,
+    },
+  });
+
+  const narration =
+    portfolio?.isPublished === true &&
+    isPortfolioNarrationEnabled(portfolio.publishedContent) &&
+    Array.isArray(portfolio.publishedNarrations)
+      ? portfolio.publishedNarrations.find(
+          (publishedNarration) => publishedNarration?.projectId === projectId,
+        )
+      : undefined;
+
+  const text = typeof narration?.text === "string" ? narration.text.trim() : "";
+
+  if (!text) {
+    throw new Meteor.Error(
+      "narration-not-available",
+      "This project does not have audio available.",
+    );
+  }
+
+  return getCachedNarration(text, voiceId);
+}
+
+if (Meteor.isServer) {
+  DDPRateLimiter.addRule(
+    {
+      type: "method",
+      name: "projects.getNarrationAudio",
+      connectionId: () => true,
+    },
+    10,
+    60 * 1000,
+  );
+
+  Meteor.methods({
+    async "projects.getNarrationAudio"(portfolioId, projectId, voiceId) {
+      if (!isProjectNarrationEnabled()) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Project narration is currently unavailable.",
+        );
+      }
+      return getPublishedNarrationAudio(portfolioId, projectId, voiceId);
+    },
+
+    async "projects.generateNarration"(portfolioId, text, voiceId) {
+      if (!isProjectNarrationEnabled()) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Project narration is currently unavailable.",
+        );
+      }
+      if (!this.userId) {
+        throw new Meteor.Error(
+          "not-authorized",
+          "Log in to generate project audio.",
+        );
+      }
+      check(portfolioId, String);
+      check(text, String);
+
+      const portfolio = await PortfolioCollection.findOneAsync({
+        _id: portfolioId,
+        userId: this.userId,
+      });
+      if (!portfolio) {
+        throw new Meteor.Error(
+          "not-authorized",
+          "You can only generate audio for your own portfolio.",
+        );
+      }
+      if (!isPortfolioNarrationEnabled(portfolio)) {
+        throw new Meteor.Error(
+          "feature-disabled",
+          "Narration is turned off for this portfolio.",
+        );
+      }
+
+      return generateProjectNarration(text, voiceId);
+    },
+  });
+}

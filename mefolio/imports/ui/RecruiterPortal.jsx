@@ -4,6 +4,7 @@ import { useTracker } from "meteor/react-meteor-data";
 import { ResumeFiles } from "/imports/api/files/resumeFiles";
 import { PortfolioCollection } from "/imports/api/portfolio";
 import { VisitHistorySection } from "./Portfolio Builder/VisitHistorySection.jsx";
+import { buildRecruiterSettingsUpdate } from "./Recruiter/recruiterSettingsUpdate";
 import {
   Building,
   DollarSign,
@@ -357,24 +358,10 @@ const RecruiterPortal = ({ portfolio, userId }) => {
       return;
     }
 
-    // Only update allowed fields
-    const allowedUpdates = {
-      companyName: recruiterInfo.companyName,
-      salaryExpectation: recruiterInfo.salaryExpectation,
-      phoneNumber: recruiterInfo.phoneNumber,
-      currentLocation: recruiterInfo.currentLocation,
-      availability: recruiterInfo.availability,
-      personalNote: recruiterInfo.personalNote,
-      allowAccess: recruiterInfo.allowAccess,
-      accessCode: recruiterInfo.accessCode,
-    };
-
     Meteor.call(
       "portfolios.update",
       selectedPortfolioId,
-      {
-        recruiterInfo: allowedUpdates,
-      },
+      buildRecruiterSettingsUpdate(recruiterInfo),
       (err) => {
         setIsSaving(false);
         if (err) {
