@@ -7,6 +7,11 @@ import {
   defaultPortfolioProfileData,
 } from "../ui/Portfolio Builder/portfolioBuilderMockData";
 
+export const getSelectedPortfolio = (portfolios = [], user) =>
+  user?._id
+    ? portfolios.find((portfolio) => portfolio.userId === user._id) || null
+    : null;
+
 export const createLoadingViewModel = () => ({
   isLoading: true,
   sidebarItems: [],

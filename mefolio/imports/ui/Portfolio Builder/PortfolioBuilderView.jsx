@@ -13,6 +13,7 @@ import {
 import {
   createDashboardViewModel,
   getCurrentTab,
+  getSelectedPortfolio,
 } from "../../models/portfolioBuilderViewModel";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
@@ -53,24 +54,6 @@ const getProjectDataKey = (projects = []) =>
       ].join(":"),
     )
     .join("|");
-
-const getUserEmail = (user) =>
-  user?.email ||
-  user?.emails?.[0]?.address ||
-  user?.services?.google?.email ||
-  user?.services?.github?.email ||
-  "";
-
-const getSelectedPortfolio = (portfolios = [], user) => {
-  const ownedPortfolio = portfolios.find(
-    (portfolio) => portfolio.userId === user?._id,
-  );
-
-  if (ownedPortfolio) return ownedPortfolio;
-  if (getUserEmail(user) === "test@example.com") return portfolios[0];
-
-  return null;
-};
 
 const createUnavailableProject = (projectId) => ({
   _id: projectId,

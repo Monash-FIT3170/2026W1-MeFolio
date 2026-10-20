@@ -101,7 +101,7 @@ export const defaultPortfolioProfileData = {
 };
 
 export const samplePortfolioProfileData = {
-  userId: "Superuser",
+  userId: "",
   portfolioNumber: 1,
   title: "Sample Portfolio",
   isPublished: false,
