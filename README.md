@@ -53,7 +53,7 @@ This is the recommended approach for development as it provides a consistent env
 
 2. **Clone the repository** and navigate to the project directory:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Monash-FIT3170/2026W1-MeFolio.git
    cd 2026W1-MeFolio/mefolio
    ```
 
@@ -98,7 +98,7 @@ If you prefer not to use Docker:
 
 3. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Monash-FIT3170/2026W1-MeFolio.git
    cd 2026W1-MeFolio/mefolio
    ```
 
@@ -116,15 +116,43 @@ If you prefer not to use Docker:
    npm start
    ```
 
-### Project Text-to-Audio (Piper)
+### Project Narration (Piper)
 
-Narration is generated server-side using a private, self-hosted
-[Piper](https://github.com/OHF-Voice/piper1-gpl) service. There is no API key or
-per-request billing; hosting still uses server resources. Generation requires
-login and ownership of the supplied portfolio. Visitors do not receive scripts
-or sample audio from this method.
+Project cards can read a short narration aloud. Audio is generated server-side by
+[Piper](https://github.com/OHF-Voice/piper1-gpl), a free, open-source text-to-speech
+engine that runs as its own service. There is no API key or per-request billing;
+hosting Piper still uses server resources.
 
-#### Start Everything
+Because Piper is a separate open-source service rather than a core part of the app,
+narration is **optional**: it can be switched off at any time without affecting
+anything else (see [Switching narration off](#switching-narration-off)).
+
+#### How it works
+
+1. A visitor presses play on a project card and picks a voice: US female
+   (`en_US-lessac-medium`), US male (`en_US-ryan-medium`) or UK male
+   (`en_GB-alan-medium`).
+2. The browser asks the MeFolio server for audio. It never contacts Piper directly.
+3. The server picks the narration text and sends it with the voice to Piper's
+   `/synthesize` endpoint. Piper returns WAV audio, which the server passes back.
+   Recent audio is cached in server memory, so replays are instant.
+
+The narration text is the project's **custom case-study narration** when the owner
+has switched custom narration on for that project, otherwise the **project
+description**. Custom narration text is never sent to visitors' browsers; they only
+receive audio. In the draft preview, the owner hears their unpublished text; the
+live portfolio uses the text captured at the last publish.
+
+If Piper is down or slow, the player shows an error, the server stops waiting after
+60 seconds, and the rest of the portfolio keeps working.
+
+The code lives in [server/project-narration.js](mefolio/server/project-narration.js),
+[imports/api/projectNarration.js](mefolio/imports/api/projectNarration.js),
+[imports/api/narrationVoices.js](mefolio/imports/api/narrationVoices.js) and the
+`Narration*` components in `imports/ui/Portfolio Preview`. The Piper image is built
+from [piper/Dockerfile](mefolio/piper/Dockerfile).
+
+#### Start Everything Locally
 
 Install and open Docker Desktop. From `mefolio`, run:
 
@@ -133,61 +161,53 @@ docker compose up --build -d
 docker compose ps
 ```
 
-The first build installs Piper and downloads its voice model automatically;
-it needs internet access and may take several minutes. Later starts reuse the
-image. Wait for `piper` and `mongo` to show `healthy`, then open
-http://localhost:3000. If Meteor is still starting, check `docker compose logs app`.
-The app waits for Piper's readiness check before starting.
+The first build installs Piper and downloads all three voices; it needs internet
+access and may take several minutes. Wait for `piper` and `mongo` to show
+`healthy`, then open http://localhost:3000. If Meteor is still starting, check
+`docker compose logs app`.
 
-No Python installation, API key or Piper settings edit is needed. Compose sets
-`PIPER_URL` automatically. Piper's port is not published to the host or internet.
-Do not add a public port mapping: Piper itself has no authentication and may
-retain the most recent script in its internal status endpoint.
+Compose sets `PIPER_URL` automatically, so no settings edit is needed. Piper's port
+is not published to the host or internet. Do not add a public port mapping: Piper
+itself has no authentication.
 
-If running Meteor without Docker, the service URL is resolved in this order:
-`private.piper.url` in Meteor settings, `PIPER_URL` in the server environment,
-then `http://127.0.0.1:5000/synthesize`. A separate Piper service must be running
-for that workflow. Do not put models or narration samples in `public/`.
+If you change the voices in `piper/Dockerfile`, rebuild the container with
+`docker compose up -d --build piper`. A Piper container built from an older image
+silently falls back to its default voice for any voice it does not have.
+
+#### Configuration
+
+The server finds Piper through the first of these that is set:
+
+1. `private.piper.url` in Meteor settings
+2. `PIPER_URL` in the server environment (on Galaxy, under `galaxy.meteor.com` ->
+   `env` in the app settings)
+3. `http://127.0.0.1:5000/synthesize`
+
+`http://piper:5000` only works inside Docker's private network. A deployed app needs
+the full HTTPS address of a separately hosted Piper service, ending in
+`/synthesize`. Hosting Piper for production is described in
+[MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#64-hosting-piper).
+
+#### Switching narration off
+
+| Switch | Where | Effect |
+| --- | --- | --- |
+| Site-wide kill switch | Meteor settings: `"public": { "features": { "projectNarration": false } }`, then redeploy | Narration disappears everywhere and Piper is never called. Use this if Piper is unavailable or not hosted |
+| Portfolio switch | Builder -> Projects tab -> "Narration" | Turns narration off for one portfolio. Applies to the draft preview immediately and to the live portfolio on the next publish |
+| Custom narration switch | Builder -> each project card, below the description | Chooses whether that project reads its custom case study or its description |
 
 #### Manually Test Real Audio
 
-There is no narration UI yet. This tests the real server method without editing
-any app code:
+1. Start everything locally and log in.
+2. In the builder's **Projects** tab, check the **Narration** switch is on. Edit a
+   project and add text under **Case Study Narration**, then switch **Custom
+   narration** on for that card.
+3. Open the preview, press play on the project card and listen. Switch voices and
+   play again: the voice should change.
+4. Switch **Custom narration** off and play again: it should now read the
+   description.
 
-1. Open http://localhost:3000 and log in as the portfolio owner. Open their
-   portfolio editor so you know which portfolio you are testing.
-2. Open browser developer tools (F12), select Console and run `Meteor.userId()`.
-   Copy the returned user ID. It must not be `null`.
-3. In a terminal in `mefolio`, run `docker compose exec mongo mongosh meteor`.
-   At the Mongo shell prompt, paste this query with your actual user ID:
-   ```js
-   db.portfolios.find(
-      { userId: "YOUR_USER_ID" },
-      { _id: 1, title: 1 }
-   ).toArray()
-   ```
-   Copy the `_id` for the portfolio you own. Type `exit` to leave the Mongo shell.
-   If there are no results, create a portfolio in the app and repeat the query.
-4. Back in the browser Console, paste the following using that portfolio ID:
-   ```js
-   var sampleAudioUrl = await Meteor.callAsync(
-      "projects.generateNarration",
-      "YOUR_PORTFOLIO_ID",
-      "I built a portfolio website using React and Meteor."
-   );
-   var samplePlayer = new Audio(sampleAudioUrl);
-   samplePlayer.controls = true;
-   document.body.prepend(samplePlayer);
-   ```
-5. Click Play on the audio controls at the top of the page. You should hear the
-   sentence. Using the Play control avoids browser autoplay restrictions.
-6. Log out and repeat only the `Meteor.callAsync` call using the same portfolio
-   ID. It must fail with `not-authorized`. Log in with a different account and
-   repeat it: it must also fail. These checks must not generate audio.
-
-Refresh the page to remove the temporary player. If synthesis fails, check
-`docker compose ps` and `docker compose logs piper`. For a startup/network error,
-ensure Docker Desktop is running and the `piper` service is healthy.
+If synthesis fails, check `docker compose ps` and `docker compose logs piper`.
 
 #### Automated Tests
 
@@ -202,31 +222,14 @@ Remove-Item Env:MOCHA_GREP, Env:TEST_CLIENT, Env:TEST_SERVER
 ```
 
 These verify ownership, validation, endpoint selection, failures and timeouts;
-they do not require Piper or prove audible output. Use the manual test above
-for real synthesis.
+they do not require Piper or prove audible output. Use the manual test above for
+real synthesis. The full suite (`npm test`) also covers the narration player,
+switches and text selection.
 
-#### Integration Contract
+#### Licences
 
-From the authenticated portfolio owner's editor, call:
-
-```js
-const sampleAudioUrl = await Meteor.callAsync(
-   "projects.generateNarration",
-   portfolioId,
-   narrationScript,
-);
-```
-
-The result is a WAV data URL for the owner's private preview or downstream
-storage. Plain text must contain 1-5,000 characters. It is read as-is, not
-summarised. Scripts are sent only from the owner to Meteor and the private Piper
-service; this tool does not store scripts, audio or change project records.
-
-Permanent storage, publishing and playback remain separate team tasks. Store
-scripts and sample audio in owner-only storage, not publicly published project
-fields. Expose only approved final audio for public playback, without returning
-the script or sample URLs. Public audio can still be transcribed by listeners.
-Check Piper's GPL licence and the chosen voice model's licence before deployment.
+Piper is licensed under the GPL, and each voice model has its own licence. Check
+both before any commercial use or redistribution.
 
 ### Available NPM Scripts
 
@@ -453,19 +456,22 @@ Sometimes the CI test runner shows "CLIENT FAILURES: 1" without displaying the e
 
 ### Deployment Strategy
 
-Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy. The Galaxy account logs in with the MeFolio admin email; billing is currently on an outgoing team member's card and is handed over by adding the incoming owner's company card to that account, then removing the outgoing card. As agreed with the tutor (12 Oct 2026), the incoming owner is not named in advance (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#billing-handover)). Confirm live app URLs and database backup settings in the Galaxy dashboard. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
+Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy, and voice narration uses a separately hosted Piper service on Azure Container Apps (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#6-voice-narration-piper)). The Galaxy account logs in with the MeFolio admin email. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
+
+**Service period:** MeFolio is live and maintained until final semester results on **3 December 2026**. On or after **4 December 2026** the system architects (Joy, Joyce and Jonah) shut it down, because there is no payer for hosting after the semester. Anyone can restart it later by taking over billing; as agreed with the tutor (12 Oct 2026), that future owner is not named in advance. See [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md) for the shutdown and restart steps.
 
 
 #### Staging Environment
 - Intended release source: the `dev` branch
 - Confirm any external deployment triggers before merging; do not assume a merge deploys
 - Use this to test feature integration before milestone completion
-- URL and access details available in team resources
+- URL (until 3 December 2026): https://mefolio-staging.sandbox.galaxycloud.app/login
 
 #### Production Environment
 - Intended release source: the reviewed and tagged `main` branch
 - Deploy only after release approval, passing checks and a verified backup
 - The 'polished' version of MeFolio available to end users
+- URL (until 3 December 2026): https://mefolio-production.sandbox.galaxycloud.app/login
 
 *Note*: During local feature development, continue using Docker and `localhost:3000`
 
@@ -480,7 +486,7 @@ This is the proposed deployment procedure; the outgoing owner must supply the ac
 1. Resolve the production risks listed above. Confirm durable resume storage, OAuth callbacks, database connectivity and the runtime supported by Meteor 3.4/Galaxy.
 2. Check out the approved `dev` commit for staging, or the release tag from `main` for production, in a clean checkout. Run `meteor npm ci` from `mefolio`, then require passing PR CI.
 3. Back up MongoDB and uploaded resumes. Record the previous working release and any migration/recovery steps.
-4. Authenticate to the authorised Meteor/Galaxy account. Obtain private environment settings securely outside the repository. Include `private.google` and `private.github` settings as needed, plus the provider-required database/runtime configuration. Configure `MONGO_URL` and the public URL through the host's supported settings/environment mechanism.
+4. Authenticate to the authorised Meteor/Galaxy account. Obtain private environment settings securely outside the repository. Include `private.google` and `private.github` settings as needed, plus the provider-required database/runtime configuration. Configure `MONGO_URL` and the public URL through the host's supported settings/environment mechanism. For narration, set `PIPER_URL` to the hosted Piper service's `/synthesize` address, or switch narration off with the site-wide kill switch.
 5. From `mefolio`, use the actual app hostname and settings path:
 
    ```sh
@@ -488,10 +494,10 @@ This is the proposed deployment procedure; the outgoing owner must supply the ac
    ```
 
    Use the organisation's regional deployment endpoint if required by Galaxy. The hostname, endpoint and billing authority must be confirmed with the owner; this command must not be run against an unapproved app.
-6. Inspect deployment/build logs and check HTTPS availability, Google/GitHub login, portfolio editing/publishing, draft privacy, public portfolio rendering, recruiter-token expiry/access, visit notifications, GitHub sync and resume upload/download persistence.
+6. Inspect deployment/build logs and check HTTPS availability, Google/GitHub login, portfolio editing/publishing, draft privacy, public portfolio rendering, recruiter-token expiry/access, visit notifications, GitHub sync, resume upload/download persistence and narration playback in each voice.
 7. Record the deployed tag, time, operator and check results in the release notes. If checks fail, stop further rollout and redeploy the last verified release; restore data/files only under the approved recovery plan.
 
-After Week 12, follow [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md): hosting requires an accepting owner and payer; otherwise use a controlled shutdown. Former students have no ongoing support or funding obligation.
+After 3 December 2026, follow [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md): the hosted services are shut down, and restarting them requires a new owner who takes over billing. Former students have no ongoing support or funding obligation.
 
 ## Versioning Strategy
 
