@@ -12,7 +12,12 @@ import {
   isChatbotPersona,
 } from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import {
+  buildNarrationText,
+  isPortfolioNarrationEnabled,
+} from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
+import "./user-methods.js";
 
 // oauth login
 import "./oauth-login/oauth.js";
@@ -39,6 +44,7 @@ import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+import "./project-narration.js";
 // register AI Twin methods
 import "./ai/chatMethods.js";
 import "./credly-methods.js";
@@ -387,8 +393,28 @@ Meteor.startup(async () => {
   }
 });
 
-Meteor.publish("projects.all", function () {
-  return ProjectCollection.find({}, { sort: { createdAt: -1 } });
+Meteor.publish("projects.all", async function () {
+  if (!this.userId) return this.ready();
+
+  const portfolios = await PortfolioCollection.find(
+    { userId: this.userId },
+    { fields: { projects: 1 } },
+  ).fetchAsync();
+
+  const projectIds = [
+    ...new Set(
+      portfolios.flatMap((portfolio) =>
+        Array.isArray(portfolio.projects) ? portfolio.projects : [],
+      ),
+    ),
+  ];
+
+  if (!projectIds.length) return this.ready();
+
+  return ProjectCollection.find(
+    { _id: { $in: projectIds } },
+    { sort: { createdAt: -1 } },
+  );
 });
 
 // Private portfolio fields withheld from clients that do not own the portfolio.
@@ -396,6 +422,7 @@ Meteor.publish("projects.all", function () {
 // `portfolio.recruiterView` publication instead.
 const NON_OWNER_PORTFOLIO_FIELDS = {
   recruiterInfo: 0,
+  publishedNarrations: 0,
   aiTwinConfiguration: 0,
   publishedAiTwinConfiguration: 0,
 };
@@ -660,6 +687,10 @@ Meteor.methods({
     const normalized = {
       title: projectData.title ?? "",
       description: projectData.description ?? "",
+      caseStudyNarrative:
+        typeof projectData.caseStudyNarrative === "string"
+          ? projectData.caseStudyNarrative.trim()
+          : "",
       technologies: projectData.technologies ?? projectData.stack ?? [],
       githubLink: projectData.githubLink ?? projectData.github ?? "",
       liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
@@ -728,6 +759,28 @@ Meteor.methods({
   async "projects.update"(projectId, updates) {
     const normalizedUpdates = { ...updates };
     const unset = {};
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "caseStudyNarrative",
+      )
+    ) {
+      normalizedUpdates.caseStudyNarrative =
+        typeof normalizedUpdates.caseStudyNarrative === "string"
+          ? normalizedUpdates.caseStudyNarrative.trim()
+          : "";
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "useCustomNarration",
+      )
+    ) {
+      normalizedUpdates.useCustomNarration =
+        normalizedUpdates.useCustomNarration === true;
+    }
 
     if (
       Object.prototype.hasOwnProperty.call(normalizedUpdates, "proofOfWorkMode")
@@ -993,6 +1046,8 @@ Meteor.methods({
       _id: { $in: projectIds },
     }).fetchAsync();
 
+    const narrationEnabled = isPortfolioNarrationEnabled(portfolio);
+
     const orderedProjects = projectIds
       .map((projectId) =>
         projectRecords.find((project) => project._id === projectId),
@@ -1009,6 +1064,8 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        narrationAvailable:
+          narrationEnabled && Boolean(buildNarrationText(project)),
         proofOfWorkMode: project.proofOfWorkMode || "standard",
         ...(project.challenge
           ? {
@@ -1031,6 +1088,19 @@ Meteor.methods({
       );
     }
 
+    const publishedNarrations = narrationEnabled
+      ? projectIds
+          .map((projectId) =>
+            projectRecords.find((project) => project._id === projectId),
+          )
+          .filter(Boolean)
+          .map((project) => ({
+            projectId: project._id,
+            text: buildNarrationText(project),
+          }))
+          .filter((narration) => narration.text)
+      : [];
+
     const publishedContent = {
       title: portfolio.title,
       bio: portfolio.bio,
@@ -1042,6 +1112,7 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      narrationEnabled,
       chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       certifications: normalizeCertifications(portfolio.certifications),
     };
@@ -1049,6 +1120,7 @@ Meteor.methods({
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedNarrations,
         publishedAiTwinConfiguration: {
           documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
             ? portfolio.aiTwinConfiguration.documents

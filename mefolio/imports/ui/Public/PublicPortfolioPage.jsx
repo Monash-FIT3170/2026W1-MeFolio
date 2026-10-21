@@ -1,5 +1,5 @@
 import { Meteor } from "meteor/meteor";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTracker } from "meteor/react-meteor-data";
 import { useParams } from "react-router-dom";
 import { PortfolioCollection } from "../../api/portfolio.js";
@@ -27,7 +27,6 @@ export const PublicPortfolioPage = () => {
       "portfolios.publicView",
       lookupValue,
     );
-
     const foundPortfolio = PortfolioCollection.findOne({
       $or: [{ _id: lookupValue }, { username: lookupValue }],
     });
@@ -45,11 +44,24 @@ export const PublicPortfolioPage = () => {
         : null,
     };
   }, [lookupValue]);
+  const recordedViewForPortfolio = useRef(null);
+  const realPortfolioId = portfolio?._id;
 
   useEffect(() => {
-    if (isLoading || !publishedContent || !portfolio?._id) return undefined;
+    if (isLoading || !publishedContent || !realPortfolioId) {
+      return undefined;
+    }
 
-    const realPortfolioId = portfolio._id;
+    if (recordedViewForPortfolio.current !== realPortfolioId) {
+      recordedViewForPortfolio.current = realPortfolioId;
+
+      Meteor.call("portfolios.recordView", realPortfolioId, (error) => {
+        if (error) {
+          console.error("Failed to record portfolio view:", error);
+        }
+      });
+    }
+
     const sendHeartbeat = () => {
       Meteor.call("portfolios.viewerHeartbeat", realPortfolioId, (error) => {
         if (error) console.error("Failed to send viewer heartbeat:", error);
@@ -57,9 +69,10 @@ export const PublicPortfolioPage = () => {
     };
 
     sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 10000);
-    return () => clearInterval(interval);
-  }, [isLoading, portfolio?._id, publishedContent]);
+    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
+
+    return () => clearInterval(heartbeatInterval);
+  }, [isLoading, realPortfolioId, publishedContent]);
 
   if (isLoading) {
     return (
@@ -107,12 +120,12 @@ export const PublicPortfolioPage = () => {
     >
       <PortfolioContent
         portfolio={publishedContent}
-        portfolioId={portfolio?._id}
+        portfolioId={realPortfolioId}
         projects={publishedContent.projects || []}
       />
       <div className="pointer-events-none fixed top-16 right-5 z-40">
         <div className="pointer-events-auto">
-          <ViewerLocationPrompt portfolioId={portfolio?._id} />
+          <ViewerLocationPrompt portfolioId={realPortfolioId} />
         </div>
       </div>
     </div>

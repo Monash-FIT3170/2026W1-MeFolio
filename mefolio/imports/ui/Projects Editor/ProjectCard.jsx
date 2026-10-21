@@ -15,6 +15,8 @@ import {
   CardTitle,
   CardContent,
 } from "../Portfolio Preview/Card";
+import { NarrationToggle } from "../Portfolio Preview/NarrationToggle";
+import { usesCustomNarration } from "../../api/projectNarration";
 
 // Treat these extensions as video so we render a <video> rather than an <img>.
 const VIDEO_EXTENSIONS = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i;
@@ -28,11 +30,14 @@ const isVideoMedia = (media) =>
 // links. Optional fields degrade gracefully (placeholder media, hidden links).
 // When drag handlers are supplied the whole card becomes draggable so the owner
 // can reorder cards into any sequence; an Edit button shows when onEdit is set.
+// When onToggleCustomNarration is set, a switch below the description chooses
+// whether narration reads the custom case study or the description.
 export function ProjectCard({
   project,
   index,
   onEdit,
   onSync,
+  onToggleCustomNarration,
   isSyncing = false,
   draggable = false,
   isDragging = false,
@@ -49,7 +54,18 @@ export function ProjectCard({
     liveDemoLink = "",
     media = "",
     githubStats = null,
+    caseStudyNarrative = "",
   } = project || {};
+
+  const hasCustomNarration =
+    typeof caseStudyNarrative === "string" &&
+    Boolean(caseStudyNarrative.trim());
+  const customNarrationOn = hasCustomNarration && usesCustomNarration(project);
+  const narrationHint = customNarrationOn
+    ? "Narration reads your custom case study."
+    : hasCustomNarration
+      ? "Narration reads the project description."
+      : "Narration reads the project description. Add a custom narration with Edit to use it instead.";
 
   const lastUpdated = githubStats?.updatedAt
     ? new Intl.DateTimeFormat(undefined, {
@@ -164,6 +180,23 @@ export function ProjectCard({
         {description && (
           <p className="mt-1 text-sm text-muted line-clamp-3">{description}</p>
         )}
+        {onToggleCustomNarration && (
+          <div
+            data-testid="project-card-custom-narration"
+            className="mt-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <NarrationToggle
+              fullWidth
+              label="Custom narration"
+              ariaLabel={`Use custom narration for ${title}`}
+              enabled={customNarrationOn}
+              disabled={!hasCustomNarration}
+              onChange={(enabled) => onToggleCustomNarration(project, enabled)}
+            />
+            <p className="mt-1.5 text-xs text-muted">{narrationHint}</p>
+          </div>
+        )}
         {githubLink && (
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-muted">
             <span className="inline-flex items-center gap-1.5">
@@ -266,6 +299,8 @@ ProjectCard.propTypes = {
     githubLink: PropTypes.string,
     liveDemoLink: PropTypes.string,
     media: PropTypes.string,
+    caseStudyNarrative: PropTypes.string,
+    useCustomNarration: PropTypes.bool,
     githubStats: PropTypes.shape({
       stars: PropTypes.number,
       commits: PropTypes.number,
@@ -274,6 +309,7 @@ ProjectCard.propTypes = {
   }),
   onEdit: PropTypes.func,
   onSync: PropTypes.func,
+  onToggleCustomNarration: PropTypes.func,
   isSyncing: PropTypes.bool,
   draggable: PropTypes.bool,
   isDragging: PropTypes.bool,

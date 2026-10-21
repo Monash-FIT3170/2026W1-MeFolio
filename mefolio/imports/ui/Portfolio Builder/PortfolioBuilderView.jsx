@@ -33,6 +33,11 @@ import AiTwinConfiguration from "./AiTwinConfiguration.jsx";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
+import { NarrationToggle } from "../Portfolio Preview/NarrationToggle";
+import {
+  isPortfolioNarrationEnabled,
+  isProjectNarrationEnabled,
+} from "../../api/projectNarration";
 import { useResponsive } from "../Contexts/ResponsiveContext";
 import CertificationsEditorSection from "./CertificationsEditorSection";
 
@@ -244,6 +249,7 @@ const DashboardLayout = () => {
     isLoading: showFullPageLoading,
     portfolios: visiblePortfolios,
     projects: databaseProjects,
+    engagements: snapshot.engagements,
     user: snapshot.user,
   });
 
@@ -312,6 +318,63 @@ const DashboardLayout = () => {
   };
 
   const handleEditProject = (project) => setEditingProject(project);
+
+  // Owner-level switch for the whole narration feature. Piper is an external
+  // service, so this lets the owner turn narration off without touching the
+  // rest of the portfolio. It applies to the draft preview straight away and
+  // to the live portfolio on the next publish.
+  const portfolioNarrationEnabled =
+    isPortfolioNarrationEnabled(selectedPortfolio);
+
+  const handleNarrationToggle = (enabled) => {
+    const portfolioId = selectedPortfolio?._id;
+    if (!portfolioId) return;
+
+    Meteor.call(
+      "portfolios.update",
+      portfolioId,
+      { narrationEnabled: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+        }
+      },
+    );
+  };
+
+  // Chooses whether a project's narration reads its custom case study or its
+  // description. Applies to the draft preview straight away and to the live
+  // portfolio on the next publish.
+  const handleToggleCustomNarration = (project, enabled) => {
+    const projectId = project?._id || project?.id;
+    if (!projectId) return;
+
+    Meteor.call(
+      "projects.update",
+      projectId,
+      { useCustomNarration: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update custom narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+          return;
+        }
+
+        setOrderedProjects((previousProjects) =>
+          previousProjects.map((currentProject) =>
+            (currentProject._id || currentProject.id) === projectId
+              ? { ...currentProject, useCustomNarration: enabled }
+              : currentProject,
+          ),
+        );
+      },
+    );
+  };
 
   const handleSaveProject = (projectId, updates) => {
     Meteor.call("projects.update", projectId, updates, (error) => {
@@ -452,6 +515,13 @@ const DashboardLayout = () => {
 
                 <DraftStatusIndicator status={draftStatus} />
 
+                {activeTab === "projects" && isProjectNarrationEnabled() && (
+                  <NarrationToggle
+                    enabled={portfolioNarrationEnabled}
+                    onChange={handleNarrationToggle}
+                  />
+                )}
+
                 {activeTab === "projects" && (
                   <button
                     type="button"
@@ -531,6 +601,11 @@ const DashboardLayout = () => {
                   onEdit={handleEditProject}
                   syncingProjectId={syncingProjectId}
                   onSync={handleSyncProject}
+                  onToggleCustomNarration={
+                    portfolioNarrationEnabled
+                      ? handleToggleCustomNarration
+                      : undefined
+                  }
                   draggedProjectIndex={draggedProjectIndex}
                   onDragStart={handleProjectDragStart}
                   onDragOver={handleProjectDragOver}
@@ -583,6 +658,7 @@ const DashboardLayout = () => {
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
         portfolioId={selectedPortfolio?._id}
+        narrationEnabled={portfolioNarrationEnabled}
       />
 
       <EditProjectModal
@@ -591,6 +667,7 @@ const DashboardLayout = () => {
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
+        narrationEnabled={portfolioNarrationEnabled}
       />
     </div>
   );
