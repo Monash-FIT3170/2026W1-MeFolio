@@ -17,6 +17,7 @@ import {
   isPortfolioNarrationEnabled,
 } from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
+import "./user-methods.js";
 
 // oauth login
 import "./oauth-login/oauth.js";
