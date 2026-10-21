@@ -37,6 +37,10 @@ Meteor.methods({
         question: trimmedMessage,
       });
 
+      await PortfolioCollection.updateAsync(portfolioId, {
+        $inc: { aiQuestionsAsked: 1 },
+      });
+
       return { answer };
     } catch (error) {
       console.error("Portfolio AI request failed:", error);
