@@ -26,9 +26,9 @@ This section provides essential information for future developers continuing wor
 ## System Requirements
 
 ### Software Requirements
-- **Node.js**: v18.x or higher (required for Meteor)
-- **Meteor**: Latest stable version (installed via `curl https://install.meteor.com/ | sh`)
-- **Docker & Docker Compose**: Required for development
+- **Meteor**: The application pins `METEOR@3.4` in [mefolio/.meteor/release](mefolio/.meteor/release); use this release rather than assuming the latest version is compatible.
+- **Node.js**: Docker and CI use Node 20. Use Meteor's bundled Node/npm for local app commands; review Node 20's security support and Meteor compatibility before future production releases.
+- **Docker & Docker Compose v2**: Recommended for development, not required for the native Meteor option.
 - **Git**: For version control
 
 ### Hardware Requirements
@@ -38,7 +38,7 @@ This section provides essential information for future developers continuing wor
 
 ### Operating Systems
 - **Windows**: Windows 10/11 with WSL2 or native Docker Desktop
-- **macOS**: macOS 10.14+
+- **macOS**: A version supported by the installed Docker Desktop and Meteor release
 - **Linux**: Any modern distribution with Docker support
 
 ---
@@ -53,17 +53,19 @@ This is the recommended approach for development as it provides a consistent env
 
 2. **Clone the repository** and navigate to the project directory:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Monash-FIT3170/2026W1-MeFolio.git
    cd 2026W1-MeFolio/mefolio
    ```
 
-3. **Start the Docker containers**:
+3. **Configure local settings, then start the Docker containers**:
+
+   Copy [mefolio/server/oauth-login/oauth.settings.example.json](mefolio/server/oauth-login/oauth.settings.example.json) to `server/oauth-login/oauth.settings.json` inside `mefolio`. Supply authorised Google/GitHub credentials locally. The Dockerfile requires this settings file; never commit real secrets.
    
    **First time only** - build and start the containers:
    ```bash
    docker compose up --build
    ```
-   This will build the images and start all services (may take 2-3 minutes).
+   This builds the images and starts both services. Initial Meteor downloads/builds may take several minutes.
    
    **Subsequent runs** - just start the containers (much faster):
    ```bash
@@ -72,13 +74,16 @@ This is the recommended approach for development as it provides a consistent env
 
 4. **Verify everything is running**:
    - Application: http://localhost:3000
-   - MongoDB: Connect via MongoDB Compass using `mongodb://localhost:27017`
+   - MongoDB: Connect via MongoDB Compass using `mongodb://localhost:3001/meteor`
+   - Check startup errors with `docker compose ps` and `docker compose logs --tail=100 app mongo`.
 
 5. **Stop the containers** when finished developing:
    ```bash
    docker compose down
    ```
-   To pause instead of stopping (faster restart): `docker compose stop`
+   To stop without removing containers: `docker compose stop`, then `docker compose start` to restart. Named volumes survive `down`; `down -v` deletes them, including the database.
+
+   This Compose setup runs Meteor's development server, not a production deployment. See [docker.md](docker.md).
 
 ### Local Development (Without Docker)
 
@@ -89,11 +94,11 @@ If you prefer not to use Docker:
    curl https://install.meteor.com/ | sh
    ```
 
-2. **Install MongoDB**: Download from https://www.mongodb.com/try/download/community
+2. Meteor can start a local development MongoDB automatically. Install a separate MongoDB only if you intend to configure an external database with `MONGO_URL`.
 
 3. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Monash-FIT3170/2026W1-MeFolio.git
    cd 2026W1-MeFolio/mefolio
    ```
 
@@ -102,24 +107,52 @@ If you prefer not to use Docker:
    meteor npm install
    ```
 
-5. **Start MongoDB** (ensure it's running on port 27017)
+5. For an external database, start it and set `MONGO_URL` to its full connection string. Otherwise leave `MONGO_URL` unset to use Meteor's development database. Do not run native Meteor and Docker on port 3000 at the same time.
 
-6. **Configure OAuth settings**: Copy `server/oauth-login/oauth.settings.example.json` to `server/oauth-login/oauth.settings.json` and add your GitHub OAuth credentials
+6. **Configure OAuth settings**: Copy the provided example to `server/oauth-login/oauth.settings.json` and add your Google/GitHub OAuth credentials and, if needed, a GitHub API token.
 
 7. **Start the development server**:
    ```bash
    npm start
    ```
 
-### Project Text-to-Audio (Piper)
+### Project Narration (Piper)
 
-Narration is generated server-side using a private, self-hosted
-[Piper](https://github.com/OHF-Voice/piper1-gpl) service. There is no API key or
-per-request billing; hosting still uses server resources. Generation requires
-login and ownership of the supplied portfolio. Visitors do not receive scripts
-or sample audio from this method.
+Project cards can read a short narration aloud. Audio is generated server-side by
+[Piper](https://github.com/OHF-Voice/piper1-gpl), a free, open-source text-to-speech
+engine that runs as its own service. There is no API key or per-request billing;
+hosting Piper still uses server resources.
 
-#### Start Everything
+Because Piper is a separate open-source service rather than a core part of the app,
+narration is **optional**: it can be switched off at any time without affecting
+anything else (see [Switching narration off](#switching-narration-off)).
+
+#### How it works
+
+1. A visitor presses play on a project card and picks a voice: US female
+   (`en_US-lessac-medium`), US male (`en_US-ryan-medium`) or UK male
+   (`en_GB-alan-medium`).
+2. The browser asks the MeFolio server for audio. It never contacts Piper directly.
+3. The server picks the narration text and sends it with the voice to Piper's
+   `/synthesize` endpoint. Piper returns WAV audio, which the server passes back.
+   Recent audio is cached in server memory, so replays are instant.
+
+The narration text is the project's **custom case-study narration** when the owner
+has switched custom narration on for that project, otherwise the **project
+description**. Custom narration text is never sent to visitors' browsers; they only
+receive audio. In the draft preview, the owner hears their unpublished text; the
+live portfolio uses the text captured at the last publish.
+
+If Piper is down or slow, the player shows an error, the server stops waiting after
+60 seconds, and the rest of the portfolio keeps working.
+
+The code lives in [server/project-narration.js](mefolio/server/project-narration.js),
+[imports/api/projectNarration.js](mefolio/imports/api/projectNarration.js),
+[imports/api/narrationVoices.js](mefolio/imports/api/narrationVoices.js) and the
+`Narration*` components in `imports/ui/Portfolio Preview`. The Piper image is built
+from [piper/Dockerfile](mefolio/piper/Dockerfile).
+
+#### Start Everything Locally
 
 Install and open Docker Desktop. From `mefolio`, run:
 
@@ -128,61 +161,53 @@ docker compose up --build -d
 docker compose ps
 ```
 
-The first build installs Piper and downloads its voice model automatically;
-it needs internet access and may take several minutes. Later starts reuse the
-image. Wait for `piper` and `mongo` to show `healthy`, then open
-http://localhost:3000. If Meteor is still starting, check `docker compose logs app`.
-The app waits for Piper's readiness check before starting.
+The first build installs Piper and downloads all three voices; it needs internet
+access and may take several minutes. Wait for `piper` and `mongo` to show
+`healthy`, then open http://localhost:3000. If Meteor is still starting, check
+`docker compose logs app`.
 
-No Python installation, API key or Piper settings edit is needed. Compose sets
-`PIPER_URL` automatically. Piper's port is not published to the host or internet.
-Do not add a public port mapping: Piper itself has no authentication and may
-retain the most recent script in its internal status endpoint.
+Compose sets `PIPER_URL` automatically, so no settings edit is needed. Piper's port
+is not published to the host or internet. Do not add a public port mapping: Piper
+itself has no authentication.
 
-If running Meteor without Docker, the service URL is resolved in this order:
-`private.piper.url` in Meteor settings, `PIPER_URL` in the server environment,
-then `http://127.0.0.1:5000/synthesize`. A separate Piper service must be running
-for that workflow. Do not put models or narration samples in `public/`.
+If you change the voices in `piper/Dockerfile`, rebuild the container with
+`docker compose up -d --build piper`. A Piper container built from an older image
+silently falls back to its default voice for any voice it does not have.
+
+#### Configuration
+
+The server finds Piper through the first of these that is set:
+
+1. `private.piper.url` in Meteor settings
+2. `PIPER_URL` in the server environment (on Galaxy, under `galaxy.meteor.com` ->
+   `env` in the app settings)
+3. `http://127.0.0.1:5000/synthesize`
+
+`http://piper:5000` only works inside Docker's private network. A deployed app needs
+the full HTTPS address of a separately hosted Piper service, ending in
+`/synthesize`. Hosting Piper for production is described in
+[MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#64-hosting-piper).
+
+#### Switching narration off
+
+| Switch | Where | Effect |
+| --- | --- | --- |
+| Site-wide kill switch | Meteor settings: `"public": { "features": { "projectNarration": false } }`, then redeploy | Narration disappears everywhere and Piper is never called. Use this if Piper is unavailable or not hosted |
+| Portfolio switch | Builder -> Projects tab -> "Narration" | Turns narration off for one portfolio. Applies to the draft preview immediately and to the live portfolio on the next publish |
+| Custom narration switch | Builder -> each project card, below the description | Chooses whether that project reads its custom case study or its description |
 
 #### Manually Test Real Audio
 
-There is no narration UI yet. This tests the real server method without editing
-any app code:
+1. Start everything locally and log in.
+2. In the builder's **Projects** tab, check the **Narration** switch is on. Edit a
+   project and add text under **Case Study Narration**, then switch **Custom
+   narration** on for that card.
+3. Open the preview, press play on the project card and listen. Switch voices and
+   play again: the voice should change.
+4. Switch **Custom narration** off and play again: it should now read the
+   description.
 
-1. Open http://localhost:3000 and log in as the portfolio owner. Open their
-   portfolio editor so you know which portfolio you are testing.
-2. Open browser developer tools (F12), select Console and run `Meteor.userId()`.
-   Copy the returned user ID. It must not be `null`.
-3. In a terminal in `mefolio`, run `docker compose exec mongo mongosh meteor`.
-   At the Mongo shell prompt, paste this query with your actual user ID:
-   ```js
-   db.portfolios.find(
-      { userId: "YOUR_USER_ID" },
-      { _id: 1, title: 1 }
-   ).toArray()
-   ```
-   Copy the `_id` for the portfolio you own. Type `exit` to leave the Mongo shell.
-   If there are no results, create a portfolio in the app and repeat the query.
-4. Back in the browser Console, paste the following using that portfolio ID:
-   ```js
-   var sampleAudioUrl = await Meteor.callAsync(
-      "projects.generateNarration",
-      "YOUR_PORTFOLIO_ID",
-      "I built a portfolio website using React and Meteor."
-   );
-   var samplePlayer = new Audio(sampleAudioUrl);
-   samplePlayer.controls = true;
-   document.body.prepend(samplePlayer);
-   ```
-5. Click Play on the audio controls at the top of the page. You should hear the
-   sentence. Using the Play control avoids browser autoplay restrictions.
-6. Log out and repeat only the `Meteor.callAsync` call using the same portfolio
-   ID. It must fail with `not-authorized`. Log in with a different account and
-   repeat it: it must also fail. These checks must not generate audio.
-
-Refresh the page to remove the temporary player. If synthesis fails, check
-`docker compose ps` and `docker compose logs piper`. For a startup/network error,
-ensure Docker Desktop is running and the `piper` service is healthy.
+If synthesis fails, check `docker compose ps` and `docker compose logs piper`.
 
 #### Automated Tests
 
@@ -197,31 +222,14 @@ Remove-Item Env:MOCHA_GREP, Env:TEST_CLIENT, Env:TEST_SERVER
 ```
 
 These verify ownership, validation, endpoint selection, failures and timeouts;
-they do not require Piper or prove audible output. Use the manual test above
-for real synthesis.
+they do not require Piper or prove audible output. Use the manual test above for
+real synthesis. The full suite (`npm test`) also covers the narration player,
+switches and text selection.
 
-#### Integration Contract
+#### Licences
 
-From the authenticated portfolio owner's editor, call:
-
-```js
-const sampleAudioUrl = await Meteor.callAsync(
-   "projects.generateNarration",
-   portfolioId,
-   narrationScript,
-);
-```
-
-The result is a WAV data URL for the owner's private preview or downstream
-storage. Plain text must contain 1-5,000 characters. It is read as-is, not
-summarised. Scripts are sent only from the owner to Meteor and the private Piper
-service; this tool does not store scripts, audio or change project records.
-
-Permanent storage, publishing and playback remain separate team tasks. Store
-scripts and sample audio in owner-only storage, not publicly published project
-fields. Expose only approved final audio for public playback, without returning
-the script or sample URLs. Public audio can still be transcribed by listeners.
-Check Piper's GPL licence and the chosen voice model's licence before deployment.
+Piper is licensed under the GPL, and each voice model has its own licence. Check
+both before any commercial use or redistribution.
 
 ### Available NPM Scripts
 
@@ -235,6 +243,8 @@ npm run format             # Auto-format all files with Prettier
 npm run lint               # Check for linting issues with ESLint
 npm run lint:fix           # Fix linting issues automatically
 ```
+
+Run these scripts from `mefolio`. CI uses `npm ci`, `npx prettier --check .`, `npm run lint`, and `bash scripts/run-ci-tests.sh`. The Bash test wrapper handles a known browser-test teardown hang and can terminate browser/database processes; run it only in an isolated CI environment, not on a shared production host.
 
 ---
 
@@ -272,7 +282,7 @@ MeFolio supports **Google OAuth** and **GitHub OAuth**.
 
 OAuth credentials are not committed to the repository.
 
-Access to the google and github developer sites to manage the generated oauth credentials can be accessed via the mefolio admin account.
+The previous handover identifies a MeFolio admin account for provider administration. The successor must confirm authorised access and transfer account ownership securely; credentials and account recovery details must not be documented in Git.
 
 
 ### Local Development
@@ -291,7 +301,8 @@ using the provided example/template file:
         },
         "github": {
           "clientId": "YOUR_GITHUB_CLIENT_ID",
-          "secret": "YOUR_GITHUB_CLIENT_SECRET"
+          "secret": "YOUR_GITHUB_CLIENT_SECRET",
+          "apiToken": "YOUR_OPTIONAL_GITHUB_API_TOKEN"
         }
       }
     }
@@ -300,9 +311,9 @@ There is an existing .gitignore already to prevent committing OAuth credentials 
 
 ### Staging and Production
 
-OAuth credentials for deployed environments are already stored in **Meteor Galaxy Private Meteor Settings**.
+The previous handover reports credentials in **Meteor Galaxy Private Meteor Settings**. Confirm the current settings in the authorised Galaxy account; their live presence is not verified by the repository.
 
-The same OAuth credentials can be used across local development, staging and production, provided the correct callback URLs are configured.
+Prefer separate OAuth applications/credentials for development, staging and production. Configure the provider callbacks for each origin (`/_oauth/google` and `/_oauth/github`) and ensure `ROOT_URL` matches the public application URL.
 
 The OAuth configuration code is located at:
 
@@ -320,6 +331,15 @@ The OAuth configuration code is located at:
 - **ESLint & Prettier**: Code quality and formatting tools
 - **Mocha & Chai**: Testing framework and assertion library
 
+## Developer Orientation and Production Risks
+
+- [mefolio/server/main.js](mefolio/server/main.js) is the server entry point; [mefolio/client/main.jsx](mefolio/client/main.jsx) is the client entry point. [mefolio/tests/main.js](mefolio/tests/main.js) loads the test suite.
+- Portfolio operations and indexes live in [mefolio/server/portfolio-methods.js](mefolio/server/portfolio-methods.js) and [mefolio/server/portfolio-indexes.js](mefolio/server/portfolio-indexes.js). Public data access is controlled by server publications; preserve ownership and publish-state checks when changing them.
+- Recruiter-token generation/verification and owner visit notifications live under `mefolio/server/recruiter-tokens`. GitHub repository statistics are fetched by [mefolio/server/github-api.js](mefolio/server/github-api.js), including rate-limit/timeout handling.
+- **Production blocker:** server startup creates a sample account with a fixed password and seeds sample data. Gate/remove production seeding and secure or remove the existing seeded account before public deployment. Startup must not recreate an insecure account.
+- [mefolio/imports/api/files/resumeFiles.js](mefolio/imports/api/files/resumeFiles.js) stores PDF uploads in `uploads/resumes` and declares public downloads. Verify durable storage and privacy/access requirements; a database backup does not back up uploaded files. Ephemeral hosting filesystems must not be relied on for persistence.
+- Do not commit OAuth settings, deployment settings, database URLs, user exports or backups. Use an authorised secret store and least-privilege account access.
+
 ---
 
 ## Common Issues & Troubleshooting
@@ -331,8 +351,7 @@ The OAuth configuration code is located at:
 
 **Issue**: "Port 3000 or 27017 already in use"
 - **Solution**: 
-  - Kill existing processes: `lsof -ti:3000 | xargs kill -9` (macOS/Linux)
-  - Or modify docker-compose.yml to use different ports
+   - Compose exposes host ports 3000 and 3001. Identify the conflicting service and stop it safely, or change the host port mapping in Compose.
 
 ### Meteor-Related Issues
 
@@ -373,10 +392,10 @@ The OAuth configuration code is located at:
 ### Database Issues
 
 **Issue**: Database data is lost after restarting containers
-- **Solution**: Verify that `mongo_data` volume persists in docker-compose.yml. Data should survive restarts unless `docker compose down` is used
+- **Solution**: Verify that `mongo_data` persists in Compose and that you are using the same Compose project/volume. Data survives `docker compose down`; `docker compose down -v` deletes it.
 
 **Issue**: "Duplicate key error" or database constraint violations
-- **Solution**: Clear the database and restart: `docker compose down -v && docker compose up -d`
+- **Solution**: Inspect the conflicting record/index and resolve the inconsistency with an authorised, backed-up data change. Do not delete the database as a routine troubleshooting step.
 
 ### Windows-Specific Meteor Issues
 
@@ -401,7 +420,7 @@ The OAuth configuration code is located at:
 **Issue**: Symlink creation fails during installation
 - **Solution**: Run PowerShell as Administrator and try again. Meteor requires elevated permissions to create symlinks on Windows.
 
-For additional help, see the [Meteor Installation Docs](https://v2-docs.meteor.com/install)
+Prefer Docker Desktop with WSL2 on Windows to avoid native path/symlink issues. For current release-specific guidance, see the [Meteor Installation Docs](https://docs.meteor.com/about/install.html).
 
 ---
 
@@ -409,19 +428,19 @@ For additional help, see the [Meteor Installation Docs](https://v2-docs.meteor.c
 
 ### Continuous Integration (GitHub Actions)
 
-The project uses GitHub Actions for automated testing and linting on every PR. Two workflows run automatically:
+The project uses GitHub Actions for PRs targeting `main` or `dev`. Two checked-in workflows run automatically:
 
 1. **Linting and Formatting Check** - Verifies code follows project standards
 2. **Test Suite Check** - Runs all unit and integration tests
 
-**Important**: PRs cannot be merged unless all checks pass.
+**Required strategy**: All checks must pass before merging. The repository administrator must enable branch protections/required checks in GitHub; those settings cannot be verified from workflow files alone.
 
 #### Resolving Failing CI
 
 1. Navigate to the **Checks** tab in your PR
 2. Review error logs to identify the issue
    - *Tip*: Use GitHub Copilot's 'Explain Error' button if you're stuck
-3. If no visible error logs appear, contact an SA for assistance
+3. If logs do not identify the issue, ask the appointed maintainer and provide the failing job/commit reference.
 
 #### Known Issue: Hidden Client Test Failures
 
@@ -437,34 +456,70 @@ Sometimes the CI test runner shows "CLIENT FAILURES: 1" without displaying the e
 
 ### Deployment Strategy
 
-MeFolio has two deployed environments which have been deployed via Meteor Galaxy:
+Staging and production are hosted on Meteor Galaxy, with `dev` intended for staging and `main` for production. The MongoDB database is also hosted through Meteor Galaxy, and voice narration uses a separately hosted Piper service on Azure Container Apps (see [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md#6-voice-narration-piper)). The Galaxy account logs in with the MeFolio admin email. The checked-in workflows only test/lint; automatic deployment is not established by this repository.
 
-(Note: Access to the Meteor Galaxy deployment config can be accessed via the MeFolio admin account)
+**Service period:** MeFolio is live and maintained until final semester results on **3 December 2026**. On or after **4 December 2026** the system architects (Joy, Joyce and Jonah) shut it down, because there is no payer for hosting after the semester. Anyone can restart it later by taking over billing; as agreed with the tutor (12 Oct 2026), that future owner is not named in advance. See [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md) for the shutdown and restart steps.
 
 
 #### Staging Environment
-- Automatically deployed from the `dev` branch
-- Updated with each merged PR into `dev`
+- Intended release source: the `dev` branch
+- Confirm any external deployment triggers before merging; do not assume a merge deploys
 - Use this to test feature integration before milestone completion
-- URL and access details available in team resources
+- URL (until 3 December 2026): https://mefolio-staging.sandbox.galaxycloud.app/login
 
 #### Production Environment
-- Automatically deployed from the `main` branch
-- Updated at end-of-sprint/milestone when `dev` is merged into `main`
+- Intended release source: the reviewed and tagged `main` branch
+- Deploy only after release approval, passing checks and a verified backup
 - The 'polished' version of MeFolio available to end users
+- URL (until 3 December 2026): https://mefolio-production.sandbox.galaxycloud.app/login
 
 *Note*: During local feature development, continue using Docker and `localhost:3000`
 
 ### Accessing the Deployed Database
 
-To access the staging MongoDB database while testing:
+Obtain an authorised, least-privilege connection string from the incoming owner's secret store, not a public document or an old chat link. Use the provider's required TLS configuration with certificate validation enabled. Do not disable certificate validation as standard practice, and do not use production data for local testing without approval.
 
-1. Open MongoDB Compass and click **Add Connection**
-2. Paste the connection string from the #important-info channel in Discord (pinned by Jonah)
-3. In **Advanced Connection Options**:
-   - Set **TLS/SSL** to **On**
-   - Check **tlsAllowInvalidCertificates** to **True**
-4. Click **Save & Connect**
+### Manual Galaxy Deployment Runbook
+
+This is the proposed deployment procedure; the outgoing owner must supply the actual environment identifiers and verify it in staging. No live deployment was performed for this documentation update.
+
+1. Resolve the production risks listed above. Confirm durable resume storage, OAuth callbacks, database connectivity and the runtime supported by Meteor 3.4/Galaxy.
+2. Check out the approved `dev` commit for staging, or the release tag from `main` for production, in a clean checkout. Run `meteor npm ci` from `mefolio`, then require passing PR CI.
+3. Back up MongoDB and uploaded resumes. Record the previous working release and any migration/recovery steps.
+4. Authenticate to the authorised Meteor/Galaxy account. Obtain private environment settings securely outside the repository. Include `private.google` and `private.github` settings as needed, plus the provider-required database/runtime configuration. Configure `MONGO_URL` and the public URL through the host's supported settings/environment mechanism. For narration, set `PIPER_URL` to the hosted Piper service's `/synthesize` address, or switch narration off with the site-wide kill switch.
+5. From `mefolio`, use the actual app hostname and settings path:
+
+   ```sh
+   meteor deploy <galaxy-app-hostname> --settings <secure-settings-file.json>
+   ```
+
+   Use the organisation's regional deployment endpoint if required by Galaxy. The hostname, endpoint and billing authority must be confirmed with the owner; this command must not be run against an unapproved app.
+6. Inspect deployment/build logs and check HTTPS availability, Google/GitHub login, portfolio editing/publishing, draft privacy, public portfolio rendering, recruiter-token expiry/access, visit notifications, GitHub sync, resume upload/download persistence and narration playback in each voice.
+7. Record the deployed tag, time, operator and check results in the release notes. If checks fail, stop further rollout and redeploy the last verified release; restore data/files only under the approved recovery plan.
+
+After 3 December 2026, follow [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md): the hosted services are shut down, and restarting them requires a new owner who takes over billing. Former students have no ongoing support or funding obligation.
+
+## Versioning Strategy
+
+Adopt Semantic Versioning (`MAJOR.MINOR.PATCH`) for future approved releases:
+
+- `MAJOR`: incompatible changes to public behaviour, data contracts or deployment requirements.
+- `MINOR`: backward-compatible functionality.
+- `PATCH`: backward-compatible bug/security fixes.
+
+Use annotated Git tags such as `v1.0.0` on approved `main` commits and `v1.1.0-rc.1` for release candidates. These are examples, not claims that those releases already exist. Before the first tag, inspect existing tags and agree the initial version. The application package currently has no `version` field; if package metadata is adopted as a version source, add it intentionally and keep it aligned with tags.
+
+Publish GitHub release notes describing changes, known issues, dependency/runtime changes, data migrations and rollback instructions. A code rollback is not necessarily a data rollback; document compatibility and backup requirements before schema changes.
+
+## Pull Request Strategy
+
+1. Find/create a GitHub issue and agree scope with the appointed maintainer. If no maintainer exists, a PR may be proposed but cannot imply review, support or release commitments.
+2. Create a focused branch from up-to-date `dev`, for example `feature/<issue>-summary` or `fix/<issue>-summary`. External contributors should fork if they lack write access. Do not push directly to `main` or `dev`.
+3. Implement the change, add relevant tests and update affected documentation. Keep secrets and unrelated generated output out of the diff.
+4. From `mefolio`, run tests, lint and a formatting check. Push the branch and open a PR targeting `dev`; copy [pull_request_template.md](pull_request_template.md) into the description because the root filename does not establish automatic GitHub template loading.
+5. Include the issue reference, change summary, test evidence, screenshots for UI changes, risks/migrations/rollback, and the extent of Generative AI use (explicitly state none if not used).
+6. Require at least one code owner review (see [.github/CODEOWNERS](.github/CODEOWNERS)), passing test/lint/format checks and resolved review comments before merge. Prefer squash-merging feature PRs; the administrator should enforce required checks/reviews through branch protection.
+7. Release via a reviewed `dev` to `main` PR, tag the approved commit and follow the deployment runbook. Urgent production fixes may target `main` with the same review/check requirements, then be brought back into `dev`.
 
 ---
 
@@ -507,6 +562,7 @@ To access the staging MongoDB database while testing:
 For questions about specific features or issues:
 - Check existing GitHub issues for similar problems
 - Review inline code comments and JSDoc documentation
-- Refer to the original team members listed above for contextual knowledge
+- Code maintainers: Joy Jasmine Kaur (@JkGiThuB821), Jonah Rudzki (@jonahrudzki) and Joyce Leung (@jyc-leung02). They are listed in [.github/CODEOWNERS](.github/CODEOWNERS), so GitHub requests their review on every PR.
+- The rest of the team list is historical attribution, not a commitment to support after Week 12.
 
 ---

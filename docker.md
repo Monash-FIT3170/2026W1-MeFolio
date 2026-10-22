@@ -1,42 +1,36 @@
-## Dev Setup (Docker)
+# Docker Development Setup
 
-### Step 1 - Install Docker
-Install Docker desktop
+This guide uses the existing MeFolio application. Do not create a new Meteor app.
 
-### Step 2 - Download the Docker Folder
-Download and unzip the docker folder
+## Requirements
 
-### Step 3 - Open the Docker Folder
-Open the docker folder in vscode and open a new terminal in the same directory
+- Git and Docker Engine with Docker Compose v2 (Docker Desktop on Windows/macOS).
+- On Windows, enable Docker Desktop's WSL2 Linux-container backend.
+- Start Docker before running Compose commands.
 
-### Step 4 - Open the Compose the Docker Container in VScode
-Install "Dev Containers" extension in VS Code, and then do the following:
+## Start MeFolio
 
-Cmd + Shift + P -> Reopen in Container
+1. Clone the repository and open a terminal in `mefolio`.
+2. Copy `server/oauth-login/oauth.settings.example.json` to `server/oauth-login/oauth.settings.json`. Enter authorised OAuth credentials locally; never commit secrets.
+3. Run `docker compose up --build` for the first start, or `docker compose up` subsequently.
+4. Open <http://localhost:3000>.
 
-### Step 5 - Create Meteor App/MongoDB Connection
-You should now be in the linux docker container 'app'.
-open vscode terminal (this will now be inside the docker container), then run the following in order:
+MongoDB Compass can connect to `mongodb://localhost:3001/meteor`. Inside the Compose network, the application uses `mongodb://mongo:27017/meteor`.
 
-meteor create my-app (Only first time on creation)
-cd my-app
-meteor npm install
-meteor run
+The Dockerfile uses a Node 20 base image and runs Meteor's development server with the local OAuth settings file. This setup is not a hardened production deployment.
 
-Your meteor app should now be accessible in your browser on http://localhost:3000/
+## Check and Stop
 
-Your MongoDB database should be accessible from a separate docker container via MongoDB Compass on the following connect string: mongodb://localhost:27017
+```sh
+docker compose ps
+docker compose logs --tail=100 app mongo
+docker compose stop
+docker compose start
+docker compose down
+```
 
-### Step 6 - Leave the devcontainer accessing the Docker Container
-Once you are finished developing and wish to leave your development container, please use:
+`stop` stops containers without removing them. `down` removes containers and the network but preserves named volumes. `docker compose down -v` deletes named volumes, including the MongoDB data; do not use it unless that data is disposable or a verified backup exists.
 
-Cmd + Shift + P -> Reopen folder locally
+If a port is occupied, stop the conflicting service or change only the host side of the Compose port mapping. If Docker cannot connect to its daemon, check that Docker Desktop/Engine is running. If a dependency remains missing after an image rebuild, the persistent `node_modules` volume may need its dependencies refreshed; inspect the app logs before changing volumes.
 
-### (Optional) Step 7 - Kill/pause Docker containers to free Memory
-After development has been completed you may use one of the following:
-
-docker compose down (reccommended) -> Closes Docker containers, requiring them to be reopened (done by dev containers, reopen in dev container)
-
-docker compose stop -> Pauses Docker containers, allowing them to be restarted quickly
-
-Do Nothing -> Docker containers are actively running and will continue to use memory
+See [README.md](README.md) for handover and deployment information and [MAINTENANCE_PLAN.md](MAINTENANCE_PLAN.md) for post-Week-12 operations.
