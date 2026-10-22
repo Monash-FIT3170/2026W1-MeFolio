@@ -94,10 +94,16 @@ if (Meteor.isClient) {
 
     // Stands in for the portfolios.publicView subscription and whatever it
     // would have put into minimongo.
-    const stubSubscription = ({ ready = true, portfolio } = {}) => {
-      Meteor.subscribe = (...args) => {
-        subscriptionCalls.push(args);
-        return { ready: () => ready };
+    const stubSubscription = ({
+      ready = true,
+      viewerReady = ready,
+      portfolio,
+    } = {}) => {
+      Meteor.subscribe = (name, ...args) => {
+        subscriptionCalls.push([name, ...args]);
+        return {
+          ready: () => (name === "portfolios.viewer" ? viewerReady : ready),
+        };
       };
       PortfolioCollection.findOne = () => portfolio;
     };
@@ -121,6 +127,25 @@ if (Meteor.isClient) {
 
       expect(screen.getByTestId("public-portfolio-loading")).to.exist;
       expect(screen.queryByTestId("public-portfolio-view")).to.not.exist;
+    });
+
+    it("renders the published snapshot without waiting for viewer presence", () => {
+      stubSubscription({
+        viewerReady: false,
+        portfolio: {
+          _id: "testPortfolioId",
+          isPublished: true,
+          publishedContent,
+        },
+      });
+      renderPage("/u/public-owner");
+
+      expect(screen.getByRole("heading", { name: "Public Owner Portfolio" })).to
+        .exist;
+      expect(subscriptionCalls).to.deep.include([
+        "portfolios.viewer",
+        "testPortfolioId",
+      ]);
     });
 
     it("shows the unavailable message when no portfolio matches the id", () => {

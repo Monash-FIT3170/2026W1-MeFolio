@@ -32,13 +32,12 @@ export const PublicPortfolioPage = () => {
     });
 
     // Only subscribe to viewer once we know the real _id.
-    const viewerHandle = foundPortfolio?._id
-      ? Meteor.subscribe("portfolios.viewer", foundPortfolio._id)
-      : null;
-    const viewerReady = !viewerHandle || viewerHandle.ready();
+    if (foundPortfolio?._id) {
+      Meteor.subscribe("portfolios.viewer", foundPortfolio._id);
+    }
 
     return {
-      isLoading: !publicViewHandle.ready() || !viewerReady,
+      isLoading: !publicViewHandle.ready(),
       portfolio: foundPortfolio,
       publishedContent: foundPortfolio?.isPublished
         ? foundPortfolio.publishedContent
