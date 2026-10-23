@@ -1,11 +1,12 @@
 import {
-  mockOverviewStats,
-  mockProfile,
-  mockProjects,
   sidebarItems,
-  samplePortfolioProfileData,
   defaultPortfolioProfileData,
 } from "../ui/Portfolio Builder/portfolioBuilderMockData";
+
+export const getSelectedPortfolio = (portfolios = [], user) =>
+  user?._id
+    ? portfolios.find((portfolio) => portfolio.userId === user._id) || null
+    : null;
 
 export const createLoadingViewModel = () => ({
   isLoading: true,
@@ -17,8 +18,42 @@ export const createLoadingViewModel = () => ({
   projects: [],
 });
 
-export const mapOverviewStats = (portfolios) => {
-  return portfolios?.length ? mockOverviewStats : mockOverviewStats;
+export const mapOverviewStats = (
+  engagements = [],
+  totalViews = 0,
+  aiQuestionsAsked = 0,
+) => {
+  const totalInteractions = engagements.reduce(
+    (total, engagement) => total + Number(engagement.clicks || 0),
+    0,
+  );
+
+  return [
+    {
+      id: "total-views",
+      value: String(Number(totalViews) || 0),
+      label: "Total Views",
+      change: "0%",
+    },
+    {
+      id: "visitors-now",
+      value: "0",
+      label: "Visitors Right Now",
+      change: "0%",
+    },
+    {
+      id: "interactions",
+      value: String(totalInteractions),
+      label: "Interactions",
+      change: "0%",
+    },
+    {
+      id: "ai-used",
+      value: String(Number(aiQuestionsAsked) || 0),
+      label: "AI Chatbots Used",
+      change: "0%",
+    },
+  ];
 };
 
 export const mapLiveVisitors = (portfolios) => {
@@ -39,12 +74,26 @@ export const mapLiveVisitors = (portfolios) => {
       ? `${Math.max(0, Math.floor((Date.now() - connectedAt) / 60000))} min ago`
       : "Live now";
 
+    let location = "Location not shared";
+    if (viewer.location && typeof viewer.location === "object") {
+      const { city, countryCode } = viewer.location;
+      if (city && countryCode) {
+        location = `${city}, ${countryCode}`;
+      } else if (city) {
+        location = city;
+      } else {
+        location = "Location saved, no city";
+      }
+    } else if (viewer.userId) {
+      location = "Signed in";
+    }
+
     return {
       id: viewer.connectionId || viewer.userId || `viewer-${index}`,
       name: displayName,
       email: viewer.email || "",
       activity: "Viewing portfolio",
-      location: viewer.userId ? "Signed in" : "Guest",
+      location,
       duration,
       active: true,
     };
@@ -52,7 +101,7 @@ export const mapLiveVisitors = (portfolios) => {
 };
 
 export const mapProjects = (projects) => {
-  if (!Array.isArray(projects) || !projects.length) return mockProjects;
+  if (!Array.isArray(projects) || !projects.length) return [];
 
   return projects.map((project, index) => ({
     ...project,
@@ -78,11 +127,17 @@ const getProfileInitials = (name = "", email = "") => {
     return nameParts[0].slice(0, 2).toUpperCase();
   }
 
-  return email.slice(0, 2).toUpperCase() || mockProfile.initials;
+  return email.slice(0, 2).toUpperCase();
 };
 
 export const mapProfile = (user) => {
-  if (!user) return mockProfile;
+  if (!user) {
+    return {
+      initials: "",
+      name: "",
+      email: "",
+    };
+  }
 
   const selectedUser = Array.isArray(user) ? user[0] : user;
   const googleProfile = selectedUser.services?.google;
@@ -109,12 +164,15 @@ export const mapProfile = (user) => {
 };
 
 // Maps current user and portfolio fields into the About Me editor/view shape.
-export const mapAboutMe = (portfolio) => {
+export const mapAboutMe = (portfolio = {}) => {
   return {
     ...defaultPortfolioProfileData,
     ...portfolio,
     projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
     badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+    certifications: Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [],
     recruiterInfo: {
       ...defaultPortfolioProfileData.recruiterInfo,
       ...(portfolio.recruiterInfo || {}),
@@ -122,29 +180,35 @@ export const mapAboutMe = (portfolio) => {
   };
 };
 
-export const createMockDashboardViewModel = (user) => ({
-  isLoading: false,
-  sidebarItems,
-  overviewStats: mockOverviewStats,
-  liveVisitors: [],
-  profile: mapProfile(user),
-  aboutMe: mapAboutMe(samplePortfolioProfileData),
-  projects: mockProjects,
-});
-
 export const createDashboardViewModel = ({
   isLoading = false,
   portfolios = [],
   projects = null,
+  engagements = [],
   user = null,
 } = {}) => {
   if (isLoading) return createLoadingViewModel();
-  if (!portfolios.length) return createMockDashboardViewModel(user);
+
+  if (!portfolios.length) {
+    return {
+      isLoading: false,
+      sidebarItems,
+      overviewStats: mapOverviewStats(engagements),
+      liveVisitors: [],
+      profile: mapProfile(user),
+      aboutMe: mapAboutMe(defaultPortfolioProfileData),
+      projects: [],
+    };
+  }
 
   return {
     isLoading: false,
     sidebarItems,
-    overviewStats: mapOverviewStats(portfolios),
+    overviewStats: mapOverviewStats(
+      engagements,
+      portfolios[0]?.totalViews,
+      portfolios[0]?.aiQuestionsAsked,
+    ),
     liveVisitors: mapLiveVisitors(portfolios),
     profile: mapProfile(user),
     aboutMe: mapAboutMe(portfolios[0]),

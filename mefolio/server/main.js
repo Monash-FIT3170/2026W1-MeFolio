@@ -1,17 +1,31 @@
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
+import { WebApp } from "meteor/webapp";
 import { Accounts } from "meteor/accounts-base";
 import { ProjectCollection } from "/imports/api/projects";
 import {
   PortfolioCollection,
   createDefaultPortfolioPublishingState,
 } from "/imports/api/portfolio";
+import {
+  DEFAULT_CHATBOT_PERSONA,
+  isChatbotPersona,
+} from "/imports/api/chatbotPersonas";
 import { PortfolioProjectsCollection } from "/imports/api/portfolioProjects";
+import {
+  buildNarrationText,
+  isPortfolioNarrationEnabled,
+} from "/imports/api/projectNarration";
 import "/imports/api/files/resumeFiles";
+import "./user-methods.js";
 
 // oauth login
 import "./oauth-login/oauth.js";
 import "./projectClickTracking.js";
+
+// register AI Twin methods
+import "./ai/chatMethods.js";
+import "./ai/aiTwinMethods.js";
 
 // recruiter access token
 import "./recruiter-tokens/collection.js";
@@ -23,215 +37,67 @@ import "./recruiter-tokens/visit-notifications.js";
 import "./publications/publicPortfolio.js";
 import "./publications/publicPortfolioMeta.js";
 // portfolio methods (in their own module so tests can load them without the
-// app seed and OAuth config)
+// app startup and OAuth config)
 import "./portfolio-methods.js";
 // portfolio indexes (unique custom URL / username)
 import "./portfolio-indexes.js";
 
 // register github methods for sync
 import "./github-methods.js";
+import "./project-narration.js";
+// register AI Twin methods
+import "./ai/chatMethods.js";
+import "./credly-methods.js";
+import { validateChallenge } from "./challenge-methods.js";
+
+// cache middleware
+import {
+  shouldCachePortfolioView,
+  applyCacheHeaders,
+} from "./cache-middleware.js";
+// certifications
+import {
+  normalizeCertification,
+  normalizeCertifications,
+} from "/imports/api/certifications";
 
 Accounts.config({
   loginExpirationInDays: 1,
 });
 
-Meteor.startup(async () => {
-  let sampleUserId;
-  const existingSampleUser =
-    (await Meteor.users.findOneAsync({
-      "emails.address": "superuser@example.com",
-    })) || (await Meteor.users.findOneAsync({ "profile.name": "Superuser" }));
+/* global process */
+// BUG-01: real password-reset email delivery.
+// Meteor sends mail through its built-in SMTP transport when MAIL_URL is set;
+// with no MAIL_URL it only logs the email, which is why resets previously did
+// nothing. Keep the real MAIL_URL out of VCS (an env var in staging, or private
+// settings locally) — only a placeholder lives in oauth.settings.example.json.
+if (!process.env.MAIL_URL && Meteor.settings.private?.MAIL_URL) {
+  process.env.MAIL_URL = Meteor.settings.private.MAIL_URL;
+}
 
-  if (existingSampleUser) {
-    sampleUserId = existingSampleUser._id;
-  } else {
-    sampleUserId = await Accounts.createUser({
-      email: "superuser@example.com",
-      password: "superuser",
-      profile: { name: "Superuser" },
-    });
-  }
+Accounts.emailTemplates.siteName = "MeFolio";
+// The sender must match the provider's authenticated/verified address or real
+// mail will be rejected or spam-filtered, so read it from settings and fall
+// back to a generic address only when none is configured.
+Accounts.emailTemplates.from =
+  Meteor.settings.private?.MAIL_FROM || "MeFolio <no-reply@mefolio.app>";
 
-  let projectIds = [];
-  if ((await ProjectCollection.find().countAsync()) === 0) {
-    const project1Id = await ProjectCollection.insertAsync({
-      title: "Personal Portfolio Website",
-      description:
-        "A responsive portfolio website used to showcase projects, skills, and contact details.",
-      createdAt: new Date(),
-      technologies: ["React", "CSS", "Meteor"],
-      githubLink: "https://github.com/example/portfolio",
-      liveDemoLink: "https://example-portfolio.com",
-      media:
-        "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80",
-    });
+// Point the reset link at our in-app react-router route (not Meteor's default
+// hash URL) so /reset-password/:token renders the ResetPasswordPage.
+Accounts.urls.resetPassword = (token) =>
+  Meteor.absoluteUrl(`reset-password/${token}`);
 
-    const project2Id = await ProjectCollection.insertAsync({
-      title: "Task Management App",
-      description:
-        "A simple task tracking app with project cards, status updates, and basic filtering.",
-      createdAt: new Date(),
-      technologies: ["JavaScript", "MongoDB", "Meteor"],
-      githubLink: "https://github.com/example/task-app",
-      liveDemoLink: "https://example-task-app.com",
-      media:
-        "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80",
-    });
+Accounts.emailTemplates.resetPassword = {
+  subject: () => "Reset your MeFolio password",
+  text: (user, url) =>
+    "Hello,\n\n" +
+    "We received a request to reset your MeFolio password. Click the link " +
+    `below to choose a new one:\n\n${url}\n\n` +
+    "If you didn't request this, you can safely ignore this email.\n\n— MeFolio",
+};
 
-    const project3Id = await ProjectCollection.insertAsync({
-      title: "Developer Blog Platform",
-      description:
-        "A blog-style project used to share technical writeups and software engineering reflections.",
-      createdAt: new Date(),
-      technologies: ["React", "Node.js", "CSS"],
-      githubLink: "https://github.com/example/blog-platform",
-      liveDemoLink: "https://example-blog.com",
-      media:
-        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
-    });
-
-    const project4Id = await ProjectCollection.insertAsync({
-      title: "E-Commerce Storefront",
-      description:
-        "A full-stack online store with product listings, cart, and checkout flow.",
-      createdAt: new Date(),
-      technologies: ["React", "Node.js", "Stripe"],
-      githubLink: "https://github.com/example/ecommerce",
-      liveDemoLink: "https://example-store.com",
-      media:
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
-    });
-
-    const project5Id = await ProjectCollection.insertAsync({
-      title: "Real-Time Chat App",
-      description:
-        "A websocket-powered chat application with rooms, presence indicators, and message history.",
-      createdAt: new Date(),
-      technologies: ["Meteor", "React", "MongoDB"],
-      githubLink: "https://github.com/example/chat-app",
-      liveDemoLink: "https://example-chat.com",
-      media:
-        "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&q=80",
-    });
-
-    const project6Id = await ProjectCollection.insertAsync({
-      title: "Data Visualisation Dashboard",
-      description:
-        "An analytics dashboard with interactive charts, filters, and CSV export built for internal reporting.",
-      createdAt: new Date(),
-      technologies: ["React", "D3.js", "Python"],
-      githubLink: "https://github.com/example/dashboard",
-      liveDemoLink: "https://example-dashboard.com",
-      media:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    });
-
-    projectIds = [
-      project1Id,
-      project2Id,
-      project3Id,
-      project4Id,
-      project5Id,
-      project6Id,
-    ];
-  } else {
-    const existingProjects = await ProjectCollection.find(
-      {},
-      { sort: { createdAt: 1 } },
-    ).fetchAsync();
-    projectIds = existingProjects.map((project) => project._id);
-  }
-
-  let samplePortfolioId;
-  const existingSamplePortfolio =
-    (await PortfolioCollection.findOneAsync({ title: "Sample Portfolio" })) ||
-    (await PortfolioCollection.findOneAsync({ userId: sampleUserId }));
-
-  if (existingSamplePortfolio) {
-    samplePortfolioId = existingSamplePortfolio._id;
-    const samplePortfolioUpdates = {};
-
-    if (existingSamplePortfolio.userId !== sampleUserId) {
-      samplePortfolioUpdates.userId = sampleUserId;
-    }
-
-    if (!existingSamplePortfolio.projects?.length && projectIds.length) {
-      samplePortfolioUpdates.projects = projectIds;
-    }
-
-    if (Object.keys(samplePortfolioUpdates).length) {
-      await PortfolioCollection.updateAsync(samplePortfolioId, {
-        $set: samplePortfolioUpdates,
-      });
-    }
-  } else {
-    samplePortfolioId = await PortfolioCollection.insertAsync({
-      userId: sampleUserId,
-      portfolioNumber: 1,
-      title: "Sample Portfolio",
-      bio: "This is a sample portfolio.",
-
-      ...createDefaultPortfolioPublishingState(),
-
-      // Agreed FEAT-05 structure
-      profile: {
-        fullName: "John Doe",
-        headline: "Product Designer and Frontend Developer",
-        avatarUrl: "",
-        location: "Sydney, NSW",
-        availability: {
-          isAvailable: true,
-          label: "Available for hire",
-        },
-      },
-
-      about: {
-        summary:
-          "Product designer and frontend developer focused on building clean, user-friendly digital experiences.",
-        highlights: ["React", "UI Design", "Frontend Development"],
-        yearsOfExperience: 3,
-      },
-
-      contact: {
-        email: "john@example.com",
-        phone: "",
-        website: "",
-      },
-
-      socials: {
-        github: "https://github.com/johndoe",
-        linkedin: "https://www.linkedin.com/in/johndoe",
-        twitter: "",
-        other: [],
-      },
-
-      cta: {
-        contactEnabled: true,
-      },
-
-      createdAt: new Date(),
-      projects: projectIds,
-      theme: "minimalist",
-      badges: [
-        {
-          title: "Sample Badge",
-          issuer: "Sample Issuer",
-          issueDate: new Date(),
-          badgeImageUrl: "https://example.com/badge.png",
-          verificationUrl: "https://example.com/verify-badge",
-        },
-      ],
-      recruiterInfo: {
-        salaryExpectation: "$70,000 - $90,000",
-        phoneNumber: "123-456-7890",
-        currentLocation: "Sydney NSW",
-        availability: "Immediate",
-        personalNote: "Looking for opportunities in full-stack development.",
-        allowAccess: true,
-      },
-    });
-  }
-
+// Maintain existing portfolios without creating accounts or sample content.
+export async function initializePortfolioData() {
   // FEAT-11: Backfill publication fields for portfolios created before
   // draft/live separation was introduced.
   await PortfolioCollection.updateAsync(
@@ -256,16 +122,29 @@ Meteor.startup(async () => {
 
   const portfolios = await PortfolioCollection.find().fetchAsync();
   for (const portfolio of portfolios) {
+    if (
+      portfolio.isPublished &&
+      !Object.hasOwn(portfolio, "publishedAiTwinConfiguration")
+    ) {
+      await PortfolioCollection.updateAsync(portfolio._id, {
+        $set: {
+          publishedAiTwinConfiguration: {
+            documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+              ? portfolio.aiTwinConfiguration.documents
+              : [],
+          },
+        },
+      });
+    }
+
     const existingOrderCount = await PortfolioProjectsCollection.find({
       portfolioId: portfolio._id,
     }).countAsync();
     if (existingOrderCount > 0) continue;
 
-    const savedProjectIds = portfolio.projects?.length
+    const savedProjectIds = Array.isArray(portfolio.projects)
       ? portfolio.projects
-      : portfolio._id === samplePortfolioId
-        ? projectIds
-        : [];
+      : [];
 
     await Promise.all(
       savedProjectIds.map((projectId, index) =>
@@ -278,18 +157,82 @@ Meteor.startup(async () => {
       ),
     );
   }
+
+  // BUG-02: Flush lingering visitor presence state from prior container
+  // sessions or abrupt restarts. When the server boots, no active client connections exist.
+  await PortfolioCollection.updateAsync(
+    { viewers: { $exists: true, $not: { $size: 0 } } },
+    { $set: { viewers: [] } },
+    { multi: true },
+  );
+}
+
+Meteor.startup(async () => {
+  await initializePortfolioData();
+
+  // Periodically sweep visitors who missed heartbeats (e.g. abrupt disconnects, sleep, crashes)
+  // Heartbeats occur every 10s from PublicPortfolioPage; expire after 30s of inactivity.
+  Meteor.setInterval(async () => {
+    try {
+      const expirationThreshold = new Date(Date.now() - 30 * 1000);
+      await PortfolioCollection.updateAsync(
+        { "viewers.lastSeenAt": { $lt: expirationThreshold } },
+        {
+          $pull: {
+            viewers: { lastSeenAt: { $lt: expirationThreshold } },
+          },
+        },
+        { multi: true },
+      );
+    } catch (err) {
+      console.error("Failed to prune stale live visitors:", err);
+    }
+  }, 15 * 1000);
+
+  // FEAT-28: Performance Hardening -- Cache Headers
+  if (Meteor.isProduction) {
+    WebApp.rawConnectHandlers.use((req, res, next) => {
+      if (shouldCachePortfolioView(req)) {
+        applyCacheHeaders(res);
+      }
+      next();
+    });
+  }
 });
 
-Meteor.publish("projects.all", function () {
-  return ProjectCollection.find({}, { sort: { createdAt: -1 } });
+Meteor.publish("projects.all", async function () {
+  if (!this.userId) return this.ready();
+
+  const portfolios = await PortfolioCollection.find(
+    { userId: this.userId },
+    { fields: { projects: 1 } },
+  ).fetchAsync();
+
+  const projectIds = [
+    ...new Set(
+      portfolios.flatMap((portfolio) =>
+        Array.isArray(portfolio.projects) ? portfolio.projects : [],
+      ),
+    ),
+  ];
+
+  if (!projectIds.length) return this.ready();
+
+  return ProjectCollection.find(
+    { _id: { $in: projectIds } },
+    { sort: { createdAt: -1 } },
+  );
 });
 
-// Private portfolio fields that must never reach a client that does not own
-// the portfolio. `recruiterInfo` holds private recruiter details (salary,
-// phone, personal note) and the access code itself, so it is only sent to the
-// owner. Recruiters receive it through the token-gated `portfolio.recruiterView`
-// publication instead.
-const NON_OWNER_PORTFOLIO_FIELDS = { recruiterInfo: 0 };
+// Private portfolio fields withheld from clients that do not own the portfolio.
+// Recruiters receive authorized details through the token-gated
+// `portfolio.recruiterView` publication instead.
+const NON_OWNER_PORTFOLIO_FIELDS = {
+  recruiterInfo: 0,
+  publishedNarrations: 0,
+  aiTwinConfiguration: 0,
+  publishedAiTwinConfiguration: 0,
+};
 const activeViewerConnections = new Map();
 
 const getViewerData = async (publication) => {
@@ -327,6 +270,7 @@ const getViewerData = async (publication) => {
     email,
     connectedAt: new Date(),
     lastSeenAt: new Date(),
+    location: null,
   };
 
   if (publication.userId) {
@@ -344,8 +288,15 @@ const addPortfolioViewer = async (portfolioId, viewer) => {
     viewer,
   });
 
+  // Pull existing session by connectionId, or by userId if logged in, to prevent duplicates
+  const pullFilter = viewer.userId
+    ? {
+        $or: [{ connectionId: viewer.connectionId }, { userId: viewer.userId }],
+      }
+    : { connectionId: viewer.connectionId };
+
   await PortfolioCollection.updateAsync(portfolioId, {
-    $pull: { viewers: { connectionId: viewer.connectionId } },
+    $pull: { viewers: pullFilter },
   });
 
   await PortfolioCollection.updateAsync(portfolioId, {
@@ -543,6 +494,10 @@ Meteor.methods({
     const normalized = {
       title: projectData.title ?? "",
       description: projectData.description ?? "",
+      caseStudyNarrative:
+        typeof projectData.caseStudyNarrative === "string"
+          ? projectData.caseStudyNarrative.trim()
+          : "",
       technologies: projectData.technologies ?? projectData.stack ?? [],
       githubLink: projectData.githubLink ?? projectData.github ?? "",
       liveDemoLink: projectData.liveDemoLink ?? projectData.demo ?? "",
@@ -550,6 +505,13 @@ Meteor.methods({
       status: projectData.status ?? "live",
       githubStats: null,
       lastSyncedAt: null,
+      proofOfWorkMode:
+        projectData.proofOfWorkMode === "interactive"
+          ? "interactive"
+          : "standard",
+      ...(projectData.challenge === undefined
+        ? {}
+        : { challenge: validateChallenge(projectData.challenge) }),
       createdAt: projectData.createdAt
         ? new Date(projectData.createdAt)
         : new Date(),
@@ -559,9 +521,8 @@ Meteor.methods({
 
     const projectId = await ProjectCollection.insertAsync(normalized);
 
-    // Use the portfolioId passed from the client if provided (e.g. test user
-    // viewing the superuser portfolio), otherwise find or create the current
-    // user's own portfolio.
+    // Use the selected portfolio when provided; otherwise find or create the
+    // current user's portfolio.
     let portfolio = projectData.portfolioId
       ? await PortfolioCollection.findOneAsync(projectData.portfolioId)
       : await PortfolioCollection.findOneAsync({ userId: this.userId });
@@ -602,7 +563,55 @@ Meteor.methods({
   },
 
   async "projects.update"(projectId, updates) {
-    return await ProjectCollection.updateAsync(projectId, { $set: updates });
+    const normalizedUpdates = { ...updates };
+    const unset = {};
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "caseStudyNarrative",
+      )
+    ) {
+      normalizedUpdates.caseStudyNarrative =
+        typeof normalizedUpdates.caseStudyNarrative === "string"
+          ? normalizedUpdates.caseStudyNarrative.trim()
+          : "";
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        normalizedUpdates,
+        "useCustomNarration",
+      )
+    ) {
+      normalizedUpdates.useCustomNarration =
+        normalizedUpdates.useCustomNarration === true;
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(normalizedUpdates, "proofOfWorkMode")
+    ) {
+      normalizedUpdates.proofOfWorkMode =
+        normalizedUpdates.proofOfWorkMode === "interactive"
+          ? "interactive"
+          : "standard";
+    }
+
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, "challenge")) {
+      if (normalizedUpdates.challenge === null) {
+        delete normalizedUpdates.challenge;
+        unset.challenge = "";
+      } else {
+        normalizedUpdates.challenge = validateChallenge(
+          normalizedUpdates.challenge,
+        );
+      }
+    }
+
+    const update = { $set: normalizedUpdates };
+    if (Object.keys(unset).length) update.$unset = unset;
+
+    return await ProjectCollection.updateAsync(projectId, update);
   },
 
   async "projects.delete"(projectId) {
@@ -619,13 +628,172 @@ Meteor.methods({
     const safePortfolioData = { ...portfolioData };
     delete safePortfolioData.username;
 
+    if (
+      Object.hasOwn(safePortfolioData, "chatbotPersona") &&
+      !isChatbotPersona(safePortfolioData.chatbotPersona)
+    ) {
+      throw new Meteor.Error(
+        "invalid-chatbot-persona",
+        "Choose one of the available chatbot personalities.",
+      );
+    }
+
     const newPortfolio = {
       ...safePortfolioData,
+      chatbotPersona:
+        safePortfolioData.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
       ...createDefaultPortfolioPublishingState(),
       userId: this.userId,
     };
 
     return await PortfolioCollection.insertAsync(newPortfolio);
+  },
+
+  // Certification methods
+  async "portfolios.addCertification"(portfolioId, certification) {
+    check(portfolioId, String);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to add a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const normalized = normalizeCertification({
+      ...certification,
+      source: "manual",
+      verified: false,
+      lastSyncedAt: null,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.addCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? portfolio.certifications
+      : [];
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: [...existing, normalized] },
+    });
+  },
+
+  async "portfolios.updateCertification"(portfolioId, index, certification) {
+    check(portfolioId, String);
+    check(index, Number);
+    check(certification, Object);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to update a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    const original = existing[index];
+
+    // Preserve server-owned fields
+    const normalized = normalizeCertification({
+      ...certification,
+      source: original.source,
+      verified: original.verified,
+      lastSyncedAt: original.lastSyncedAt,
+    });
+
+    if (!normalized.title.trim()) {
+      throw new Meteor.Error(
+        "portfolios.updateCertification.invalidTitle",
+        "Certification title is required.",
+      );
+    }
+
+    existing[index] = normalized;
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
+  },
+
+  async "portfolios.removeCertification"(portfolioId, index) {
+    check(portfolioId, String);
+    check(index, Number);
+
+    if (!this.userId) {
+      throw new Meteor.Error(
+        "not-authorized",
+        "You must be logged in to remove a certification.",
+      );
+    }
+
+    const portfolio = await PortfolioCollection.findOneAsync({
+      _id: portfolioId,
+      userId: this.userId,
+    });
+
+    if (!portfolio) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.notFound",
+        "Portfolio not found or not owned by the current user.",
+      );
+    }
+
+    const existing = Array.isArray(portfolio.certifications)
+      ? [...portfolio.certifications]
+      : [];
+
+    if (index < 0 || index >= existing.length) {
+      throw new Meteor.Error(
+        "portfolios.removeCertification.invalidIndex",
+        "Certification not found.",
+      );
+    }
+
+    existing.splice(index, 1);
+
+    return await PortfolioCollection.updateAsync(portfolioId, {
+      $set: { certifications: existing },
+    });
   },
 
   async "portfolios.publish"(portfolioId) {
@@ -684,6 +852,8 @@ Meteor.methods({
       _id: { $in: projectIds },
     }).fetchAsync();
 
+    const narrationEnabled = isPortfolioNarrationEnabled(portfolio);
+
     const orderedProjects = projectIds
       .map((projectId) =>
         projectRecords.find((project) => project._id === projectId),
@@ -700,6 +870,19 @@ Meteor.methods({
         liveDemoLink: project.liveDemoLink || "",
         media: project.media || "",
         status: project.status || "",
+        narrationAvailable:
+          narrationEnabled && Boolean(buildNarrationText(project)),
+        proofOfWorkMode: project.proofOfWorkMode || "standard",
+        ...(project.challenge
+          ? {
+              challenge: {
+                title: project.challenge.title || "",
+                language: project.challenge.language || "",
+                hint: project.challenge.hint || "",
+                starterCode: project.challenge.starterCode || "",
+              },
+            }
+          : {}),
         githubStats: project.githubStats || null,
         lastSyncedAt: project.lastSyncedAt || null,
       }));
@@ -710,6 +893,19 @@ Meteor.methods({
         "One or more portfolio projects could not be found. Please review your projects before publishing.",
       );
     }
+
+    const publishedNarrations = narrationEnabled
+      ? projectIds
+          .map((projectId) =>
+            projectRecords.find((project) => project._id === projectId),
+          )
+          .filter(Boolean)
+          .map((project) => ({
+            projectId: project._id,
+            text: buildNarrationText(project),
+          }))
+          .filter((narration) => narration.text)
+      : [];
 
     const publishedContent = {
       title: portfolio.title,
@@ -722,11 +918,20 @@ Meteor.methods({
       projects: orderedProjects,
       theme: portfolio.theme || "minimal",
       badges: Array.isArray(portfolio.badges) ? portfolio.badges : [],
+      narrationEnabled,
+      chatbotPersona: portfolio.chatbotPersona || DEFAULT_CHATBOT_PERSONA,
+      certifications: normalizeCertifications(portfolio.certifications),
     };
 
     return await PortfolioCollection.updateAsync(portfolioId, {
       $set: {
         publishedContent,
+        publishedNarrations,
+        publishedAiTwinConfiguration: {
+          documents: Array.isArray(portfolio.aiTwinConfiguration?.documents)
+            ? portfolio.aiTwinConfiguration.documents
+            : [],
+        },
         isPublished: true,
         publishedAt: new Date(),
       },
@@ -760,6 +965,72 @@ Meteor.methods({
 
     if (activeViewer?.portfolioId === portfolioId) {
       activeViewer.viewer.lastSeenAt = lastSeenAt;
+      activeViewerConnections.set(connectionId, activeViewer);
+    }
+
+    return updatedCount;
+  },
+
+  async "portfolios.recordViewerLocation"(portfolioId, location) {
+    check(portfolioId, String);
+    check(location, {
+      lat: Number,
+      lng: Number,
+      city: String,
+      countryCode: String,
+    });
+
+    const connectionId = this.connection?.id;
+    if (!connectionId) return 0;
+
+    // Reject nonsensical coordinates
+    if (
+      location.lat < -90 ||
+      location.lat > 90 ||
+      location.lng < -180 ||
+      location.lng > 180
+    ) {
+      throw new Meteor.Error(
+        "portfolios.recordViewerLocation.invalidCoords",
+        "Coordinates out of range.",
+      );
+    }
+
+    const locationEntry = {
+      lat: location.lat,
+      lng: location.lng,
+      city: String(location.city).slice(0, 100),
+      countryCode: String(location.countryCode).slice(0, 8),
+      capturedAt: new Date(),
+    };
+
+    let updatedCount = await PortfolioCollection.updateAsync(
+      { _id: portfolioId, "viewers.connectionId": connectionId },
+      { $set: { "viewers.$.location": locationEntry } },
+    );
+
+    if (!updatedCount) {
+      const published = await PortfolioCollection.findOneAsync({
+        _id: portfolioId,
+        isPublished: true,
+      });
+      if (!published) {
+        throw new Meteor.Error(
+          "portfolios.recordViewerLocation.notFound",
+          "Portfolio not found.",
+        );
+      }
+
+      const viewer = await getViewerData(this);
+      if (!viewer) return 0;
+      viewer.location = locationEntry;
+      await addPortfolioViewer(portfolioId, viewer);
+      return 1;
+    }
+
+    const activeViewer = activeViewerConnections.get(connectionId);
+    if (activeViewer?.portfolioId === portfolioId) {
+      activeViewer.viewer.location = locationEntry;
       activeViewerConnections.set(connectionId, activeViewer);
     }
 

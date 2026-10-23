@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-const DraftStatusIndicator = ({ status, onReview }) => {
+const DraftStatusIndicator = ({ status }) => {
   const { neverPublished, hasUnpublishedChanges } = status;
   const needsAttention = neverPublished || hasUnpublishedChanges;
 
@@ -19,14 +19,6 @@ const DraftStatusIndicator = ({ status, onReview }) => {
         />
         <span className="text-sm font-semibold text-primary">{label}</span>
       </div>
-      {needsAttention && (
-        <button
-          onClick={onReview}
-          className="px-4 py-2 rounded-lg border border-alt/50 text-alt text-sm font-semibold hover:bg-alt/10 transition"
-        >
-          Review Changes
-        </button>
-      )}
     </div>
   );
 };
@@ -36,7 +28,6 @@ DraftStatusIndicator.propTypes = {
     neverPublished: PropTypes.bool,
     hasUnpublishedChanges: PropTypes.bool,
   }).isRequired,
-  onReview: PropTypes.func.isRequired,
 };
 
 export default DraftStatusIndicator;

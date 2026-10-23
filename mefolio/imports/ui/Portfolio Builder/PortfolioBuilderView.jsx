@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio";
@@ -12,8 +13,9 @@ import {
 import {
   createDashboardViewModel,
   getCurrentTab,
+  getSelectedPortfolio,
 } from "../../models/portfolioBuilderViewModel";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Routes, Route } from "react-router-dom";
 import { PortfolioPreview } from "../Portfolio Preview/PortfolioPreview";
 import PlaceholderSection from "./PlaceholderSection";
@@ -27,12 +29,18 @@ import Sidebar from "./Sidebar";
 import AboutMeLinksEditor from "../components/AboutMeLinksEditor";
 import RecruiterPortal from "../RecruiterPortal";
 import RecruiterVisitAlert from "/imports/ui/Recruiter/RecruiterVisitAlert.jsx";
-import LogoutButton from "../Login/LogoutButton";
 import AnalyticsSection from "./AnalyticsSection";
+import AiTwinConfiguration from "./AiTwinConfiguration.jsx";
 import DraftStatusIndicator from "../Portfolio Preview/DraftStatusIndicator";
-import DraftComparisonModal from "../Portfolio Preview/DraftComparisonModal";
 import { getDraftStatus } from "../Portfolio Preview/portfolioDraftDiff";
 import LiveVisitorsPage from "./LiveVisitorsSection";
+import { NarrationToggle } from "../Portfolio Preview/NarrationToggle";
+import {
+  isPortfolioNarrationEnabled,
+  isProjectNarrationEnabled,
+} from "../../api/projectNarration";
+import { useResponsive } from "../Contexts/ResponsiveContext";
+import CertificationsEditorSection from "./CertificationsEditorSection";
 
 const getProjectId = (project) => project?._id || project?.id;
 
@@ -46,24 +54,6 @@ const getProjectDataKey = (projects = []) =>
       ].join(":"),
     )
     .join("|");
-
-const getUserEmail = (user) =>
-  user?.email ||
-  user?.emails?.[0]?.address ||
-  user?.services?.google?.email ||
-  user?.services?.github?.email ||
-  "";
-
-const getSelectedPortfolio = (portfolios = [], user) => {
-  const ownedPortfolio = portfolios.find(
-    (portfolio) => portfolio.userId === user?._id,
-  );
-
-  if (ownedPortfolio) return ownedPortfolio;
-  if (getUserEmail(user) === "test@example.com") return portfolios[0];
-
-  return null;
-};
 
 const createUnavailableProject = (projectId) => ({
   _id: projectId,
@@ -181,15 +171,18 @@ const useDashboardData = () =>
   });
 
 const DashboardLayout = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const [isPreview, setIsPreview] = useState(false);
+  const { isMobile } = useResponsive();
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "overview",
+  );
   const [orderedProjects, setOrderedProjects] = useState([]);
   const [dataProjectKey, setDataProjectKey] = useState("");
   const [saveStatus, setSaveStatus] = useState("idle");
   const [draggedProjectIndex, setDraggedProjectIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [copyLinkStatus, setCopyLinkStatus] = useState("idle");
   const [syncingProjectId, setSyncingProjectId] = useState(null);
   const [actionError, setActionError] = useState(null);
 
@@ -239,6 +232,7 @@ const DashboardLayout = () => {
     isLoading: showFullPageLoading,
     portfolios: visiblePortfolios,
     projects: databaseProjects,
+    engagements: snapshot.engagements,
     user: snapshot.user,
   });
 
@@ -307,6 +301,63 @@ const DashboardLayout = () => {
   };
 
   const handleEditProject = (project) => setEditingProject(project);
+
+  // Owner-level switch for the whole narration feature. Piper is an external
+  // service, so this lets the owner turn narration off without touching the
+  // rest of the portfolio. It applies to the draft preview straight away and
+  // to the live portfolio on the next publish.
+  const portfolioNarrationEnabled =
+    isPortfolioNarrationEnabled(selectedPortfolio);
+
+  const handleNarrationToggle = (enabled) => {
+    const portfolioId = selectedPortfolio?._id;
+    if (!portfolioId) return;
+
+    Meteor.call(
+      "portfolios.update",
+      portfolioId,
+      { narrationEnabled: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+        }
+      },
+    );
+  };
+
+  // Chooses whether a project's narration reads its custom case study or its
+  // description. Applies to the draft preview straight away and to the live
+  // portfolio on the next publish.
+  const handleToggleCustomNarration = (project, enabled) => {
+    const projectId = project?._id || project?.id;
+    if (!projectId) return;
+
+    Meteor.call(
+      "projects.update",
+      projectId,
+      { useCustomNarration: enabled },
+      (error) => {
+        if (error) {
+          console.error("Failed to update custom narration setting:", error);
+          showActionError(
+            "Couldn't update the narration setting. Please try again.",
+          );
+          return;
+        }
+
+        setOrderedProjects((previousProjects) =>
+          previousProjects.map((currentProject) =>
+            (currentProject._id || currentProject.id) === projectId
+              ? { ...currentProject, useCustomNarration: enabled }
+              : currentProject,
+          ),
+        );
+      },
+    );
+  };
 
   const handleSaveProject = (projectId, updates) => {
     Meteor.call("projects.update", projectId, updates, (error) => {
@@ -381,30 +432,6 @@ const DashboardLayout = () => {
     });
   };
 
-  const handleCopyLink = async () => {
-    if (!selectedPortfolio?._id || !selectedPortfolio?.isPublished) return;
-
-    const publicUrl = selectedPortfolio.username
-      ? `${window.location.origin}/u/${selectedPortfolio.username}`
-      : `${window.location.origin}/${selectedPortfolio._id}/view`;
-
-    try {
-      await navigator.clipboard.writeText(publicUrl);
-      setCopyLinkStatus("copied");
-
-      window.setTimeout(() => {
-        setCopyLinkStatus("idle");
-      }, 2000);
-    } catch (error) {
-      console.error("Failed to copy portfolio link:", error);
-      setCopyLinkStatus("error");
-
-      window.setTimeout(() => {
-        setCopyLinkStatus("idle");
-      }, 2000);
-    }
-  };
-
   const navigate = useNavigate();
   const currentTab = getCurrentTab(sidebarItems, activeTab);
   const draftStatus = getDraftStatus({
@@ -425,162 +452,188 @@ const DashboardLayout = () => {
       {/* FEAT-17: reactive in-app alert when a recruiter opens the owner's link */}
       <RecruiterVisitAlert />
       <Sidebar
-        items={sidebarItems}
+        items={sidebarItems.filter((item) => item.id !== "settings")}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setIsPreview(false);
+          setActiveTab(tab);
+        }}
         profile={profile}
+        portfolio={selectedPortfolio}
+        projects={orderedProjects}
+        hasUnpublishedChanges={draftStatus.hasUnpublishedChanges}
+        isPreview={isPreview}
         onPreviewToggle={(isPreview) => {
-          if (isPreview) navigate("/preview");
+          if (isPreview && isMobile) navigate("/preview");
+          else setIsPreview(isPreview);
         }}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="flex items-center justify-between border-b border-line bg-surface-fill px-8 py-6">
-          <h1 className="text-2xl font-extrabold text-primary">
-            {currentTab.label}
-          </h1>
-
-          <div className="flex items-center gap-3">
-            {!isConnected && hasLoadedOnce && (
-              <span className="text-xs font-medium text-amber-600">
-                Reconnecting… showing your last saved data
-              </span>
-            )}
-
-            <DraftStatusIndicator
-              status={draftStatus}
-              onReview={() => setIsComparisonOpen(true)}
-            />
-
-            <button
-              type="button"
-              data-testid="copy-public-link-btn"
-              onClick={handleCopyLink}
-              disabled={
-                !selectedPortfolio?._id || !selectedPortfolio?.isPublished
-              }
-              title={
-                selectedPortfolio?.isPublished
-                  ? "Copy public portfolio link"
-                  : "Publish your portfolio before sharing it"
-              }
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-fill disabled:cursor-not-allowed disabled:opacity-50"
+      <main
+        key={isPreview ? "preview" : "builder"}
+        className="relative z-0 min-w-0 flex-1 overflow-y-auto"
+      >
+        {isPreview ? (
+          <PortfolioPreview
+            portfolio={selectedPortfolio}
+            projects={orderedProjects}
+            viewportMode={isMobile ? "mobile" : "desktop"}
+            hasBuilderMenu
+          />
+        ) : (
+          <>
+            <header
+              className={`flex items-center justify-between border-b border-line bg-surface-fill py-6 ${isMobile ? "flex-wrap gap-3 pl-20 pr-4" : "px-8"}`}
             >
-              {copyLinkStatus === "copied"
-                ? "Link Copied!"
-                : copyLinkStatus === "error"
-                  ? "Copy Failed"
-                  : "Copy Link"}
-            </button>
+              <h1 className="text-2xl font-extrabold text-primary">
+                {currentTab.label}
+              </h1>
 
-            {activeTab === "settings" && <LogoutButton />}
+              <div className="flex items-center gap-3">
+                {!isConnected && hasLoadedOnce && (
+                  <span className="text-xs font-medium text-amber-600">
+                    Reconnecting… showing your last saved data
+                  </span>
+                )}
 
-            {activeTab === "projects" && (
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
-              >
-                Add Project
-              </button>
-            )}
-          </div>
-        </header>
+                <DraftStatusIndicator status={draftStatus} />
 
-        {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
+                {activeTab === "projects" && isProjectNarrationEnabled() && (
+                  <NarrationToggle
+                    enabled={portfolioNarrationEnabled}
+                    onChange={handleNarrationToggle}
+                  />
+                )}
+
+                {activeTab === "projects" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(true)}
+                    className="rounded-lg border border-line bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:opacity-90"
+                  >
+                    Add Project
+                  </button>
+                )}
+              </div>
+            </header>
+
+            {/* GRACEFUL FAILURE: non-blocking banner for the most recent failed
             save/reorder/sync/delete. Dismissible, and auto-clears itself. */}
-        {actionError && (
-          <div
-            role="alert"
-            className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            <span>{actionError}</span>
-            <button
-              type="button"
-              onClick={() => setActionError(null)}
-              className="shrink-0 font-semibold text-red-700 hover:underline"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
+            {actionError && (
+              <div
+                role="alert"
+                className="mx-8 mt-4 flex items-center justify-between gap-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              >
+                <span>{actionError}</span>
+                <button
+                  type="button"
+                  onClick={() => setActionError(null)}
+                  className="shrink-0 font-semibold text-red-700 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
-        <div className="p-8">
-          {activeTab === "overview" ? (
-            <OverviewSection
-              stats={overviewStats}
-              portfolioId={selectedPortfolio?._id}
-              onViewAllVisitors={() => setActiveTab("visitors")}
-            />
-          ) : activeTab === "about-me" ? (
-            <AboutMeLinksEditor
-              value={aboutMe}
-              onChange={(updatedValue) => {
-                const portfolioId = selectedPortfolio?._id;
+            <div className="p-8">
+              {activeTab === "overview" ? (
+                <OverviewSection
+                  stats={overviewStats}
+                  portfolioId={selectedPortfolio?._id}
+                  onViewAllVisitors={() => setActiveTab("visitors")}
+                />
+              ) : activeTab === "about-me" ? (
+                <AboutMeLinksEditor
+                  value={aboutMe}
+                  onChange={(updatedValue) => {
+                    const portfolioId = selectedPortfolio?._id;
 
-                if (!portfolioId) return;
+                    if (!portfolioId) return;
 
-                Meteor.call(
-                  "portfolios.update",
-                  portfolioId,
-                  {
-                    contact: updatedValue.contact,
-                    socials: updatedValue.socials,
-                  },
-                  (error) => {
-                    if (error) {
-                      console.error("Failed to save portfolio:", error);
-                      // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
-                      // from here once `value` is passed down, so the
-                      // user's typed changes aren't lost - just flag that
-                      // they weren't persisted.
-                      showActionError(
-                        "Couldn't save your About Me changes. Please try again.",
-                      );
+                    Meteor.call(
+                      "portfolios.update",
+                      portfolioId,
+                      {
+                        contact: updatedValue.contact,
+                        socials: updatedValue.socials,
+                      },
+                      (error) => {
+                        if (error) {
+                          console.error("Failed to save portfolio:", error);
+                          // GRACEFUL FAILURE: AboutMeLinksEditor is uncontrolled
+                          // from here once `value` is passed down, so the
+                          // user's typed changes aren't lost - just flag that
+                          // they weren't persisted.
+                          showActionError(
+                            "Couldn't save your About Me changes. Please try again.",
+                          );
+                        }
+                      },
+                    );
+                  }}
+                />
+              ) : activeTab === "settings" ? (
+                <ProfileSettings
+                  profile={profile}
+                  aboutMe={aboutMe}
+                  portfolioId={selectedPortfolio?._id}
+                />
+              ) : activeTab === "projects" ? (
+                <ProjectsSection
+                  projects={orderedProjects}
+                  onEdit={handleEditProject}
+                  syncingProjectId={syncingProjectId}
+                  onSync={handleSyncProject}
+                  onToggleCustomNarration={
+                    portfolioNarrationEnabled
+                      ? handleToggleCustomNarration
+                      : undefined
+                  }
+                  draggedProjectIndex={draggedProjectIndex}
+                  onDragStart={handleProjectDragStart}
+                  onDragOver={handleProjectDragOver}
+                  onDrop={handleProjectDrop}
+                  onDragEnd={handleProjectDragEnd}
+                />
+              ) : activeTab === "analytics" ? (
+                <AnalyticsSection
+                  projects={orderedProjects}
+                  engagements={snapshot.engagements}
+                />
+              ) : activeTab === "visitors" ? (
+                <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
+              ) : activeTab === "ai-twin" ? (
+                <AiTwinConfiguration
+                  portfolioId={selectedPortfolio?._id}
+                  configuration={selectedPortfolio?.aiTwinConfiguration}
+                  chatbotPersona={selectedPortfolio?.chatbotPersona}
+                />
+              ) : activeTab === "recruiter" ? (
+                <RecruiterPortal
+                  portfolio={selectedPortfolio}
+                  userId={snapshot.user?._id}
+                />
+              ) : activeTab === "badges" ? (
+                <div className="flex flex-col gap-8">
+                  <CertificationsEditorSection
+                    portfolioId={selectedPortfolio?._id}
+                    certifications={selectedPortfolio?.certifications || []}
+                    credlyUsername={
+                      snapshot.user?.profile?.credlyUsername || ""
                     }
-                  },
-                );
-              }}
-            />
-          ) : activeTab === "settings" ? (
-            <ProfileSettings
-              profile={profile}
-              aboutMe={aboutMe}
-              portfolioId={selectedPortfolio?._id}
-            />
-          ) : activeTab === "projects" ? (
-            <ProjectsSection
-              projects={orderedProjects}
-              onEdit={handleEditProject}
-              syncingProjectId={syncingProjectId}
-              onSync={handleSyncProject}
-              draggedProjectIndex={draggedProjectIndex}
-              onDragStart={handleProjectDragStart}
-              onDragOver={handleProjectDragOver}
-              onDrop={handleProjectDrop}
-              onDragEnd={handleProjectDragEnd}
-            />
-          ) : activeTab === "analytics" ? (
-            <AnalyticsSection
-              projects={orderedProjects}
-              engagements={snapshot.engagements}
-            />
-          ) : activeTab === "visitors" ? (
-            <LiveVisitorsPage portfolioId={selectedPortfolio?._id} />
-          ) : activeTab === "recruiter" ? (
-            <RecruiterPortal
-              portfolio={selectedPortfolio}
-              userId={snapshot.user?._id}
-            />
-          ) : activeTab === "themes" ? (
-            <ThemeSection
-              portfolioId={selectedPortfolio?._id}
-              currentActiveTheme={selectedPortfolio?.theme}
-            />
-          ) : (
-            <PlaceholderSection title={currentTab.label} />
-          )}
-        </div>
+                  />
+                </div>
+              ) : activeTab === "themes" ? (
+                <ThemeSection
+                  portfolioId={selectedPortfolio?._id}
+                  currentActiveTheme={selectedPortfolio?.theme}
+                />
+              ) : (
+                <PlaceholderSection title={currentTab.label} />
+              )}
+            </div>
+          </>
+        )}
       </main>
 
       <AddProjectModal
@@ -588,6 +641,7 @@ const DashboardLayout = () => {
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProject}
         portfolioId={selectedPortfolio?._id}
+        narrationEnabled={portfolioNarrationEnabled}
       />
 
       <EditProjectModal
@@ -596,17 +650,50 @@ const DashboardLayout = () => {
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProject}
         onDelete={handleDeleteProject}
-      />
-      <DraftComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        status={draftStatus}
+        narrationEnabled={portfolioNarrationEnabled}
       />
     </div>
   );
 };
 
+const OwnerPortfolioShell = ({ portfolio, projects, user, children }) => {
+  const navigate = useNavigate();
+  const { sidebarItems, profile } = createDashboardViewModel({
+    portfolios: portfolio ? [portfolio] : [],
+    projects,
+    user,
+  });
+  const draftStatus = getDraftStatus({ portfolio, projects });
+
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar
+        items={sidebarItems.filter((item) => item.id !== "settings")}
+        activeTab=""
+        onTabChange={(activeTab) => navigate("/", { state: { activeTab } })}
+        profile={profile}
+        portfolio={portfolio}
+        projects={projects}
+        hasUnpublishedChanges={draftStatus.hasUnpublishedChanges}
+        isPreview
+        onPreviewToggle={() => navigate("/")}
+      />
+      <main className="relative z-0 min-w-0 flex-1 overflow-y-auto">
+        {children}
+      </main>
+    </div>
+  );
+};
+
+OwnerPortfolioShell.propTypes = {
+  portfolio: PropTypes.object,
+  projects: PropTypes.arrayOf(PropTypes.object).isRequired,
+  user: PropTypes.object,
+  children: PropTypes.node.isRequired,
+};
+
 const OwnerPreviewRoute = () => {
+  const { isMobile } = useResponsive();
   const {
     isLoading,
     portfolios,
@@ -636,24 +723,38 @@ const OwnerPreviewRoute = () => {
   }
 
   return (
-    <PortfolioPreview
+    <OwnerPortfolioShell
       portfolio={selectedPortfolio}
       projects={databaseProjects}
-      isStaging
-    />
+      user={snapshot.user}
+    >
+      <PortfolioPreview
+        portfolio={selectedPortfolio}
+        projects={databaseProjects}
+        viewportMode={isMobile ? "mobile" : "desktop"}
+        hasBuilderMenu
+      />
+    </OwnerPortfolioShell>
   );
 };
 
 // Renders the snapshot taken at publish time rather than the live draft, so
 // the owner can see exactly what was published.
 const PublishedPortfolioRoute = () => {
-  const { isLoading, portfolios, user } = useDashboardData();
+  const {
+    isLoading,
+    portfolios,
+    user,
+    projectDocuments,
+    projectOrderDocuments,
+  } = useDashboardData();
+  const { isMobile } = useResponsive();
   const navigate = useNavigate();
 
   const { data: snapshot, hasLoadedOnce } = useLastKnownGood(
     isLoading,
-    () => ({ portfolios, user }),
-    [portfolios, user],
+    () => ({ portfolios, user, projectDocuments, projectOrderDocuments }),
+    [portfolios, user, projectDocuments, projectOrderDocuments],
   );
 
   const selectedPortfolio = getSelectedPortfolio(
@@ -661,6 +762,11 @@ const PublishedPortfolioRoute = () => {
     snapshot.user,
   );
   const publishedContent = selectedPortfolio?.publishedContent;
+  const databaseProjects = getPortfolioProjects(
+    selectedPortfolio,
+    snapshot.projectDocuments,
+    snapshot.projectOrderDocuments,
+  );
 
   if (isLoading && !hasLoadedOnce) {
     return <p className="p-8 text-lg">Loading published portfolio...</p>;
@@ -668,18 +774,24 @@ const PublishedPortfolioRoute = () => {
 
   if (!publishedContent) {
     return (
-      <div className="flex flex-col items-start gap-4 p-8">
-        <p className="text-lg text-primary">
-          This portfolio has not been published yet.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate("/preview")}
-          className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
-        >
-          Back to draft preview
-        </button>
-      </div>
+      <OwnerPortfolioShell
+        portfolio={selectedPortfolio}
+        projects={databaseProjects}
+        user={snapshot.user}
+      >
+        <div className="flex flex-col items-start gap-4 p-8">
+          <p className="text-lg text-primary">
+            This portfolio has not been published yet.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/preview")}
+            className="rounded-lg bg-button px-5 py-2 text-sm font-semibold text-secondary transition hover:bg-accent1"
+          >
+            Back to draft preview
+          </button>
+        </div>
+      </OwnerPortfolioShell>
     );
   }
 
@@ -691,17 +803,25 @@ const PublishedPortfolioRoute = () => {
   // inherited: they are declared once on the app shell, where the draft theme
   // is in scope, and an inherited font-family arrives already resolved.
   return (
-    <div
-      data-theme={getPublishedTheme(publishedContent.theme)}
-      className="min-h-screen bg-background font-main"
+    <OwnerPortfolioShell
+      portfolio={selectedPortfolio}
+      projects={databaseProjects}
+      user={snapshot.user}
     >
-      <PortfolioPreview
-        portfolio={publishedContent}
-        portfolioId={selectedPortfolio?._id}
-        projects={publishedContent.projects || []}
-        isPublishedView
-      />
-    </div>
+      <div
+        data-theme={getPublishedTheme(publishedContent.theme)}
+        className="min-h-screen bg-background font-main"
+      >
+        <PortfolioPreview
+          portfolio={publishedContent}
+          portfolioId={selectedPortfolio?._id}
+          projects={publishedContent.projects || []}
+          isPublishedView
+          viewportMode={isMobile ? "mobile" : "desktop"}
+          hasBuilderMenu
+        />
+      </div>
+    </OwnerPortfolioShell>
   );
 };
 

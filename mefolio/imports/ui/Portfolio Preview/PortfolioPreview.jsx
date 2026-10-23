@@ -1,30 +1,27 @@
 import PropTypes from "prop-types";
 import { useRef, useState, useMemo, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ProjectCard } from "./ProjectCard.jsx";
 import { Meteor } from "meteor/meteor";
 import { useTracker } from "meteor/react-meteor-data";
 import { PortfolioCollection } from "../../api/portfolio.js";
 import { PortfolioProjectsCollection } from "../../api/portfolioProjects.js";
 import { ProjectCollection } from "../../api/projects.js";
+import { isPortfolioNarrationEnabled } from "../../api/projectNarration.js";
 import About from "../components/About.jsx";
 import Navbar from "../components/Navbar.jsx";
 import { ProfileCard } from "../components/ProfileCard.jsx";
-import PublishButton from "./PublishButton.jsx";
-
-const getUserEmail = (user) =>
-  user?.email ||
-  user?.emails?.[0]?.address ||
-  user?.services?.google?.email ||
-  user?.services?.github?.email ||
-  "";
+import SkillsProjectMap from "./SkillsProjectMap.jsx";
+import { NarrationToggle } from "./NarrationToggle.jsx";
+import { CertificationsSection } from "./CertificationsSection.jsx";
 
 export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
   portfolioId: providedPortfolioId,
   projects: draftProjects = null,
-  isStaging = false,
+  viewportMode = "desktop",
   isPublishedView = false,
+  hasBuilderMenu = false,
 }) => {
   const { portfolioId: routePortfolioId } = useParams();
   const isPublicView = Boolean(routePortfolioId);
@@ -147,20 +144,18 @@ export const PortfolioPreview = ({
       return { portfolio: null, projects: [], ready: false };
     }
 
-    const currentUser = Meteor.user();
-    const selectedPortfolio =
-      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-      PortfolioCollection.findOne({ _id: routePortfolioId }) ||
-      (getUserEmail(currentUser) === "test@example.com"
-        ? PortfolioCollection.findOne()
-        : null);
+    const userId = Meteor.userId();
+    const selectedPortfolio = userId
+      ? PortfolioCollection.findOne({ userId })
+      : null;
 
     if (!selectedPortfolio?._id) {
       return { portfolio: selectedPortfolio, projects: [], ready: true };
     }
-    if (!portfolio?._id) return { projects: [], portfolio, ready: true };
-
-    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    const viewerSub = Meteor.subscribe(
+      "portfolios.viewer",
+      selectedPortfolio._id,
+    );
     if (!viewerSub.ready()) {
       return { projects: [], portfolio: selectedPortfolio, ready: false };
     }
@@ -213,9 +208,7 @@ export const PortfolioPreview = ({
     };
   }, [isPublicView, routePortfolioId, ready]);
 
-  const navigate = useNavigate();
   const scrollRef = useRef(null);
-  const [viewportMode, setViewportMode] = useState("desktop");
 
   if (isPublicView) {
     return null;
@@ -227,6 +220,8 @@ export const PortfolioPreview = ({
 
   // Skill filter state
   const [selectedSkill, setSelectedSkill] = useState("All");
+  const narrationFeatureEnabled = isPortfolioNarrationEnabled(portfolio);
+  const [narrationEnabled, setNarrationEnabled] = useState(true);
 
   // Compute unique skills from the loaded projects
   const availableSkills = useMemo(() => {
@@ -265,78 +260,18 @@ export const PortfolioPreview = ({
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  if (!ready) return <p>Loading portfolio...</p>;
+  if (!portfolio) return <p>Portfolio not available</p>;
+
   return (
     <div className="bg-surface-fill min-h-screen pb-8">
-      {/* Dashboard chrome — full-width border, padded content */}
-      <div className="border-b border-line bg-surface-fill">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3 lg:px-10">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-base font-bold text-primary m-0">
-              {isPublishedView
-                ? "Published portfolio"
-                : isStaging
-                  ? "Draft preview"
-                  : "Project preview"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className="flex rounded-lg border border-line bg-background p-1"
-              role="group"
-              aria-label="Preview viewport"
-            >
-              <button
-                type="button"
-                onClick={() => setViewportMode("desktop")}
-                aria-pressed={viewportMode === "desktop"}
-                aria-label="Show desktop preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "desktop"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Desktop
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewportMode("mobile")}
-                aria-pressed={viewportMode === "mobile"}
-                aria-label="Show mobile preview"
-                className={`rounded-md px-3 py-2 text-sm font-bold transition-colors ${
-                  viewportMode === "mobile"
-                    ? "bg-primary text-background"
-                    : "text-primary hover:bg-surface-fill"
-                }`}
-              >
-                Mobile
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="rounded-lg border border-line bg-background px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-background"
-            >
-              Back to Dashboard
-            </button>
-
-            {isStaging && <PublishButton portfolio={portfolio} />}
-          </div>
-        </div>
-      </div>
-
       {/* Full-width navbar */}
-      <div
-        className={`mx-auto overflow-hidden bg-background transition-all duration-300 ${
-          viewportMode === "mobile"
-            ? "w-[390px] max-w-full border border-line shadow-xl rounded-b-2xl"
-            : "w-full"
-        }`}
-      >
-        <Navbar portfolio={portfolio} viewportMode={viewportMode} />
+      <div className="w-full overflow-hidden bg-background">
+        <Navbar
+          portfolio={portfolio}
+          viewportMode={viewportMode}
+          hasBuilderMenu={hasBuilderMenu}
+        />
 
         {/* Hero section — about + profile card */}
         <section className="bg-background border-b border-line">
@@ -362,6 +297,8 @@ export const PortfolioPreview = ({
             </div>
           </div>
         </section>
+
+        <SkillsProjectMap projects={projects} viewportMode={viewportMode} />
 
         {/* Project gallery section */}
         <section
@@ -390,7 +327,7 @@ export const PortfolioPreview = ({
               <select
                 value={selectedSkill}
                 onChange={(e) => setSelectedSkill(e.target.value)}
-                className={`rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
+                className={`h-10 min-h-0 w-44 rounded-xl border border-line bg-surface-fill px-3 py-2 text-sm font-bold text-primary ${
                   viewportMode === "mobile" ? "w-full" : ""
                 }`}
               >
@@ -401,6 +338,13 @@ export const PortfolioPreview = ({
                   </option>
                 ))}
               </select>
+              {narrationFeatureEnabled && (
+                <NarrationToggle
+                  enabled={narrationEnabled}
+                  onChange={setNarrationEnabled}
+                  fullWidth={viewportMode === "mobile"}
+                />
+              )}
               {selectedSkill !== "All" && (
                 <button
                   onClick={() => setSelectedSkill("All")}
@@ -435,6 +379,13 @@ export const PortfolioPreview = ({
                   <ProjectCard
                     project={project}
                     portfolioId={trackingPortfolioId}
+                    draftPortfolioId={
+                      isPublishedView ? undefined : portfolio?._id
+                    }
+                    narrationEnabled={
+                      narrationFeatureEnabled && narrationEnabled
+                    }
+                    dataTheme={portfolio.theme || "default"}
                   />
                 </div>
               ))}
@@ -444,6 +395,12 @@ export const PortfolioPreview = ({
             <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none" />
           </div>
         </section>
+
+        {/* Certificate section */}
+        <CertificationsSection
+          certifications={portfolio?.certifications}
+          viewportMode={viewportMode}
+        />
       </div>
     </div>
   );
@@ -453,6 +410,7 @@ PortfolioPreview.propTypes = {
   portfolio: PropTypes.object,
   portfolioId: PropTypes.string,
   projects: PropTypes.arrayOf(PropTypes.object),
-  isStaging: PropTypes.bool,
+  viewportMode: PropTypes.oneOf(["desktop", "mobile"]),
   isPublishedView: PropTypes.bool,
+  hasBuilderMenu: PropTypes.bool,
 };

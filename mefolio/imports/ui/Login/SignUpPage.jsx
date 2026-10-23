@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Eye,
   EyeOff,
@@ -7,14 +7,17 @@ import {
   Lock,
   User,
   Sparkles,
-  Shield,
   Rocket,
   Trophy,
   BarChart3,
 } from "lucide-react";
 import PropTypes from "prop-types";
 import { Meteor } from "meteor/meteor";
-import { Accounts } from "meteor/accounts-base";
+import {
+  PASSWORD_RULES,
+  getPasswordStrength,
+  isPasswordValid,
+} from "/imports/api/passwordRules";
 
 /**
  * FEAT-01: User Authentication UI
@@ -35,34 +38,43 @@ export function SignUpPage({
     password: "",
     confirmPassword: "",
   });
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const redirectTimer = useRef(null);
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
+  const strength = getPasswordStrength(formData.password);
+  const strengthLabels = ["Too weak", "Weak", "Fair", "Good", "Strong"];
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
 
-    // Basic Validation Logic
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
 
-    // Meteor Account Creation Logic
-    Accounts.createUser(
-      {
-        email: formData.email,
-        password: formData.password,
-        profile: {
-          fullName: formData.name,
-        },
-      },
-      (error) => {
-        if (error) {
-          // If the email is already taken or password is too weak
-          setError(`Registration Failed: ${error.reason}`);
-        } else {
-          console.log("User created successfully");
-          onSignUp();
+    if (!isPasswordValid(formData.password)) {
+      setError(
+        "Please choose a password that meets all the requirements below.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    Meteor.call(
+      "users.register",
+      formData.email,
+      formData.password,
+      formData.name,
+      (err) => {
+        setSubmitting(false);
+        if (err) {
+          setError(`Registration Failed: ${err.reason || "Please try again."}`);
+          return;
         }
+        setSuccess(true);
+        redirectTimer.current = setTimeout(() => onSignUp?.(), 2000);
       },
     );
   };
@@ -76,34 +88,6 @@ export function SignUpPage({
 
   return (
     <div className="min-h-screen w-full flex bg-slate-50 font-sans relative">
-      {/* Dev Bypass - Top Right Corner */}
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          onClick={() => {
-            // Mock login for development bypass
-            Meteor.loginWithPassword("test@example.com", "password", (err) => {
-              if (err) {
-                // If user doesn't exist, create them
-                Accounts.createUser(
-                  {
-                    email: "test@example.com",
-                    password: "password",
-                    profile: { name: "Test User" },
-                  },
-                  () => onSignUp(),
-                );
-              } else {
-                onSignUp();
-              }
-            });
-          }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-xs font-bold transition-colors border border-slate-200"
-        >
-          <Shield className="w-3.5 h-3.5" />
-          Dev Bypass
-        </button>
-      </div>
-
       {/* Left side - Matching Branding with Aspirational Text */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-700 via-violet-700 to-fuchsia-700 relative overflow-hidden">
         {/* Background Decorative Elements */}
@@ -202,6 +186,15 @@ export function SignUpPage({
             </div>
           )}
 
+          {success && (
+            <div
+              role="status"
+              className="mb-6 p-4 bg-background border-2 border-accent1 rounded-xl text-primary text-sm font-bold"
+            >
+              Account created! Redirecting you to sign in...
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 ml-1">
@@ -266,6 +259,34 @@ export function SignUpPage({
                   )}
                 </button>
               </div>
+              <div aria-live="polite">
+                <div className="mt-2 flex gap-1">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1.5 flex-1 rounded-full ${
+                        strength >= level ? "bg-accent1" : "bg-muted/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="mt-1 ml-1 text-xs font-bold text-muted">
+                  {formData.password ? strengthLabels[strength] : ""}
+                </p>
+                <ul className="mt-1 ml-1 space-y-0.5 text-xs font-medium">
+                  {PASSWORD_RULES.map((rule) => {
+                    const passed = rule.test(formData.password);
+                    return (
+                      <li
+                        key={rule.id}
+                        className={passed ? "text-accent1" : "text-muted"}
+                      >
+                        {passed ? "✓" : "○"} {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -325,9 +346,12 @@ export function SignUpPage({
 
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98] mt-2"
+              disabled={
+                submitting || success || !isPasswordValid(formData.password)
+              }
+              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98] mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create account
+              {submitting ? "Creating account..." : "Create account"}
             </button>
 
             <div className="relative my-6">

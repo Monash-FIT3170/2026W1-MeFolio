@@ -55,6 +55,8 @@ export const ProfileCard = ({ portfolio: draftPortfolio = null }) => {
             <img
               src={imageUrl}
               alt={name}
+              loading="eager"
+              fetchPriority="high"
               className="w-48 h-48 mx-auto rounded-full object-cover mb-4"
             />
           ) : (

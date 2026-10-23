@@ -94,10 +94,16 @@ if (Meteor.isClient) {
 
     // Stands in for the portfolios.publicView subscription and whatever it
     // would have put into minimongo.
-    const stubSubscription = ({ ready = true, portfolio } = {}) => {
-      Meteor.subscribe = (...args) => {
-        subscriptionCalls.push(args);
-        return { ready: () => ready };
+    const stubSubscription = ({
+      ready = true,
+      viewerReady = ready,
+      portfolio,
+    } = {}) => {
+      Meteor.subscribe = (name, ...args) => {
+        subscriptionCalls.push([name, ...args]);
+        return {
+          ready: () => (name === "portfolios.viewer" ? viewerReady : ready),
+        };
       };
       PortfolioCollection.findOne = () => portfolio;
     };
@@ -121,6 +127,25 @@ if (Meteor.isClient) {
 
       expect(screen.getByTestId("public-portfolio-loading")).to.exist;
       expect(screen.queryByTestId("public-portfolio-view")).to.not.exist;
+    });
+
+    it("renders the published snapshot without waiting for viewer presence", () => {
+      stubSubscription({
+        viewerReady: false,
+        portfolio: {
+          _id: "testPortfolioId",
+          isPublished: true,
+          publishedContent,
+        },
+      });
+      renderPage("/u/public-owner");
+
+      expect(screen.getByRole("heading", { name: "Public Owner Portfolio" })).to
+        .exist;
+      expect(subscriptionCalls).to.deep.include([
+        "portfolios.viewer",
+        "testPortfolioId",
+      ]);
     });
 
     it("shows the unavailable message when no portfolio matches the id", () => {
@@ -158,8 +183,16 @@ if (Meteor.isClient) {
         .exist;
       expect(screen.getByText("Builds things on the web.")).to.exist;
       expect(screen.getByText("Project Gallery")).to.exist;
-      expect(screen.getByText("Weather Dashboard")).to.exist;
-      expect(screen.getByText("Recipe Finder")).to.exist;
+      expect(screen.getByRole("heading", { name: "Weather Dashboard" })).to
+        .exist;
+      expect(screen.getByRole("heading", { name: "Recipe Finder" })).to.exist;
+      expect(screen.getByRole("heading", { name: "Skills in practice" })).to
+        .exist;
+      expect(
+        screen.getByRole("button", { name: "Skill React, used in 1 project" }),
+      ).to.exist;
+      expect(screen.getByRole("button", { name: "Project Weather Dashboard" }))
+        .to.exist;
     });
 
     it("records project destination clicks with the public portfolio ID", () => {
@@ -182,8 +215,8 @@ if (Meteor.isClient) {
       });
       renderPage();
 
-      fireEvent.click(screen.getByRole("link", { name: /code/i }));
-      fireEvent.click(screen.getByRole("link", { name: /demo/i }));
+      fireEvent.click(screen.getByRole("link", { name: /^code$/i }));
+      fireEvent.click(screen.getByRole("link", { name: /^demo$/i }));
 
       expect(projectClickCalls).to.have.lengthOf(2);
       expect(projectClickCalls[0]).to.include({

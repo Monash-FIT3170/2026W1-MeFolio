@@ -2,6 +2,7 @@ const FIELD_LABELS = {
   title: "Portfolio title",
   bio: "Bio",
   theme: "Theme",
+  chatbotPersona: "AI chatbot personality",
   "profile.fullName": "Full name",
   "profile.headline": "Headline",
   "profile.avatarUrl": "Avatar",
@@ -20,14 +21,59 @@ const FIELD_LABELS = {
   "socials.other": "Other social links",
   "cta.resumeUrl": "Resume link",
   "cta.contactEnabled": "Contact button enabled",
+  narrationEnabled: "Voice narration enabled",
 };
 
-const getByPath = (obj, path) =>
-  path
+// Fields whose missing value means something other than "empty". Portfolios
+// and snapshots from before the narration toggle have narration on.
+const FIELD_DEFAULTS = {
+  narrationEnabled: true,
+};
+
+const getByPath = (obj, path) => {
+  const value = path
     .split(".")
-    .reduce((value, key) => (value == null ? undefined : value[key]), obj);
+    .reduce(
+      (current, key) => (current == null ? undefined : current[key]),
+      obj,
+    );
+  return value === undefined ? FIELD_DEFAULTS[path] : value;
+};
 const valuesAreEqual = (a, b) =>
   JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+const getAiTwinDocuments = (configuration) =>
+  Array.isArray(configuration?.documents) ? configuration.documents : [];
+
+const describeAiTwinDocuments = (documents, comparisonDocuments = []) => {
+  if (documents.length === 0) return "(empty)";
+
+  const comparisonById = new Map(
+    comparisonDocuments.map((document) => [document.id, document]),
+  );
+  const titles = documents.map((document) => {
+    const comparison = comparisonById.get(document.id);
+    const wasUpdated = comparison && !valuesAreEqual(document, comparison);
+
+    return `${document.title || "Untitled"}${wasUpdated ? " (updated)" : ""}`;
+  });
+
+  return `${documents.length} ${documents.length === 1 ? "item" : "items"}: ${titles.join(", ")}`;
+};
+
+const getAiTwinChange = (draft) => {
+  const draftDocuments = getAiTwinDocuments(draft?.aiTwinConfiguration);
+  const liveDocuments = getAiTwinDocuments(draft?.publishedAiTwinConfiguration);
+  if (valuesAreEqual(draftDocuments, liveDocuments)) return null;
+
+  return {
+    path: "aiTwinConfiguration",
+    label: "AI Twin information",
+    from: describeAiTwinDocuments(liveDocuments),
+    to: describeAiTwinDocuments(draftDocuments, liveDocuments),
+  };
+};
+
 export const formatDiffValue = (value) => {
   if (value === undefined || value === null || value === "") return "(empty)";
   if (typeof value === "boolean") return value ? "Yes" : "No";
@@ -41,10 +87,14 @@ export const diffPortfolioFields = (draft, live) => {
       .map(([path, label]) => ({
         path,
         label,
-        from: undefined,
+        from: FIELD_DEFAULTS[path],
         to: getByPath(draft, path),
       }))
-      .filter((change) => formatDiffValue(change.to) !== "(empty)");
+      .filter(
+        (change) =>
+          formatDiffValue(change.to) !== "(empty)" &&
+          !valuesAreEqual(change.from, change.to),
+      );
   }
   return Object.entries(FIELD_LABELS)
     .map(([path, label]) => ({
@@ -104,6 +154,8 @@ export const getDraftStatus = ({ portfolio, projects = [] }) => {
 
   const live = portfolio.publishedContent || null;
   const fieldChanges = diffPortfolioFields(portfolio, live);
+  const aiTwinChange = getAiTwinChange(portfolio);
+  if (aiTwinChange) fieldChanges.push(aiTwinChange);
   const projectChanges = diffPortfolioProjects(projects, live?.projects || []);
   const hasProjectChanges =
     projectChanges.added.length > 0 ||
