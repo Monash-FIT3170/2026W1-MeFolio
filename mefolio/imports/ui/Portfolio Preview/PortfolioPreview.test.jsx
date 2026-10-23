@@ -272,8 +272,8 @@ describe("Dashboard portfolio ownership", () => {
     const dashboard = createDashboardViewModel();
 
     expect(dashboard.aboutMe.userId).to.equal("");
-    expect(dashboard.aboutMe.title).to.equal("Sample Portfolio");
-    expect(dashboard.projects).to.have.length.greaterThan(0);
+    expect(dashboard.aboutMe.title).to.equal("");
+    expect(dashboard.projects).to.have.lengthOf(0);
     expect(dashboard.sidebarItems).to.have.length.greaterThan(0);
   });
 });
