@@ -15,13 +15,6 @@ import SkillsProjectMap from "./SkillsProjectMap.jsx";
 import { NarrationToggle } from "./NarrationToggle.jsx";
 import { CertificationsSection } from "./CertificationsSection.jsx";
 
-const getUserEmail = (user) =>
-  user?.email ||
-  user?.emails?.[0]?.address ||
-  user?.services?.google?.email ||
-  user?.services?.github?.email ||
-  "";
-
 export const PortfolioPreview = ({
   portfolio: draftPortfolio = null,
   portfolioId: providedPortfolioId,
@@ -151,20 +144,18 @@ export const PortfolioPreview = ({
       return { portfolio: null, projects: [], ready: false };
     }
 
-    const currentUser = Meteor.user();
-    const selectedPortfolio =
-      PortfolioCollection.findOne({ userId: Meteor.userId() }) ||
-      PortfolioCollection.findOne({ _id: routePortfolioId }) ||
-      (getUserEmail(currentUser) === "test@example.com"
-        ? PortfolioCollection.findOne()
-        : null);
+    const userId = Meteor.userId();
+    const selectedPortfolio = userId
+      ? PortfolioCollection.findOne({ userId })
+      : null;
 
     if (!selectedPortfolio?._id) {
       return { portfolio: selectedPortfolio, projects: [], ready: true };
     }
-    if (!portfolio?._id) return { projects: [], portfolio, ready: true };
-
-    const viewerSub = Meteor.subscribe("portfolios.viewer", portfolio._id);
+    const viewerSub = Meteor.subscribe(
+      "portfolios.viewer",
+      selectedPortfolio._id,
+    );
     if (!viewerSub.ready()) {
       return { projects: [], portfolio: selectedPortfolio, ready: false };
     }
@@ -268,6 +259,9 @@ export const PortfolioPreview = ({
     const walk = (x - startX) * 2;
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
+
+  if (!ready) return <p>Loading portfolio...</p>;
+  if (!portfolio) return <p>Portfolio not available</p>;
 
   return (
     <div className="bg-surface-fill min-h-screen pb-8">

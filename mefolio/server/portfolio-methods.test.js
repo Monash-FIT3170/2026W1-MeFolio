@@ -5,7 +5,7 @@ import { buildRecruiterSettingsUpdate } from "/imports/ui/Recruiter/recruiterSet
 import { expect } from "chai";
 
 // Register the methods under test. Importing this lightweight module populates
-// Meteor.server.method_handlers without pulling in main.js's seed and OAuth
+// Meteor.server.method_handlers without pulling in main.js's startup and OAuth
 import "./portfolio-methods.js";
 
 // Usernames are now backed by a unique index, and this suite runs against a

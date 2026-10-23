@@ -5,7 +5,7 @@ import { isChatbotPersona } from "/imports/api/chatbotPersonas";
 import { normalizeCertifications } from "/imports/api/certifications";
 
 // Portfolio methods kept in their own module (rather than main.js) so tests can
-// import them without pulling in the app seed and OAuth config, which need
+// import them without pulling in the app startup and OAuth config, which need
 // Meteor.settings to be present.
 Meteor.methods({
   async "portfolios.update"(portfolioId, updates) {
